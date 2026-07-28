@@ -1,0 +1,21 @@
+# WiFi configuration for Diagnostico-Hardware.ps1
+# ---------------------------------------------------------------
+# Set the network to connect to during the automatic tests.
+# The script reads this file automatically every time it runs.
+#
+# SSID     = exact name of the WiFi network.
+# Password = network password. Leave it blank if the SSID is
+#            already saved as a profile in Windows; in that case
+#            the script will just connect to it without a password.
+#
+# Lines starting with # are ignored.
+#
+# HOW TO USE:
+#   1. Copy this file to "wifi-config.txt" in the same folder.
+#   2. Fill in your real SSID/Password there.
+#   3. wifi-config.txt is listed in .gitignore, so your real
+#      network credentials never get committed to source control.
+# ---------------------------------------------------------------
+
+SSID=
+Password=
