@@ -37,19 +37,30 @@ jobs:
           if (-not (Test-Path $csc)) { $csc = "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\csc.exe" }
           if (-not (Test-Path $csc)) { throw "csc.exe not found on this runner." }
 
-          & $csc /nologo /target:winexe /platform:anycpu `
-            /out:app/Diagnostico-Hardware.exe `
-            /win32manifest:app/app.manifest `
-            /win32icon:app/Runa-M.ico `
-            /reference:System.dll /reference:System.Windows.Forms.dll `
-            app/Launcher.cs
+          # Built as PowerShell arrays + splatting (@array), not backtick line
+          # continuations - a backtick continuation here previously lost the
+          # "app/" prefix off the last argument (Launcher.cs), which made csc.exe
+          # look for the file at the repo root instead of inside app/, and broke
+          # the very first release build. Arrays don't have that failure mode.
+          $launcherArgs = @(
+            "/nologo", "/target:winexe", "/platform:anycpu",
+            "/out:app/Diagnostico-Hardware.exe",
+            "/win32manifest:app/app.manifest",
+            "/win32icon:app/Runa-M.ico",
+            "/reference:System.dll", "/reference:System.Windows.Forms.dll",
+            "app/Launcher.cs"
+          )
+          & $csc @launcherArgs
           if ($LASTEXITCODE -ne 0) { throw "Compiling Diagnostico-Hardware.exe failed." }
 
-          & $csc /nologo /target:winexe /platform:anycpu `
-            /out:app/InstaladorUSB.exe `
-            /win32icon:app/Runa-M.ico `
-            /reference:System.dll /reference:System.Windows.Forms.dll `
-            app/InstaladorUSB.cs
+          $usbArgs = @(
+            "/nologo", "/target:winexe", "/platform:anycpu",
+            "/out:app/InstaladorUSB.exe",
+            "/win32icon:app/Runa-M.ico",
+            "/reference:System.dll", "/reference:System.Windows.Forms.dll",
+            "app/InstaladorUSB.cs"
+          )
+          & $csc @usbArgs
           if ($LASTEXITCODE -ne 0) { throw "Compiling InstaladorUSB.exe failed." }
 
       - name: Install Inno Setup
