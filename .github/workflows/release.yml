@@ -37,28 +37,32 @@ jobs:
           if (-not (Test-Path $csc)) { $csc = "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\csc.exe" }
           if (-not (Test-Path $csc)) { throw "csc.exe not found on this runner." }
 
-          # Built as PowerShell arrays + splatting (@array), not backtick line
-          # continuations - a backtick continuation here previously lost the
-          # "app/" prefix off the last argument (Launcher.cs), which made csc.exe
-          # look for the file at the repo root instead of inside app/, and broke
-          # the very first release build. Arrays don't have that failure mode.
+          # Paths built with Join-Path (absolute, native backslashes) instead of
+          # hand-written "app/..." forward-slash strings - the older .NET Framework
+          # csc.exe treats "/" as a switch delimiter even when it shows up inside an
+          # argument's value or the bare source-file argument, which silently ate
+          # the "app" folder off every path and broke both previous release builds
+          # (CS1504: source file 'Launcher.cs' could not be opened). Plain backslash
+          # paths have no "/" characters left for csc.exe to misparse.
+          $appDir = Join-Path $PWD.Path "app"
+
           $launcherArgs = @(
             "/nologo", "/target:winexe", "/platform:anycpu",
-            "/out:app/Diagnostico-Hardware.exe",
-            "/win32manifest:app/app.manifest",
-            "/win32icon:app/Runa-M.ico",
+            "/out:$(Join-Path $appDir 'Diagnostico-Hardware.exe')",
+            "/win32manifest:$(Join-Path $appDir 'app.manifest')",
+            "/win32icon:$(Join-Path $appDir 'Runa-M.ico')",
             "/reference:System.dll", "/reference:System.Windows.Forms.dll",
-            "app/Launcher.cs"
+            (Join-Path $appDir "Launcher.cs")
           )
           & $csc @launcherArgs
           if ($LASTEXITCODE -ne 0) { throw "Compiling Diagnostico-Hardware.exe failed." }
 
           $usbArgs = @(
             "/nologo", "/target:winexe", "/platform:anycpu",
-            "/out:app/InstaladorUSB.exe",
-            "/win32icon:app/Runa-M.ico",
+            "/out:$(Join-Path $appDir 'InstaladorUSB.exe')",
+            "/win32icon:$(Join-Path $appDir 'Runa-M.ico')",
             "/reference:System.dll", "/reference:System.Windows.Forms.dll",
-            "app/InstaladorUSB.cs"
+            (Join-Path $appDir "InstaladorUSB.cs")
           )
           & $csc @usbArgs
           if ($LASTEXITCODE -ne 0) { throw "Compiling InstaladorUSB.exe failed." }
@@ -71,7 +75,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist -Force | Out-Null
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\JotnarSetup.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (Join-Path $PWD.Path "installer\JotnarSetup.iss")
 
       - name: Package portable ZIP
         shell: pwsh
