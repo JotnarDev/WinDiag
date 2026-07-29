@@ -53,6 +53,20 @@ and what it checks.
 
 ## Quick start
 
+Fastest way to try it - paste into a PowerShell prompt, no download or install step:
+
+```powershell
+irm https://raw.githubusercontent.com/JotnarDev/hardware-diagnostics-tool/main/bootstrap/Run-Jotnar.ps1 | iex
+```
+
+That's one of four ways to get this running - see [`docs/INSTALL.md`](docs/INSTALL.md)
+for all of them: running it directly (above), installing it onto a USB drive with one
+command, a ready-to-run portable ZIP, or a proper Windows installer (Setup.exe) - the
+last two are published on the [Releases page](https://github.com/JotnarDev/hardware-diagnostics-tool/releases)
+for every tagged version.
+
+To work with the source directly instead:
+
 1. Clone or download this repository.
 2. Open [`app/`](app/) - this folder is meant to stay flat; the launcher, the script, and
    its helper tools all expect to live side by side.
@@ -80,10 +94,18 @@ and what it checks.
 │   ├── Instalar-USB.ps1             USB installer script (copies the toolkit to a USB drive)
 │   ├── InstaladorUSB.cs             Native launcher for the USB installer
 │   └── wifi-config.example.txt      Template for wifi-config.txt (see Quick start)
+├── bootstrap/                  One-liner scripts that pull straight from GitHub
+│   ├── Run-Jotnar.ps1               Download + run immediately, nothing installed
+│   └── Install-To-USB.ps1           Download + copy onto a plugged-in USB drive
+├── installer/
+│   └── JotnarSetup.iss              Inno Setup script - produces a real Setup.exe
+├── .github/workflows/
+│   └── release.yml                  Builds and publishes Setup.exe + portable ZIP on tag push
 └── docs/
     ├── ARCHITECTURE.md          How the application is put together internally
     ├── FEATURES.md              Full itemized list of every test/feature
     ├── BUILD.md                 Build, packaging, and USB deployment walkthrough
+    ├── INSTALL.md               All four ways to install/run the tool
     └── USAGE.md                 Day-to-day usage guide for technicians
 ```
 

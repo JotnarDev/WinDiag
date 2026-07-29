@@ -87,6 +87,40 @@ it from being committed back):
 - **`keytest.exe`** - an optional keyboard-test utility. If absent, the Keyboard guided
   test falls back to asking the technician to manually press a few keys.
 
+## Building the Setup.exe installer
+
+`installer/JotnarSetup.iss` is an [Inno Setup](https://jrsoftware.org/isinfo.php) script
+that packages the already-built `app/` output into a real Windows installer - Program
+Files, Start Menu shortcuts, and a proper uninstaller. To build it by hand:
+
+1. Run `app/build.bat` first, so `Diagnostico-Hardware.exe` and `Runa-M.ico` already exist.
+2. Install Inno Setup (free) if you don't have it.
+3. Open `installer/JotnarSetup.iss` in Inno Setup and click **Compile**, or run
+   `ISCC.exe installer\JotnarSetup.iss` from the command line.
+4. The finished installer is written to `dist/JotnarHardwareDiagnostics-Setup.exe`.
+
+You don't normally need to do this by hand - see below.
+
+## Automated releases (GitHub Actions)
+
+[`.github/workflows/release.yml`](../.github/workflows/release.yml) does the entire
+build for you on GitHub's own Windows runners: it compiles both `.exe` launchers,
+builds the Inno Setup installer, packages a portable ZIP of `app/`, and publishes both
+as assets on a GitHub Release. To cut a release:
+
+```
+git tag v3.0.0
+git push origin v3.0.0
+```
+
+Pushing a tag matching `v*.*.*` triggers the workflow automatically. You can also run
+it manually from the Actions tab (`workflow_dispatch`) to sanity-check the build
+without publishing a tagged release - in that case the build output is attached to
+the workflow run itself as a downloadable artifact instead of a Release.
+
+See [`docs/INSTALL.md`](INSTALL.md) for the four end-user ways to install/run the tool,
+including the two one-liner `bootstrap/` scripts that pull straight from this repository.
+
 ## Notes for a public repository
 
 If you're publishing this repository publicly, double-check before your first push that:

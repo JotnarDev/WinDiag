@@ -41,6 +41,19 @@ The current release. Highlights of what shipped on the way to this version:
   (unit number, work order, WiFi SSID/password) is now either auto-detected or asked for
   once, only when actually needed.
 
+## [Unreleased]
+
+### Added
+- Four distribution paths, documented in `docs/INSTALL.md`:
+  - `bootstrap/Run-Jotnar.ps1` - one-liner that downloads and runs the tool directly
+    from GitHub, no install.
+  - `bootstrap/Install-To-USB.ps1` - one-liner that downloads the tool straight onto a
+    plugged-in USB drive.
+  - `installer/JotnarSetup.iss` - Inno Setup script producing a real Windows installer
+    (Program Files, Start Menu, uninstaller).
+  - `.github/workflows/release.yml` - builds both launchers, the installer, and a
+    portable ZIP automatically, and publishes them to GitHub Releases on tag push.
+
 ## Earlier versions
 
 Not tracked individually - this changelog starts from the point the project was prepared
