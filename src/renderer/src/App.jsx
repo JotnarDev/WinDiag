@@ -3,16 +3,16 @@ import { Sidebar } from '@/components/Sidebar'
 import { PortsProvider } from '@/context/PortsContext'
 import { SystemInfoProvider } from '@/context/SystemInfoContext'
 import { AudioModule } from '@/modules/AudioModule'
-import { BateriaModule } from '@/modules/BateriaModule'
-import { DiscoModule } from '@/modules/DiscoModule'
-import { OtrosModule } from '@/modules/OtrosModule'
-import { PantallaModule } from '@/modules/PantallaModule'
-import { PuertosModule } from '@/modules/PuertosModule'
-import { ResumenModule } from '@/modules/ResumenModule'
-import { TactilModule } from '@/modules/TactilModule'
-import { TecladoModule } from '@/modules/TecladoModule'
-import { UsuariosModule } from '@/modules/UsuariosModule'
-import { VentiladoresModule } from '@/modules/VentiladoresModule'
+import { BatteryModule } from '@/modules/BatteryModule'
+import { DiskModule } from '@/modules/DiskModule'
+import { OtherDevicesModule } from '@/modules/OtherDevicesModule'
+import { DisplayModule } from '@/modules/DisplayModule'
+import { PortsModule } from '@/modules/PortsModule'
+import { OverviewModule } from '@/modules/OverviewModule'
+import { TouchModule } from '@/modules/TouchModule'
+import { KeyboardModule } from '@/modules/KeyboardModule'
+import { UsersModule } from '@/modules/UsersModule'
+import { FansModule } from '@/modules/FansModule'
 
 export function App() {
   return (
@@ -29,22 +29,22 @@ export function App() {
 }
 
 function AppShell() {
-  const [activeModule, setActiveModule] = useState('resumen')
+  const [activeModule, setActiveModule] = useState('overview')
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar activeModule={activeModule} onSelectModule={setActiveModule} />
       <main className="flex-1 overflow-y-auto p-8">
-        {activeModule === 'resumen' && <ResumenModule />}
-        {activeModule === 'pantalla' && <PantallaModule />}
-        {activeModule === 'tactil' && <TactilModule />}
-        {activeModule === 'teclado' && <TecladoModule />}
+        {activeModule === 'overview' && <OverviewModule />}
+        {activeModule === 'display' && <DisplayModule />}
+        {activeModule === 'touch' && <TouchModule />}
+        {activeModule === 'keyboard' && <KeyboardModule />}
         {activeModule === 'audio' && <AudioModule />}
-        {activeModule === 'bateria' && <BateriaModule />}
-        {activeModule === 'disco' && <DiscoModule />}
-        {activeModule === 'ventiladores' && <VentiladoresModule />}
-        {activeModule === 'puertos' && <PuertosModule />}
-        {activeModule === 'otros' && <OtrosModule />}
-        {activeModule === 'usuarios' && <UsuariosModule />}
+        {activeModule === 'battery' && <BatteryModule />}
+        {activeModule === 'disk' && <DiskModule />}
+        {activeModule === 'fans' && <FansModule />}
+        {activeModule === 'ports' && <PortsModule />}
+        {activeModule === 'otherDevices' && <OtherDevicesModule />}
+        {activeModule === 'users' && <UsersModule />}
       </main>
     </div>
   )

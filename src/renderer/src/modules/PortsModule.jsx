@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { usePortsContext } from '@/context/PortsContext'
 import { cn } from '@/lib/utils'
 
-export function PuertosModule() {
+export function PortsModule() {
   const { snapshot, isLoading, recentlyConnected, refresh: load } = usePortsContext()
   const usbDevices = snapshot?.usbDevices ?? []
   const ethernetPorts = snapshot?.ethernet ?? []

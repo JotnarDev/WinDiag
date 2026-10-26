@@ -151,7 +151,7 @@ function BatteryDeviceCard({ label, battery }) {
   )
 }
 
-export function BateriaModule() {
+export function BatteryModule() {
   const { dynamicInfo, batterySamples: samples } = useSystemInfoContext()
   if (!dynamicInfo) {
     return (

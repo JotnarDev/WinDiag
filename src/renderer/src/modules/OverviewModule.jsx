@@ -148,7 +148,7 @@ function SummaryTile({ icon: Icon2, title, summary, active, onClick }) {
   )
 }
 
-export function ResumenModule() {
+export function OverviewModule() {
   const { staticInfo: info, error, isLoading, refresh } = useSystemInfoContext()
   const [activeSection, setActiveSection] = useState(null)
   const [toolMessage, setToolMessage] = useState(null)

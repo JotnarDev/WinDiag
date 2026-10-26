@@ -43,7 +43,7 @@ function RadioStateBadge({ state }) {
 const SCAN_MAX_AVG_INTERVAL_MS = 30
 const SCAN_MIN_CHARS = 3
 const SCAN_IDLE_RESET_MS = 600
-export function OtrosModule() {
+export function OtherDevicesModule() {
   const [snapshot, setSnapshot] = useState(null)
   const [loadingSnapshot, setLoadingSnapshot] = useState(true)
   const loadSnapshot = useCallback(async () => {

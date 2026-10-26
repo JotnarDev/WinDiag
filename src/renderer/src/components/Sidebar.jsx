@@ -17,22 +17,22 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   {
-    id: 'resumen',
+    id: 'overview',
     label: 'Overview',
     icon: LayoutDashboard
   },
   {
-    id: 'pantalla',
+    id: 'display',
     label: 'Display',
     icon: Monitor
   },
   {
-    id: 'tactil',
+    id: 'touch',
     label: 'Touch',
     icon: FingerprintPattern
   },
   {
-    id: 'teclado',
+    id: 'keyboard',
     label: 'Keyboard & Mouse',
     icon: Keyboard
   },
@@ -42,32 +42,32 @@ const NAV_ITEMS = [
     icon: Volume2
   },
   {
-    id: 'bateria',
+    id: 'battery',
     label: 'Battery',
     icon: BatteryFull
   },
   {
-    id: 'disco',
+    id: 'disk',
     label: 'Disk Health',
     icon: HardDrive
   },
   {
-    id: 'ventiladores',
+    id: 'fans',
     label: 'Fans',
     icon: Fan
   },
   {
-    id: 'puertos',
+    id: 'ports',
     label: 'Ports',
     icon: Usb
   },
   {
-    id: 'otros',
+    id: 'otherDevices',
     label: 'Other Devices',
     icon: Radar
   },
   {
-    id: 'usuarios',
+    id: 'users',
     label: 'Users',
     icon: Users
   }

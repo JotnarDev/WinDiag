@@ -14,7 +14,7 @@ const TRAIL_COLORS = [
   '#f97316'
 ]
 
-export function TactilModule() {
+export function TouchModule() {
   const [isActive, setIsActive] = useState(false)
   const [activePoints, setActivePoints] = useState(0)
   const canvasRef = useRef(null)

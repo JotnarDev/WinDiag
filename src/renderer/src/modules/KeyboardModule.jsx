@@ -594,7 +594,7 @@ function emptyMouseClickCounts() {
   }
 }
 
-export function TecladoModule() {
+export function KeyboardModule() {
   const [keyStates, setKeyStates] = useState({})
   const containerRef = useRef(null)
   const contentRef = useRef(null)

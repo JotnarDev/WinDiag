@@ -13,7 +13,7 @@ function userTags(u) {
   return tags
 }
 
-export function UsuariosModule() {
+export function UsersModule() {
   const [users, setUsers] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)

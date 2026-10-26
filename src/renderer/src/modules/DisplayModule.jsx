@@ -30,7 +30,7 @@ const TEST_COLORS = [
   }
 ]
 
-export function PantallaModule() {
+export function DisplayModule() {
   const [isActive, setIsActive] = useState(false)
   const [colorIndex, setColorIndex] = useState(0)
   const exitTest = useCallback(() => {

@@ -1,41 +1,42 @@
 # WinDiag
 
-Herramienta de diagnóstico de hardware para Windows (Electron + React + Tailwind).
+Hardware diagnostics tool for Windows (Electron + React + Tailwind).
 
-> Proyecto reconstruido a partir del build `windiag-1.0.0` (`app.asar`). El original era
-> TypeScript; los tipos no sobreviven a la compilación, así que esta versión es JavaScript/JSX
-> con la misma lógica, textos, estilos y canales IPC.
+> Source reconstructed from the packaged `windiag-1.0.0` build (`app.asar`). The original was
+> TypeScript; type annotations don't survive compilation, so this version is JavaScript/JSX with
+> the same logic, text, styles and IPC channels.
 
-## Requisitos
+## Requirements
 
 - Windows 10/11
-- Node.js 20.19+ (recomendado 22 LTS)
+- Node.js 20.19+ (22 LTS recommended)
 
-## Uso
+## Usage
 
 ```bash
 npm install
-npm run dev        # modo desarrollo con recarga
-npm run build:win  # genera dist/windiag-<version>-setup.exe
+npm run dev        # development mode with hot reload
+npm run build:win  # produces dist/windiag-<version>-setup.exe
 ```
 
-## Estructura
+## Layout
 
 ```
 src/
-  main/            Proceso principal (Electron, PowerShell/WMI)
-    index.js         ventana, handlers IPC, teclado/táctil
-    system-info.js   info estática/dinámica, ventiladores
-    ports.js         USB y Ethernet
-    other-devices.js smart card, GPS, escáner, radios, Wi-Fi
-    system-tools.js  herramientas de Windows, servicios, informes, elevación
-    users.js         cuentas locales
-    disk-health.js   salud del disco principal
-  preload/index.js API expuesta como window.api
+  main/              Main process (Electron, PowerShell/WMI)
+    index.js           window, IPC handlers, keyboard/touch helpers
+    powershell.js      shared PowerShell runner
+    system-info.js     static/dynamic hardware info, fans
+    ports.js           USB and Ethernet
+    other-devices.js   smart card, GPS, barcode scanner, radios, Wi-Fi
+    system-tools.js    Windows tools, services, reports, elevation
+    users.js           local accounts
+    disk-health.js     main drive health
+  preload/index.js   API exposed as window.api
   renderer/src/
-    App.jsx          navegación entre módulos
-    context/         SystemInfoProvider, PortsProvider
-    modules/         una pantalla por módulo (Resumen, Pantalla, Táctil, ...)
-    components/      Sidebar y componentes UI (shadcn)
-    assets/main.css  tema Tailwind v4
+    App.jsx            module navigation
+    context/           SystemInfoProvider, PortsProvider
+    modules/           one screen per module (Overview, Display, Touch, ...)
+    components/        Sidebar and UI components (shadcn)
+    assets/main.css    Tailwind v4 theme
 ```

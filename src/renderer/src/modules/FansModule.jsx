@@ -3,7 +3,7 @@ import { Fan, Thermometer, TriangleAlert } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const POLL_MS = 4e3
-export function VentiladoresModule() {
+export function FansModule() {
   const [info, setInfo] = useState(null)
   const [error, setError] = useState(null)
   useEffect(() => {

@@ -58,7 +58,7 @@ function formatPowerOnHours(hours) {
   return days > 0 ? `${hours} h (~${days} d)` : `${hours} h`
 }
 
-export function DiscoModule() {
+export function DiskModule() {
   const [data, setData] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
