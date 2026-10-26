@@ -1,11 +1,12 @@
 import { app, shell } from 'electron'
 import path from 'path'
-import { exec, spawn } from 'child_process'
+import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
 import os from 'os'
 import { randomUUID } from 'crypto'
+import { runPowerShell } from './powershell'
 
-const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 function systemRoot() {
   return process.env.SystemRoot || process.env.windir || 'C:\\Windows'
 }
@@ -85,13 +86,27 @@ export async function launchProductKeyDialog() {
   }
 }
 
+// Windows translates error text ("Access is denied" / "Acceso denegado"), so
+// nothing below inspects error messages. Admin-only operations check
+// elevation up front, and other outcomes come from state queries or exit codes.
+const NOT_ELEVATED_SUFFIX =
+  'Close WinDiag and reopen it as Administrator (use "Run as Administrator" in the sidebar or right-click the app → "Run as administrator")'
+
+export function notElevatedResult(action) {
+  return {
+    success: false,
+    message: `Administrator permission is required to ${action}. ${NOT_ELEVATED_SUFFIX}.`
+  }
+}
+
+const errorMessage = (err) => (err instanceof Error ? err.message : String(err))
+
 export async function getWindowsUpdateServiceState() {
   try {
-    const { stdout } = await execAsync(
-      'powershell -NoProfile -NonInteractive -Command "(Get-Service -Name wuauserv).Status"',
-      { windowsHide: true, timeout: 5e3 }
-    )
-    const value = stdout.trim().toLowerCase()
+    // Status is an enum, so its name is always English
+    const value = (await runPowerShell('(Get-Service -Name wuauserv).Status.ToString()'))
+      .trim()
+      .toLowerCase()
     if (value === 'running') return 'running'
     if (value === 'stopped') return 'stopped'
     return 'unknown'
@@ -100,56 +115,55 @@ export async function getWindowsUpdateServiceState() {
   }
 }
 
-function translateServiceError(raw, verb) {
-  if (/access is denied/i.test(raw)) {
-    return `Access denied. Close WinDiag and reopen it as Administrator (right-click the app → "Run as administrator") to ${verb} this service.`
-  }
-  return raw
-}
-
-export async function stopWindowsUpdateService() {
-  try {
-    await execAsync('net stop wuauserv', { windowsHide: true, timeout: 15e3 })
-    return { success: true, message: 'Windows Update service stopped.' }
-  } catch (err) {
-    const raw = err instanceof Error ? err.message : String(err)
-    if (/is not started/i.test(raw)) {
-      return { success: true, message: 'Windows Update service was already stopped.' }
+async function setWindowsUpdateService(target) {
+  const verb = target === 'running' ? 'start' : 'stop'
+  const label = target === 'running' ? 'started' : 'stopped'
+  if ((await getWindowsUpdateServiceState()) === target) {
+    return {
+      success: true,
+      message: `Windows Update service was already ${target === 'running' ? 'running' : 'stopped'}.`
     }
-    return { success: false, message: translateServiceError(raw, 'stop') }
   }
-}
-
-export async function startWindowsUpdateService() {
+  if (!(await isRunningElevated())) return notElevatedResult(`${verb} the Windows Update service`)
   try {
-    await execAsync('net start wuauserv', { windowsHide: true, timeout: 15e3 })
-    return { success: true, message: 'Windows Update service started.' }
+    await execFileAsync('net', [verb, 'wuauserv'], { windowsHide: true, timeout: 15e3 })
+    return { success: true, message: `Windows Update service ${label}.` }
   } catch (err) {
-    const raw = err instanceof Error ? err.message : String(err)
-    if (/already.*started/i.test(raw)) {
-      return { success: true, message: 'Windows Update service was already running.' }
+    if ((await getWindowsUpdateServiceState()) === target) {
+      return { success: true, message: `Windows Update service ${label}.` }
     }
-    return { success: false, message: translateServiceError(raw, 'start') }
+    return { success: false, message: errorMessage(err) }
   }
 }
 
-async function generateHtmlReport(command, filePrefix, successMessage, timeoutMs) {
+export function stopWindowsUpdateService() {
+  return setWindowsUpdateService('stopped')
+}
+
+export function startWindowsUpdateService() {
+  return setWindowsUpdateService('running')
+}
+
+async function generateHtmlReport(args, filePrefix, successMessage, timeoutMs) {
   const outputPath = path.join(os.tmpdir(), `windiag-${filePrefix}-${randomUUID()}.html`)
   try {
-    await execAsync(`${command} /output "${outputPath}"`, { windowsHide: true, timeout: timeoutMs })
-    const errorMessage = await shell.openPath(outputPath)
-    if (errorMessage) {
-      return { success: false, message: errorMessage }
+    await execFileAsync('powercfg', [...args, '/output', outputPath], {
+      windowsHide: true,
+      timeout: timeoutMs
+    })
+    const openError = await shell.openPath(outputPath)
+    if (openError) {
+      return { success: false, message: openError }
     }
     return { success: true, message: successMessage }
   } catch (err) {
-    return { success: false, message: err instanceof Error ? err.message : 'Unknown error' }
+    return { success: false, message: errorMessage(err) }
   }
 }
 
 export async function generateBatteryReport() {
   return generateHtmlReport(
-    'powercfg /batteryreport',
+    ['/batteryreport'],
     'battery-report',
     'Battery report generated and opened.',
     15e3
@@ -157,84 +171,75 @@ export async function generateBatteryReport() {
 }
 
 export async function generateEnergyReport() {
-  const result = await generateHtmlReport(
-    'powercfg /energy',
+  if (!(await isRunningElevated())) return notElevatedResult('generate the energy report')
+  return generateHtmlReport(
+    ['/energy'],
     'energy-report',
     'Energy efficiency report generated and opened.',
     75e3
   )
-  if (!result.success && /access is denied|administrator|elevation/i.test(result.message)) {
-    return {
-      success: false,
-      message:
-        'This report requires administrator permission. Close WinDiag and reopen it as Administrator (right-click the app → "Run as administrator"), then try again.'
-    }
-  }
-  return result
 }
 
 export async function isSysprepRunning() {
   try {
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -Command "if (Get-Process -Name sysprep -ErrorAction SilentlyContinue) { 'true' } else { 'false' }"`,
-      { windowsHide: true, timeout: 4e3 }
+    const output = await runPowerShell(
+      '[bool](Get-Process -Name sysprep -ErrorAction SilentlyContinue)',
+      4e3
     )
-    return stdout.trim().toLowerCase() === 'true'
+    return output.trim().toLowerCase() === 'true'
   } catch {
     return false
   }
 }
 
-export async function isRunningElevated() {
-  try {
-    await execAsync('net session', { windowsHide: true, timeout: 4e3 })
-    return true
-  } catch {
-    return false
-  }
+// Elevation can't change while the process runs, so check once.
+let elevatedPromise = null
+export function isRunningElevated() {
+  elevatedPromise ??= execFileAsync('net', ['session'], { windowsHide: true, timeout: 4e3 }).then(
+    () => true,
+    () => false
+  )
+  return elevatedPromise
 }
+
+// Win32 ERROR_CANCELLED: the user dismissed the UAC prompt
+const ERROR_CANCELLED = 1223
 
 export async function relaunchAsAdmin() {
+  const exePath = process.execPath
+  const args = process.argv.slice(1).filter((a) => a !== '.')
+  const quote = (value) => `'${value.replace(/'/g, "''")}'`
+  const argList = args.length ? ` -ArgumentList ${args.map(quote).join(',')}` : ''
+  const script = `
+try {
+    Start-Process -FilePath ${quote(exePath)}${argList} -Verb RunAs -ErrorAction Stop
+    'ok'
+} catch {
+    $code = $_.Exception.NativeErrorCode
+    if ($null -eq $code -and $_.Exception.InnerException) { $code = $_.Exception.InnerException.NativeErrorCode }
+    if ($code -eq ${ERROR_CANCELLED}) { 'cancelled' } else { 'error:' + $_.Exception.Message }
+}`
   try {
-    const exePath = process.execPath
-    const args = process.argv.slice(1).filter((a) => a !== '.')
-    const escape = (value) => value.replace(/'/g, "''")
-    const argListFragment = args.length
-      ? ` -ArgumentList ${args.map((a) => `'${escape(a)}'`).join(',')}`
-      : ''
-    const command = `Start-Process -FilePath '${escape(exePath)}'${argListFragment} -Verb RunAs`
-    await execAsync(`powershell -NoProfile -NonInteractive -Command "${command}"`, {
-      windowsHide: true,
-      timeout: 15e3
-    })
+    const output = (await runPowerShell(script, 60e3)).trim()
+    if (output === 'cancelled') return { success: false, message: 'Elevation was canceled.' }
+    if (output !== 'ok') return { success: false, message: output.replace(/^error:/, '') }
     setTimeout(() => app.quit(), 300)
     return { success: true, message: 'Relaunching as Administrator…' }
   } catch (err) {
-    const raw = err instanceof Error ? err.message : String(err)
-    if (/cancel/i.test(raw)) {
-      return { success: false, message: 'Elevation was canceled.' }
-    }
-    return { success: false, message: raw }
+    return { success: false, message: errorMessage(err) }
   }
 }
 
 export async function scheduleCheckDiskOnRestart() {
   const drive = process.env.SystemDrive || 'C:'
+  if (!(await isRunningElevated())) return notElevatedResult('schedule a disk check')
   try {
-    await execAsync(`fsutil dirty set ${drive}`, { windowsHide: true, timeout: 5e3 })
+    await execFileAsync('fsutil', ['dirty', 'set', drive], { windowsHide: true, timeout: 5e3 })
     return {
       success: true,
       message: `${drive} has been marked for a disk check on the next restart. It runs automatically next time the computer restarts (large drives can take a while).`
     }
   } catch (err) {
-    const raw = err instanceof Error ? err.message : String(err)
-    if (/access is denied/i.test(raw)) {
-      return {
-        success: false,
-        message:
-          'Access denied. Close WinDiag and reopen it as Administrator (right-click the app → "Run as administrator") to schedule a disk check.'
-      }
-    }
-    return { success: false, message: raw }
+    return { success: false, message: errorMessage(err) }
   }
 }

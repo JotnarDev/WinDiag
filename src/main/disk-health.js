@@ -1,11 +1,6 @@
-import path from 'path'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import os from 'os'
-import { unlink, writeFile } from 'fs/promises'
-import { randomUUID } from 'crypto'
+import { runPowerShell } from './powershell'
+import { isRunningElevated } from './system-tools'
 
-const execAsync = promisify(exec)
 const EMPTY_RESULT = {
   model: null,
   mediaType: null,
@@ -22,7 +17,8 @@ const EMPTY_RESULT = {
   healthPercent: null,
   healthStatus: 'unknown',
   supported: false,
-  reliabilityError: null
+  reliabilityError: null,
+  isElevated: null
 }
 
 function num(value) {
@@ -66,8 +62,15 @@ try {
 }
 `.trim()
 function computeHealthPercent(input) {
-  const { wear, readUncorrected, writeUncorrected, readCorrected, writeCorrected, temperatureMax } =
-    input
+  const {
+    wear,
+    readUncorrected,
+    writeUncorrected,
+    readCorrected,
+    writeCorrected,
+    temperatureMax,
+    isHdd
+  } = input
   if (
     wear === null &&
     readUncorrected === null &&
@@ -81,8 +84,13 @@ function computeHealthPercent(input) {
   if (wear !== null) health -= wear
   const uncorrected = (readUncorrected ?? 0) + (writeUncorrected ?? 0)
   health -= Math.min(uncorrected * 10, 40)
-  const corrected = (readCorrected ?? 0) + (writeCorrected ?? 0)
-  health -= Math.min(corrected * 0.2, 10)
+  // Hard drives routinely report huge corrected-error counts (ECC doing its
+  // normal job — often millions on Seagate drives), so they only count
+  // against SSDs.
+  if (!isHdd) {
+    const corrected = (readCorrected ?? 0) + (writeCorrected ?? 0)
+    health -= Math.min(corrected * 0.2, 10)
+  }
   if (temperatureMax !== null && temperatureMax > 55) {
     health -= Math.min((temperatureMax - 55) * 2, 15)
   }
@@ -99,16 +107,13 @@ function healthStatusFromPercent(percent) {
 }
 
 export async function getMainDiskHealth() {
-  const scriptPath = path.join(os.tmpdir(), `windiag-diskhealth-${randomUUID()}.ps1`)
   try {
-    await writeFile(scriptPath, DISK_HEALTH_PS_SCRIPT, 'utf-8')
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`,
-      { windowsHide: true, timeout: 8e3 }
-    )
-    const trimmed = stdout.trim()
+    const [trimmed, isElevated] = await Promise.all([
+      runPowerShell(DISK_HEALTH_PS_SCRIPT, 15e3),
+      isRunningElevated()
+    ])
     const raw = trimmed ? JSON.parse(trimmed) : {}
-    if (!raw.Model) return EMPTY_RESULT
+    if (!raw.Model) return { ...EMPTY_RESULT, isElevated }
     const wearPercent = num(raw.Wear)
     const temperatureC = num(raw.Temperature)
     const temperatureMaxC = num(raw.TemperatureMax)
@@ -123,7 +128,8 @@ export async function getMainDiskHealth() {
       writeUncorrected: writeErrorsUncorrected,
       readCorrected: readErrorsCorrected,
       writeCorrected: writeErrorsCorrected,
-      temperatureMax: temperatureMaxC
+      temperatureMax: temperatureMaxC,
+      isHdd: raw.MediaType === 'HDD'
     })
     return {
       model: raw.Model,
@@ -141,11 +147,10 @@ export async function getMainDiskHealth() {
       healthPercent,
       healthStatus: healthStatusFromPercent(healthPercent),
       supported: true,
-      reliabilityError: raw.ReliabilityError ?? null
+      reliabilityError: raw.ReliabilityError ?? null,
+      isElevated
     }
   } catch {
     return EMPTY_RESULT
-  } finally {
-    await unlink(scriptPath).catch(() => void 0)
   }
 }

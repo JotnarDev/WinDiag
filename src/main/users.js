@@ -1,11 +1,6 @@
-import path from 'path'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import os from 'os'
-import { unlink, writeFile } from 'fs/promises'
-import { randomUUID } from 'crypto'
+import { parseJsonArray, runPowerShell } from './powershell'
+import { isRunningElevated, notElevatedResult } from './system-tools'
 
-const execAsync = promisify(exec)
 const cleanString = (value) => {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
@@ -53,17 +48,8 @@ try {
 }
 `.trim()
 export async function getWindowsUsers() {
-  const scriptPath = path.join(os.tmpdir(), `windiag-users-${randomUUID()}.ps1`)
   try {
-    await writeFile(scriptPath, USERS_PS_SCRIPT, 'utf-8')
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`,
-      { windowsHide: true, timeout: 8e3 }
-    )
-    const trimmed = stdout.trim()
-    if (!trimmed) return []
-    const parsed = JSON.parse(trimmed)
-    const rows = Array.isArray(parsed) ? parsed : [parsed]
+    const rows = parseJsonArray(await runPowerShell(USERS_PS_SCRIPT, 15e3))
     const users = []
     for (const raw of rows) {
       const name = cleanString(raw.Name)
@@ -84,8 +70,6 @@ export async function getWindowsUsers() {
     return users
   } catch {
     return []
-  } finally {
-    await unlink(scriptPath).catch(() => void 0)
   }
 }
 
@@ -112,32 +96,28 @@ export async function deleteWindowsUser(name) {
       message: `"Administrator" is a protected built-in account and can't be deleted here.`
     }
   }
+  if (target.isCurrentUser) {
+    return {
+      success: false,
+      message: `"${target.name}" is the account you're signed in with and can't be deleted.`
+    }
+  }
   if (!target.enabled) {
     return {
       success: false,
       message: `"${target.name}" is disabled and can't be deleted here.`
     }
   }
-  try {
-    await execAsync(
-      `powershell -NoProfile -NonInteractive -Command "Remove-LocalUser -Name '${escapeForSingleQuotedPs(
-        target.name
-      )}'"`,
-      { windowsHide: true, timeout: 1e4 }
-    )
-    return {
-      success: true,
-      message: `User "${target.name}" was deleted. This removes the Windows account only — their profile folder and files under C:\\Users\\${target.name} are left in place.`
-    }
-  } catch (err) {
-    const raw = err instanceof Error ? err.message : String(err)
-    if (/access is denied/i.test(raw)) {
-      return {
-        success: false,
-        message:
-          'Access denied. Close WinDiag and reopen it as Administrator (right-click the app → "Run as administrator") to delete a user account.'
-      }
-    }
-    return { success: false, message: raw }
+  if (!(await isRunningElevated())) return notElevatedResult('delete a user account')
+  const output = await runPowerShell(
+    `try { Remove-LocalUser -Name '${escapeForSingleQuotedPs(target.name)}' -ErrorAction Stop; 'ok' } catch { $_.Exception.Message }`,
+    15e3
+  ).catch((err) => (err instanceof Error ? err.message : String(err)))
+  if (output.trim() !== 'ok') {
+    return { success: false, message: output.trim() || 'The account could not be deleted.' }
+  }
+  return {
+    success: true,
+    message: `User "${target.name}" was deleted. This removes the Windows account only — their profile folder and files under C:\\Users\\${target.name} are left in place.`
   }
 }

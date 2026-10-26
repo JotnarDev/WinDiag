@@ -135,7 +135,8 @@ export function UsersModule() {
         <Card className="py-0">
           <CardContent className="divide-y divide-zinc-100 px-0">
             {users.map((u) => {
-              const isProtected = u.name.toLowerCase() === 'administrator' || !u.enabled
+              const isProtected =
+                u.name.toLowerCase() === 'administrator' || !u.enabled || u.isCurrentUser
               const isConfirming = confirmingDelete === u.name
               const isBusy = deletingName === u.name
               const tags = userTags(u)

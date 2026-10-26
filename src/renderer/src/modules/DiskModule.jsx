@@ -21,7 +21,6 @@ const STATUS_LABEL = {
   unknown: 'Not available'
 }
 
-const ACCESS_DENIED_PATTERN = /access is denied|access denied|unauthorized|administrator|elevat/i
 const STATUS_CLASS = {
   excellent: 'border-emerald-800/60 bg-emerald-950/40 text-emerald-400',
   good: 'border-emerald-900/50 bg-emerald-950/40 text-emerald-400',
@@ -171,7 +170,7 @@ export function DiskModule() {
                     {"Could not read the drive's reliability counters: "}
                     {data.reliabilityError}
                   </p>
-                  {ACCESS_DENIED_PATTERN.test(data.reliabilityError) && (
+                  {data.isElevated === false && (
                     <p className="mt-1 text-xs text-amber-400/80">
                       {
                         'This usually means reading it needs administrator rights. Close WinDiag and reopen it as Administrator (right-click the app → "Run as administrator"), then refresh this tab.'
