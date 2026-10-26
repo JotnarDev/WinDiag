@@ -27,7 +27,8 @@ const api = {
   isElevated: () => ipcRenderer.invoke('system:is-elevated'),
   relaunchAsAdmin: () => ipcRenderer.invoke('system:relaunch-as-admin'),
   getMainDiskHealth: () => ipcRenderer.invoke('disk:get-health'),
-  setPrintScreenBlocked: (blocked) => ipcRenderer.invoke('keyboard:set-printscreen-blocked', blocked),
+  setPrintScreenBlocked: (blocked) =>
+    ipcRenderer.invoke('keyboard:set-printscreen-blocked', blocked),
   onPrintScreenPressed: (callback) => {
     const listener = () => callback()
     ipcRenderer.on('keyboard:printscreen-pressed', listener)

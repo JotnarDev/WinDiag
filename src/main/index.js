@@ -1,9 +1,9 @@
 import { BrowserWindow, app, globalShortcut, ipcMain, shell } from 'electron'
 import path from 'path'
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
+import { runPowerShell, stopPowerShell } from './powershell'
 import { getStaticSystemInfo, getDynamicSystemInfo, getFanInfo } from './system-info'
 import { getPortsSnapshot } from './ports'
 import {
@@ -27,16 +27,24 @@ import {
 } from './system-tools'
 import { getWindowsUsers, deleteWindowsUser } from './users'
 import { getMainDiskHealth } from './disk-health'
+import {
+  recoverEdgeGestures,
+  restoreEdgeGesturesSync,
+  setEdgeGesturesDisabled
+} from './edge-gestures'
 
-const execAsync = promisify(exec)
 const LOCK_KEY_SENDKEYS = {
   CapsLock: '{CAPSLOCK}',
   NumLock: '{NUMLOCK}'
 }
+// Reverting a lock key injects a synthetic key press, which comes back
+// through before-input-event. Swallow events for that key for a moment so the
+// revert isn't itself treated as a new press (and reverted again, forever).
+const LOCK_KEY_SUPPRESS_MS = 1000
+const lockKeySuppressedUntil = {}
 
 let keyboardCaptureActive = false
-let edgeSwipeSnapshot = null
-const EDGE_UI_REG_PATH = 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\EdgeUI'
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -52,14 +60,14 @@ function createWindow() {
     icon,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: true
     }
   })
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    if (/^https?:\/\//i.test(details.url)) void shell.openExternal(details.url)
     return { action: 'deny' }
   })
   mainWindow.webContents.on('before-input-event', (event, input) => {
@@ -67,6 +75,7 @@ function createWindow() {
     if (input.code === 'Escape') return
     if (input.type !== 'keyDown' && input.type !== 'keyUp') return
     event.preventDefault()
+    if (Date.now() < (lockKeySuppressedUntil[input.code] ?? 0)) return
     const payload = {
       code: input.code,
       type: input.type,
@@ -80,111 +89,117 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
+
+// Only WinDiag's own page may call into the main process — several handlers
+// can stop services or delete accounts.
+function isTrustedSender(event) {
+  const url = event.senderFrame?.url ?? ''
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    return url.startsWith(process.env['ELECTRON_RENDERER_URL'])
+  }
+  return url.startsWith('file://')
+}
+
+function handle(channel, listener) {
+  ipcMain.handle(channel, (event, ...args) => {
+    if (!isTrustedSender(event)) throw new Error(`Blocked ${channel} from an untrusted page`)
+    return listener(event, ...args)
+  })
+}
+
+function expect(type, value, channel) {
+  if (typeof value !== type) throw new TypeError(`${channel}: expected a ${type}`)
+  return value
+}
+
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.jotnar.windiag')
+  // Keep a single PowerShell process alive for systeminformation's queries
+  // instead of it spawning a new one per call.
+  if (process.platform === 'win32') si.powerShellStart()
+  void recoverEdgeGestures()
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-  ipcMain.on('ping', () => console.log('pong'))
-  ipcMain.handle('system:get-static-info', () => getStaticSystemInfo())
-  ipcMain.handle('system:get-dynamic-info', () => getDynamicSystemInfo())
-  ipcMain.handle('system:get-fan-info', () => getFanInfo())
-  ipcMain.handle('ports:get-snapshot', () => getPortsSnapshot())
-  ipcMain.handle('otherdevices:get-snapshot', () => getOtherDevicesSnapshot())
-  ipcMain.handle('smartcard:get-status', () => getSmartCardStatus())
-  ipcMain.handle('gps:get-fix', () => getGpsFix())
-  ipcMain.handle('wifi:get-status', () => getWifiConnectionStatus())
-  ipcMain.handle('system:launch-tool', (_event, toolId) => launchSystemTool(toolId))
-  ipcMain.handle('system:launch-product-key-dialog', () => launchProductKeyDialog())
-  ipcMain.handle('system:get-update-service-state', () => getWindowsUpdateServiceState())
-  ipcMain.handle('system:stop-update-service', () => stopWindowsUpdateService())
-  ipcMain.handle('system:start-update-service', () => startWindowsUpdateService())
-  ipcMain.handle('system:generate-battery-report', () => generateBatteryReport())
-  ipcMain.handle('system:generate-energy-report', () => generateEnergyReport())
-  ipcMain.handle('system:schedule-check-disk', () => scheduleCheckDiskOnRestart())
-  ipcMain.handle('users:get-list', () => getWindowsUsers())
-  ipcMain.handle('users:delete', (_event, name) => deleteWindowsUser(name))
-  ipcMain.handle('system:is-sysprep-running', () => isSysprepRunning())
-  ipcMain.handle('system:is-elevated', () => isRunningElevated())
-  ipcMain.handle('system:relaunch-as-admin', () => relaunchAsAdmin())
-  ipcMain.handle('disk:get-health', () => getMainDiskHealth())
-  ipcMain.handle('window:set-fullscreen', (_event, shouldBeFullscreen) => {
-    const [win] = BrowserWindow.getAllWindows()
-    win?.setFullScreen(shouldBeFullscreen)
+
+  handle('system:get-static-info', () => getStaticSystemInfo())
+  handle('system:get-dynamic-info', () => getDynamicSystemInfo())
+  handle('system:get-fan-info', () => getFanInfo())
+  handle('ports:get-snapshot', () => getPortsSnapshot())
+  handle('otherdevices:get-snapshot', () => getOtherDevicesSnapshot())
+  handle('smartcard:get-status', () => getSmartCardStatus())
+  handle('gps:get-fix', () => getGpsFix())
+  handle('wifi:get-status', () => getWifiConnectionStatus())
+  handle('system:launch-tool', (_event, toolId) =>
+    launchSystemTool(expect('string', toolId, 'system:launch-tool'))
+  )
+  handle('system:launch-product-key-dialog', () => launchProductKeyDialog())
+  handle('system:get-update-service-state', () => getWindowsUpdateServiceState())
+  handle('system:stop-update-service', () => stopWindowsUpdateService())
+  handle('system:start-update-service', () => startWindowsUpdateService())
+  handle('system:generate-battery-report', () => generateBatteryReport())
+  handle('system:generate-energy-report', () => generateEnergyReport())
+  handle('system:schedule-check-disk', () => scheduleCheckDiskOnRestart())
+  handle('users:get-list', () => getWindowsUsers())
+  handle('users:delete', (_event, name) =>
+    deleteWindowsUser(expect('string', name, 'users:delete'))
+  )
+  handle('system:is-sysprep-running', () => isSysprepRunning())
+  handle('system:is-elevated', () => isRunningElevated())
+  handle('system:relaunch-as-admin', () => relaunchAsAdmin())
+  handle('disk:get-health', () => getMainDiskHealth())
+  handle('window:set-fullscreen', (event, shouldBeFullscreen) => {
+    BrowserWindow.fromWebContents(event.sender)?.setFullScreen(
+      expect('boolean', shouldBeFullscreen, 'window:set-fullscreen')
+    )
   })
-  ipcMain.handle('keyboard:set-printscreen-blocked', (_event, blocked) => {
-    if (blocked) {
+  handle('keyboard:set-printscreen-blocked', (event, blocked) => {
+    if (expect('boolean', blocked, 'keyboard:set-printscreen-blocked')) {
+      const sender = event.sender
       globalShortcut.register('PrintScreen', () => {
-        const [win] = BrowserWindow.getAllWindows()
-        win?.webContents.send('keyboard:printscreen-pressed')
+        if (!sender.isDestroyed()) sender.send('keyboard:printscreen-pressed')
       })
     } else {
       globalShortcut.unregister('PrintScreen')
     }
   })
-  ipcMain.handle('keyboard:set-capture-active', (_event, active) => {
-    keyboardCaptureActive = active
+  handle('keyboard:set-capture-active', (_event, active) => {
+    keyboardCaptureActive = expect('boolean', active, 'keyboard:set-capture-active')
   })
-  ipcMain.handle('keyboard:revert-lock-key', async (_event, key) => {
+  handle('keyboard:revert-lock-key', async (_event, key) => {
     const token = LOCK_KEY_SENDKEYS[key]
     if (!token) return
+    lockKeySuppressedUntil[key] = Date.now() + LOCK_KEY_SUPPRESS_MS
     try {
-      await execAsync(
-        `powershell -NoProfile -NonInteractive -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${token}')"`,
-        { windowsHide: true, timeout: 3e3 }
+      await runPowerShell(
+        `Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${token}')`,
+        3e3
       )
-    } catch {}
+    } catch {
+      // best effort: the key just stays toggled
+    }
   })
-  ipcMain.handle('touch:set-edge-gestures-disabled', async (_event, disabled) => {
-    try {
-      if (disabled) {
-        if (edgeSwipeSnapshot) return
-        const { stdout } = await execAsync(
-          `powershell -NoProfile -NonInteractive -Command "New-Item -Path '${EDGE_UI_REG_PATH}' -Force | Out-Null; $existing = $null; try { $existing = (Get-ItemProperty -Path '${EDGE_UI_REG_PATH}' -Name 'AllowEdgeSwipe' -ErrorAction Stop).AllowEdgeSwipe } catch {}; Set-ItemProperty -Path '${EDGE_UI_REG_PATH}' -Name 'AllowEdgeSwipe' -Value 0 -Type DWord; if ($null -eq $existing) { Write-Output '__MISSING__' } else { Write-Output $existing }"`,
-          { windowsHide: true, timeout: 5e3 }
-        )
-        const result = stdout.trim()
-        edgeSwipeSnapshot = { originalValue: result === '__MISSING__' || !result ? null : result }
-      } else {
-        if (!edgeSwipeSnapshot) return
-        const { originalValue } = edgeSwipeSnapshot
-        edgeSwipeSnapshot = null
-        if (originalValue === null) {
-          await execAsync(
-            `powershell -NoProfile -NonInteractive -Command "Remove-ItemProperty -Path '${EDGE_UI_REG_PATH}' -Name 'AllowEdgeSwipe' -ErrorAction SilentlyContinue"`,
-            { windowsHide: true, timeout: 5e3 }
-          )
-        } else {
-          await execAsync(
-            `powershell -NoProfile -NonInteractive -Command "Set-ItemProperty -Path '${EDGE_UI_REG_PATH}' -Name 'AllowEdgeSwipe' -Value ${originalValue} -Type DWord"`,
-            { windowsHide: true, timeout: 5e3 }
-          )
-        }
-      }
-    } catch {}
-  })
+  handle('touch:set-edge-gestures-disabled', (_event, disabled) =>
+    setEdgeGesturesDisabled(expect('boolean', disabled, 'touch:set-edge-gestures-disabled'))
+  )
+
   createWindow()
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
+
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
-  if (edgeSwipeSnapshot) {
-    const { originalValue } = edgeSwipeSnapshot
-    edgeSwipeSnapshot = null
-    const command =
-      originalValue === null
-        ? `Remove-ItemProperty -Path '${EDGE_UI_REG_PATH}' -Name 'AllowEdgeSwipe' -ErrorAction SilentlyContinue`
-        : `Set-ItemProperty -Path '${EDGE_UI_REG_PATH}' -Name 'AllowEdgeSwipe' -Value ${originalValue} -Type DWord`
-    void execAsync(`powershell -NoProfile -NonInteractive -Command "${command}"`, {
-      windowsHide: true,
-      timeout: 5e3
-    }).catch(() => void 0)
-  }
+  restoreEdgeGesturesSync()
+  stopPowerShell()
+  if (process.platform === 'win32') si.powerShellRelease()
 })

@@ -138,7 +138,7 @@ export function Sidebar({ activeModule, onSelectModule }) {
         })}
       </nav>
       <div className="px-6 py-4 text-[11px] font-medium text-[#7A7A7A]">
-        v0.1.4 · Beta by JOTNAR
+        v{__APP_VERSION__} · Beta by JOTNAR
       </div>
     </aside>
   )
