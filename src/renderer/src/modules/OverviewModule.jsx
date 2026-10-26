@@ -161,15 +161,14 @@ export function OverviewModule() {
     setActiveSection((current) => (current === key ? null : key))
   }
   useEffect(() => {
-    if (info?.os.activated !== false) return
     let cancelled = false
-    void window.api.getWindowsUpdateServiceState().then((state) => {
+    void window.api.getWindowsUpdateState().then((state) => {
       if (!cancelled) setWuState(state)
     })
     return () => {
       cancelled = true
     }
-  }, [info?.os.activated])
+  }, [])
   const runToolAction = async (action) => {
     setToolMessage(null)
     const result = await action()
@@ -178,26 +177,18 @@ export function OverviewModule() {
       isError: !result.success
     })
   }
-  const handleStopWindowsUpdate = async () => {
+  const handleToggleWindowsUpdate = async () => {
     setWuBusy(true)
     setToolMessage(null)
-    const result = await window.api.stopWindowsUpdateService()
+    const result =
+      wuState === 'disabled'
+        ? await window.api.enableWindowsUpdates()
+        : await window.api.disableWindowsUpdates()
     setToolMessage({
       text: result.message,
       isError: !result.success
     })
-    setWuState(await window.api.getWindowsUpdateServiceState())
-    setWuBusy(false)
-  }
-  const handleStartWindowsUpdate = async () => {
-    setWuBusy(true)
-    setToolMessage(null)
-    const result = await window.api.startWindowsUpdateService()
-    setToolMessage({
-      text: result.message,
-      isError: !result.success
-    })
-    setWuState(await window.api.getWindowsUpdateServiceState())
+    setWuState(await window.api.getWindowsUpdateState())
     setWuBusy(false)
   }
   const handleGenerateBatteryReport = async () => {
@@ -529,6 +520,24 @@ export function OverviewModule() {
                     <MemoryStick className="h-4 w-4" />
                     Memory diagnostic (restart required)
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={wuBusy || wuState === null}
+                    onClick={() => void handleToggleWindowsUpdate()}
+                  >
+                    {wuState === 'disabled' ? (
+                      <CirclePlay className="h-4 w-4" />
+                    ) : (
+                      <CirclePause className="h-4 w-4" />
+                    )}
+                    {wuBusy
+                      ? 'Applying…'
+                      : wuState === 'disabled'
+                        ? 'Enable Windows Update'
+                        : 'Disable Windows Update'}
+                  </Button>
                   {!confirmingCheckDisk ? (
                     <Button
                       variant="outline"
@@ -581,33 +590,7 @@ export function OverviewModule() {
                       <KeyRound className="h-4 w-4" />
                       Enter product key
                     </Button>
-                    {wuState === 'stopped' ? (
-                      <Button
-                        variant="outline"
-                        className="gap-2"
-                        disabled={wuBusy}
-                        onClick={() => void handleStartWindowsUpdate()}
-                      >
-                        <CirclePlay className="h-4 w-4" />
-                        {wuBusy ? 'Resuming…' : 'Resume Windows Update service'}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        className="gap-2"
-                        disabled={wuBusy}
-                        onClick={() => void handleStopWindowsUpdate()}
-                      >
-                        <CirclePause className="h-4 w-4" />
-                        {wuBusy ? 'Stopping…' : 'Stop Windows Update service'}
-                      </Button>
-                    )}
                   </div>
-                  <p className="mt-2 text-xs text-amber-400">
-                    {
-                      'Stopping the service is temporary — use "Resume" (or restart Windows) to turn it back on. These actions may prompt for administrator permission.'
-                    }
-                  </p>
                 </div>
               )}
               {toolMessage && (

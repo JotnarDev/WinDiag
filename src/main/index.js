@@ -15,9 +15,9 @@ import {
 import {
   launchSystemTool,
   launchProductKeyDialog,
-  getWindowsUpdateServiceState,
-  stopWindowsUpdateService,
-  startWindowsUpdateService,
+  getWindowsUpdateState,
+  disableWindowsUpdates,
+  enableWindowsUpdates,
   generateBatteryReport,
   generateEnergyReport,
   scheduleCheckDiskOnRestart,
@@ -135,9 +135,9 @@ app.whenReady().then(() => {
     launchSystemTool(expect('string', toolId, 'system:launch-tool'))
   )
   handle('system:launch-product-key-dialog', () => launchProductKeyDialog())
-  handle('system:get-update-service-state', () => getWindowsUpdateServiceState())
-  handle('system:stop-update-service', () => stopWindowsUpdateService())
-  handle('system:start-update-service', () => startWindowsUpdateService())
+  handle('system:get-update-state', () => getWindowsUpdateState())
+  handle('system:disable-updates', () => disableWindowsUpdates())
+  handle('system:enable-updates', () => enableWindowsUpdates())
   handle('system:generate-battery-report', () => generateBatteryReport())
   handle('system:generate-energy-report', () => generateEnergyReport())
   handle('system:schedule-check-disk', () => scheduleCheckDiskOnRestart())

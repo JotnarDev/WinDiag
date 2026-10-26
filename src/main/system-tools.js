@@ -101,47 +101,75 @@ export function notElevatedResult(action) {
 
 const errorMessage = (err) => (err instanceof Error ? err.message : String(err))
 
-export async function getWindowsUpdateServiceState() {
+// Stopping wuauserv alone is temporary: Windows starts it again on demand.
+// Disabling sets the service start type to Disabled (it can't be started at
+// all) and adds the NoAutoUpdate machine policy as a second layer.
+const WU_POLICY_KEY = 'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU'
+
+const runQuiet = (file, args) =>
+  execFileAsync(file, args, { windowsHide: true, timeout: 15e3 }).then(
+    () => true,
+    () => false
+  )
+
+export async function getWindowsUpdateState() {
   try {
-    // Status is an enum, so its name is always English
-    const value = (await runPowerShell('(Get-Service -Name wuauserv).Status.ToString()'))
+    // StartType is an enum, so its name is always English
+    const value = (await runPowerShell('(Get-Service -Name wuauserv).StartType.ToString()'))
       .trim()
       .toLowerCase()
-    if (value === 'running') return 'running'
-    if (value === 'stopped') return 'stopped'
+    if (value === 'disabled') return 'disabled'
+    if (value) return 'enabled'
     return 'unknown'
   } catch {
     return 'unknown'
   }
 }
 
-async function setWindowsUpdateService(target) {
-  const verb = target === 'running' ? 'start' : 'stop'
-  const label = target === 'running' ? 'started' : 'stopped'
-  if ((await getWindowsUpdateServiceState()) === target) {
-    return {
-      success: true,
-      message: `Windows Update service was already ${target === 'running' ? 'running' : 'stopped'}.`
-    }
+export async function disableWindowsUpdates() {
+  if ((await getWindowsUpdateState()) === 'disabled') {
+    return { success: true, message: 'Windows Update was already disabled.' }
   }
-  if (!(await isRunningElevated())) return notElevatedResult(`${verb} the Windows Update service`)
+  if (!(await isRunningElevated())) return notElevatedResult('disable Windows Update')
   try {
-    await execFileAsync('net', [verb, 'wuauserv'], { windowsHide: true, timeout: 15e3 })
-    return { success: true, message: `Windows Update service ${label}.` }
+    await execFileAsync('sc', ['config', 'wuauserv', 'start=', 'disabled'], {
+      windowsHide: true,
+      timeout: 15e3
+    })
   } catch (err) {
-    if ((await getWindowsUpdateServiceState()) === target) {
-      return { success: true, message: `Windows Update service ${label}.` }
-    }
     return { success: false, message: errorMessage(err) }
   }
+  // Exit codes here also cover "already stopped" / "value already set"
+  await runQuiet('net', ['stop', 'wuauserv'])
+  await runQuiet('reg', [
+    'add',
+    WU_POLICY_KEY,
+    '/v',
+    'NoAutoUpdate',
+    '/t',
+    'REG_DWORD',
+    '/d',
+    '1',
+    '/f'
+  ])
+  return { success: true, message: 'Windows Update disabled.' }
 }
 
-export function stopWindowsUpdateService() {
-  return setWindowsUpdateService('stopped')
-}
-
-export function startWindowsUpdateService() {
-  return setWindowsUpdateService('running')
+export async function enableWindowsUpdates() {
+  if (!(await isRunningElevated())) return notElevatedResult('enable Windows Update')
+  try {
+    // "demand" (Manual) is the Windows default for wuauserv
+    await execFileAsync('sc', ['config', 'wuauserv', 'start=', 'demand'], {
+      windowsHide: true,
+      timeout: 15e3
+    })
+  } catch (err) {
+    return { success: false, message: errorMessage(err) }
+  }
+  // Fails harmlessly when the policy value doesn't exist
+  await runQuiet('reg', ['delete', WU_POLICY_KEY, '/v', 'NoAutoUpdate', '/f'])
+  await runQuiet('net', ['start', 'wuauserv'])
+  return { success: true, message: 'Windows Update enabled.' }
 }
 
 async function generateHtmlReport(args, filePrefix, successMessage, timeoutMs) {
