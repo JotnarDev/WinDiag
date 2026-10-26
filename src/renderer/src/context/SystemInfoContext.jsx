@@ -1,9 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 const MAX_BATTERY_SAMPLES = 60
-const DYNAMIC_POLL_MS = 5e3
+// Live readings refresh quickly only while a screen that shows them is open;
+// otherwise a slow background poll keeps the battery history going. Nothing
+// is polled while the window is minimized or hidden.
+const LIVE_POLL_MS = 5e3
+const BACKGROUND_POLL_MS = 30e3
 export const SystemInfoContext = createContext(null)
-export function SystemInfoProvider({ children }) {
+export function SystemInfoProvider({ children, live = false }) {
+  const liveRef = useRef(live)
+  liveRef.current = live
+  const pollNowRef = useRef(null)
   const [staticInfo, setStaticInfo] = useState(null)
   const [dynamicInfo, setDynamicInfo] = useState(null)
   const [batterySamples, setBatterySamples] = useState([])
@@ -30,7 +37,20 @@ export function SystemInfoProvider({ children }) {
   useEffect(() => {
     let cancelled = false
     let timeoutId = null
+    function schedule() {
+      if (cancelled) return
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(
+        () => pollNowRef.current?.(),
+        liveRef.current ? LIVE_POLL_MS : BACKGROUND_POLL_MS
+      )
+    }
     async function fetchDynamic() {
+      timeoutId = null
+      if (document.hidden) {
+        schedule()
+        return
+      }
       try {
         const data = await window.api.getDynamicSystemInfo()
         if (cancelled) return
@@ -49,17 +69,31 @@ export function SystemInfoProvider({ children }) {
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
-        if (!cancelled) {
-          timeoutId = setTimeout(() => void fetchDynamic(), DYNAMIC_POLL_MS)
-        }
+        schedule()
       }
     }
-    void fetchDynamic()
+    let inFlight = null
+    pollNowRef.current = () => {
+      if (inFlight || cancelled) return
+      if (timeoutId) clearTimeout(timeoutId)
+      inFlight = fetchDynamic().finally(() => (inFlight = null))
+    }
+    function handleVisibilityChange() {
+      if (!document.hidden) pollNowRef.current?.()
+    }
+    pollNowRef.current()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
       cancelled = true
       if (timeoutId) clearTimeout(timeoutId)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
+  // Switching to a live screen refreshes right away instead of waiting out
+  // the slow background interval.
+  useEffect(() => {
+    if (live) pollNowRef.current?.()
+  }, [live])
   const refresh = useCallback(() => {
     void loadStatic()
   }, [loadStatic])

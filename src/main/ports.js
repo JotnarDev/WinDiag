@@ -1,25 +1,26 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import si from 'systeminformation'
+import { parseJsonArray, runPowerShell } from './powershell'
 
-const execAsync = promisify(exec)
 const cleanString = (value) => {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : null
 }
 
+// Hubs and composite-device parents are identified by their driver service,
+// which is the same on every Windows display language (their names are
+// translated, e.g. "Hub genérico USB" on Spanish Windows).
+const USB_NOISE_SERVICES = new Set(['usbhub', 'usbhub3', 'usbccgp'])
 const USB_NOISE_PATTERNS = [
   'root hub',
   'generic usb hub',
   'usb composite device',
-  'usb input device',
-  'host controller',
-  'hub genérico usb',
-  'concentrador raíz'
+  'usb input device'
 ]
 
-function isNoiseDevice(name) {
+function isNoiseDevice(name, id, service) {
+  if (id.toUpperCase().startsWith('USB\\ROOT_HUB')) return true
+  if (service && USB_NOISE_SERVICES.has(service.toLowerCase())) return true
   const lower = name.toLowerCase()
   return USB_NOISE_PATTERNS.some((pattern) => lower.includes(pattern))
 }
@@ -31,17 +32,13 @@ function isRadioAdapterDevice(pnpClass) {
 
 async function queryUsbDevices() {
   try {
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -Command "Get-CimInstance -ClassName Win32_PnPEntity | Where-Object { $_.PNPDeviceID -like 'USB*' -and $_.ConfigManagerErrorCode -eq 0 } | Select-Object Name, PNPDeviceID, Manufacturer, PNPClass | ConvertTo-Json -Compress"`,
-      // 4s timeout, safely under the 5s poll interval below (with the
-      // renderer's overlap guard, this is belt-and-suspenders: it just
-      // makes sure a single slow call can't stall the next cycle for long).
-      { windowsHide: true, timeout: 4e3 }
+    // -Filter runs server-side in WMI, much faster than piping every PnP
+    // device through Where-Object.
+    const rows = parseJsonArray(
+      await runPowerShell(
+        `Get-CimInstance -ClassName Win32_PnPEntity -Filter "PNPDeviceID LIKE 'USB%' AND ConfigManagerErrorCode = 0" | Select-Object Name, PNPDeviceID, Manufacturer, PNPClass, Service | ConvertTo-Json -Compress`
+      )
     )
-    const trimmed = stdout.trim()
-    if (!trimmed) return []
-    const parsed = JSON.parse(trimmed)
-    const rows = Array.isArray(parsed) ? parsed : [parsed]
     const devices = []
     const seen = new Set()
     for (const row of rows) {
@@ -50,7 +47,7 @@ async function queryUsbDevices() {
       const id = cleanString(r.PNPDeviceID)
       const type = cleanString(r.PNPClass)
       if (!name || !id) continue
-      if (isNoiseDevice(name)) continue
+      if (isNoiseDevice(name, id, cleanString(r.Service))) continue
       if (isRadioAdapterDevice(type)) continue
       if (seen.has(id)) continue
       seen.add(id)

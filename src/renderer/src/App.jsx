@@ -14,25 +14,28 @@ import { KeyboardModule } from '@/modules/KeyboardModule'
 import { UsersModule } from '@/modules/UsersModule'
 import { FansModule } from '@/modules/FansModule'
 
+// Modules that display the live readings from SystemInfoProvider
+const LIVE_DATA_MODULES = new Set(['battery'])
+
 export function App() {
+  const [activeModule, setActiveModule] = useState('overview')
   return (
     // Both providers live above the tab switcher below, so neither unmounts
     // when the active module changes: the hardware snapshot and live
     // readings (dashboard, battery) and the ports snapshot both persist
     // across tab switches instead of being re-fetched every time.
-    <SystemInfoProvider>
+    <SystemInfoProvider live={LIVE_DATA_MODULES.has(activeModule)}>
       <PortsProvider>
-        <AppShell />
+        <AppShell activeModule={activeModule} onSelectModule={setActiveModule} />
       </PortsProvider>
     </SystemInfoProvider>
   )
 }
 
-function AppShell() {
-  const [activeModule, setActiveModule] = useState('overview')
+function AppShell({ activeModule, onSelectModule }) {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-      <Sidebar activeModule={activeModule} onSelectModule={setActiveModule} />
+      <Sidebar activeModule={activeModule} onSelectModule={onSelectModule} />
       <main className="flex-1 overflow-y-auto p-8">
         {activeModule === 'overview' && <OverviewModule />}
         {activeModule === 'display' && <DisplayModule />}

@@ -1,12 +1,7 @@
-import path from 'path'
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import os from 'os'
-import { unlink, writeFile } from 'fs/promises'
-import { randomUUID } from 'crypto'
 import si from 'systeminformation'
+import { parseJsonArray, runPowerShell } from './powershell'
 
-const execAsync = promisify(exec)
 const bytesToGB = (bytes) => Math.round((bytes / 1024 ** 3) * 10) / 10
 const positiveOrNull = (value) =>
   typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
@@ -54,11 +49,10 @@ async function buildBiosInfo() {
 const WINDOWS_LICENSING_APP_ID = '55c92734-d682-4d71-983e-d6ec3f16059f'
 async function queryWindowsActivation() {
   try {
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -Command "Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -and $_.ApplicationId -eq '${WINDOWS_LICENSING_APP_ID}' } | Select-Object -ExpandProperty LicenseStatus | ConvertTo-Json -Compress"`,
-      { windowsHide: true, timeout: 5e3 }
+    const trimmed = await runPowerShell(
+      `Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -and $_.ApplicationId -eq '${WINDOWS_LICENSING_APP_ID}' } | Select-Object -ExpandProperty LicenseStatus | ConvertTo-Json -Compress`,
+      10e3
     )
-    const trimmed = stdout.trim()
     if (!trimmed) return null
     const parsed = JSON.parse(trimmed)
     const statuses = (Array.isArray(parsed) ? parsed : [parsed]).map(Number)
@@ -80,9 +74,17 @@ async function buildOsInfo() {
   }
 }
 
+// Disk usage changes slowly, so the volume list is re-read at most once a minute.
+const MAIN_DISK_CACHE_MS = 60e3
+let mainDiskCache = null
 async function getMainDisk() {
+  if (mainDiskCache && Date.now() - mainDiskCache.at < MAIN_DISK_CACHE_MS) {
+    return mainDiskCache.disk
+  }
   const fsData = await si.fsSize()
-  return [...fsData].sort((a, b) => b.size - a.size)[0] ?? null
+  const disk = [...fsData].sort((a, b) => b.size - a.size)[0] ?? null
+  mainDiskCache = { at: Date.now(), disk }
+  return disk
 }
 
 async function buildBatteryInfo() {
@@ -143,22 +145,22 @@ try {
 }
 `.trim()
 async function queryBatteriesWmi() {
-  const scriptPath = path.join(os.tmpdir(), `windiag-batteries-${randomUUID()}.ps1`)
   try {
-    await writeFile(scriptPath, BATTERY_WMI_PS_SCRIPT, 'utf-8')
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`,
-      { windowsHide: true, timeout: 5e3 }
-    )
-    const trimmed = stdout.trim()
-    if (!trimmed) return []
-    const parsed = JSON.parse(trimmed)
-    return Array.isArray(parsed) ? parsed : [parsed]
+    return parseJsonArray(await runPowerShell(BATTERY_WMI_PS_SCRIPT))
   } catch {
     return []
-  } finally {
-    await unlink(scriptPath).catch(() => void 0)
   }
+}
+
+// The per-battery breakdown only matters on devices with more than one
+// battery. The first reading tells us how many there are; single-battery
+// devices (nearly all of them) skip this WMI query on every later poll.
+let hasMultipleBatteries = null
+async function queryBatteriesIfMultiple() {
+  if (hasMultipleBatteries === false) return []
+  const batteries = await queryBatteriesWmi()
+  if (hasMultipleBatteries === null) hasMultipleBatteries = batteries.length > 1
+  return batteries
 }
 
 function buildBatteryDeviceInfo(raw, index) {
@@ -283,14 +285,11 @@ export async function getStaticSystemInfo() {
 
 async function queryFansWmi() {
   try {
-    const { stdout } = await execAsync(
-      'powershell -NoProfile -NonInteractive -Command "Get-CimInstance Win32_Fan | Select-Object Name,DesiredSpeed | ConvertTo-Json -Compress"',
-      { windowsHide: true, timeout: 5e3 }
+    const list = parseJsonArray(
+      await runPowerShell(
+        'Get-CimInstance Win32_Fan | Select-Object Name,DesiredSpeed | ConvertTo-Json -Compress'
+      )
     )
-    const trimmed = stdout.trim()
-    if (!trimmed) return []
-    const parsed = JSON.parse(trimmed)
-    const list = Array.isArray(parsed) ? parsed : [parsed]
     return list.map((item, index) => {
       const record = item
       return {
@@ -317,13 +316,16 @@ export async function getFanInfo() {
 }
 
 export async function getDynamicSystemInfo() {
-  const [loadData, memData, mainDisk, batteryInfo, batteriesRaw] = await Promise.all([
+  const [loadData, mainDisk, batteryInfo, batteriesRaw] = await Promise.all([
     si.currentLoad(),
-    si.mem(),
     getMainDisk(),
     buildBatteryInfo(),
-    queryBatteriesWmi()
+    queryBatteriesIfMultiple()
   ])
+  // Read straight from the OS: si.mem() also queries the page file through
+  // PowerShell, which the dashboard doesn't show.
+  const memData = { total: os.totalmem(), free: os.freemem() }
+  memData.used = memData.total - memData.free
   const batteries = batteriesRaw.length > 1 ? batteriesRaw.map(buildBatteryDeviceInfo) : []
   return {
     cpu: {

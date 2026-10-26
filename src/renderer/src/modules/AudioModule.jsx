@@ -6,10 +6,13 @@ import { cn } from '@/lib/utils'
 
 const SINGLE_CHANNEL_DURATION_MS = 1200
 const BOTH_CHANNELS_SEGMENT_MS = 1e3
+const MIC_LEVEL_UPDATE_MS = 66
+
 export function AudioModule() {
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState(null)
   const [micLevel, setMicLevel] = useState(0)
+  const lastMicUpdateRef = useRef(0)
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const audioContextRef = useRef(null)
@@ -82,7 +85,13 @@ export function AudioModule() {
           sumSquares += normalized * normalized
         }
         const rms = Math.sqrt(sumSquares / data.length)
-        setMicLevel(Math.min(1, rms * 4))
+        // Analyse every frame but re-render ~15×/s: updating state at 60 fps
+        // re-rendered the whole module (video preview included) constantly.
+        const now = performance.now()
+        if (now - lastMicUpdateRef.current >= MIC_LEVEL_UPDATE_MS) {
+          lastMicUpdateRef.current = now
+          setMicLevel(Math.round(Math.min(1, rms * 4) * 100) / 100)
+        }
         rafRef.current = requestAnimationFrame(tick)
       }
       const videoConstraint = selectedVideoDeviceId
@@ -341,7 +350,7 @@ export function AudioModule() {
             <div className="h-6 w-full overflow-hidden rounded-full bg-zinc-800">
               <div
                 className={cn(
-                  'h-full rounded-full transition-[width] duration-75',
+                  'h-full rounded-full transition-[width] duration-100',
                   levelPercent < 60
                     ? 'bg-emerald-500'
                     : levelPercent < 85

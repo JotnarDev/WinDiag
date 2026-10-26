@@ -678,13 +678,6 @@ export function KeyboardModule() {
   useEffect(() => {
     void window.api.setKeyboardCaptureActive(true)
     const unsubscribe = window.api.onKeyInputEvent((event) => {
-      console.log(
-        '[keyboard-debug] event',
-        event.code,
-        event.type,
-        'autoRepeat=',
-        event.isAutoRepeat
-      )
       if (!allCodes.has(event.code)) return
       if (event.type === 'keyDown') {
         lastSeenRef.current[event.code] = Date.now()

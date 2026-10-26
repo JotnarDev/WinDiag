@@ -1,11 +1,5 @@
-import path from 'path'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import os from 'os'
-import { unlink, writeFile } from 'fs/promises'
-import { randomUUID } from 'crypto'
+import { parseJsonArray, runPowerShell, runPowerShellIsolated } from './powershell'
 
-const execAsync = promisify(exec)
 const cleanString = (value) => {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
@@ -28,44 +22,32 @@ function Await($WinRtTask, $ResultType) {
     $netTask.GetAwaiter().GetResult()
 }
 `.trim()
-async function runPowerShellScript(script, timeoutMs) {
-  const scriptPath = path.join(os.tmpdir(), `windiag-${randomUUID()}.ps1`)
-  try {
-    await writeFile(scriptPath, script, 'utf-8')
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -Sta -ExecutionPolicy Bypass -File "${scriptPath}"`,
-      { windowsHide: true, timeout: timeoutMs }
-    )
-    return stdout.trim()
-  } finally {
-    await unlink(scriptPath).catch(() => void 0)
-  }
-}
-
 function coerceArray(value) {
   if (Array.isArray(value)) return value
   return value ? [value] : []
 }
 
-async function queryPnpEntities(whereClause) {
+// Every detector below looks at the same few PnP classes, so they share one
+// WMI query (filtered server-side) instead of each enumerating all devices.
+const DETECTED_PNP_CLASSES = ['SmartCardReader', 'Sensor', 'SensorDevice', 'Keyboard', 'HIDClass']
+
+async function queryPnpEntities() {
+  const classFilter = DETECTED_PNP_CLASSES.map((c) => `PNPClass = '${c}'`).join(' OR ')
   try {
-    const { stdout } = await execAsync(
-      `powershell -NoProfile -NonInteractive -Command "Get-CimInstance -ClassName Win32_PnPEntity | Where-Object { ${whereClause} } | Select-Object Name, PNPDeviceID, PNPClass | ConvertTo-Json -Compress"`,
-      { windowsHide: true, timeout: 5e3 }
+    return parseJsonArray(
+      await runPowerShell(
+        `Get-CimInstance -ClassName Win32_PnPEntity -Filter "ConfigManagerErrorCode = 0 AND (${classFilter})" | Select-Object Name, PNPDeviceID, PNPClass | ConvertTo-Json -Compress`
+      )
     )
-    const trimmed = stdout.trim()
-    if (!trimmed) return []
-    const parsed = JSON.parse(trimmed)
-    return Array.isArray(parsed) ? parsed : [parsed]
   } catch {
     return []
   }
 }
 
-async function detectSmartCardReaders() {
-  const rows = await queryPnpEntities(
-    "$_.PNPClass -eq 'SmartCardReader' -and $_.ConfigManagerErrorCode -eq 0"
-  )
+const ofClass = (rows, ...classes) => rows.filter((row) => classes.includes(row.PNPClass))
+
+function detectSmartCardReaders(pnpRows) {
+  const rows = ofClass(pnpRows, 'SmartCardReader')
   const readers = []
   const seen = new Set()
   for (const row of rows) {
@@ -79,10 +61,8 @@ async function detectSmartCardReaders() {
 }
 
 const GPS_NAME_PATTERN = /\b(gps|gnss)\b/i
-async function detectGpsSensors() {
-  const rows = await queryPnpEntities(
-    "($_.PNPClass -eq 'Sensor' -or $_.PNPClass -eq 'SensorDevice') -and $_.ConfigManagerErrorCode -eq 0"
-  )
+function detectGpsSensors(pnpRows) {
+  const rows = ofClass(pnpRows, 'Sensor', 'SensorDevice')
   const sensors = []
   const seen = new Set()
   for (const row of rows) {
@@ -116,10 +96,8 @@ const BARCODE_VENDOR_PATTERNS = [
   'posx'
 ]
 
-async function detectBarcodeScannerCandidates() {
-  const rows = await queryPnpEntities(
-    "($_.PNPClass -eq 'Keyboard' -or $_.PNPClass -eq 'HIDClass') -and $_.ConfigManagerErrorCode -eq 0"
-  )
+function detectBarcodeScannerCandidates(pnpRows) {
+  const rows = ofClass(pnpRows, 'Keyboard', 'HIDClass')
   const devices = []
   const seen = new Set()
   for (const row of rows) {
@@ -181,7 +159,7 @@ function mapRadioState(raw) {
 
 async function detectRadios() {
   try {
-    const stdout = await runPowerShellScript(RADIOS_SCRIPT, 8e3)
+    const stdout = await runPowerShellIsolated(RADIOS_SCRIPT, 8e3)
     if (!stdout) return []
     const parsed = JSON.parse(stdout)
     const rows = coerceArray(parsed)
@@ -199,13 +177,13 @@ async function detectRadios() {
 }
 
 export async function getOtherDevicesSnapshot() {
-  const [smartCardReaders, gpsSensors, barcodeScannerCandidates, radios] = await Promise.all([
-    detectSmartCardReaders(),
-    detectGpsSensors(),
-    detectBarcodeScannerCandidates(),
-    detectRadios()
-  ])
-  return { smartCardReaders, gpsSensors, barcodeScannerCandidates, radios }
+  const [pnpRows, radios] = await Promise.all([queryPnpEntities(), detectRadios()])
+  return {
+    smartCardReaders: detectSmartCardReaders(pnpRows),
+    gpsSensors: detectGpsSensors(pnpRows),
+    barcodeScannerCandidates: detectBarcodeScannerCandidates(pnpRows),
+    radios
+  }
 }
 
 const SMARTCARD_STATUS_SCRIPT = `
@@ -230,7 +208,7 @@ try {
 `.trim()
 export async function getSmartCardStatus() {
   try {
-    const stdout = await runPowerShellScript(SMARTCARD_STATUS_SCRIPT, 1e4)
+    const stdout = await runPowerShellIsolated(SMARTCARD_STATUS_SCRIPT, 1e4)
     if (!stdout) return { readers: [], error: 'The system did not return a response.' }
     const parsed = JSON.parse(stdout)
     const readers = coerceArray(parsed.readers)
@@ -285,7 +263,7 @@ const EMPTY_GPS_FIX = {
 
 export async function getGpsFix() {
   try {
-    const stdout = await runPowerShellScript(GPS_FIX_SCRIPT, 2e4)
+    const stdout = await runPowerShellIsolated(GPS_FIX_SCRIPT, 2e4)
     if (!stdout) {
       return { ...EMPTY_GPS_FIX, error: 'The system did not return a response.' }
     }
@@ -295,24 +273,43 @@ export async function getGpsFix() {
   }
 }
 
+// Locale-independent: the adapter state comes from Get-NetAdapter (an enum,
+// not translated text) and the signal is the only "NN%" value netsh prints.
+// The old parser looked for the English "State"/"Signal" labels, so Wi-Fi
+// always showed as disconnected on non-English Windows.
+const WIFI_STATUS_SCRIPT = `
+$ErrorActionPreference = 'Stop'
+try {
+    # NdisPhysicalMedium 9 = native 802.11 (Wi-Fi)
+    $adapter = Get-NetAdapter -Physical -ErrorAction SilentlyContinue |
+        Where-Object { $_.NdisPhysicalMedium -eq 9 } |
+        Sort-Object { $_.Status -ne 'Up' } |
+        Select-Object -First 1
+    $connected = [bool]($adapter -and $adapter.Status -eq 'Up')
+    $ssid = $null
+    $signal = $null
+    if ($connected) {
+        # netsh writes in the console's OEM code page
+        $previous = [Console]::OutputEncoding
+        [Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage)
+        try { $text = (netsh wlan show interfaces) -join "\`n" } finally { [Console]::OutputEncoding = $previous }
+        if ($text -match '(?m)^\\s*SSID\\s*:\\s*(.+?)\\s*$') { $ssid = $Matches[1] }
+        if ($text -match ':\\s*(\\d{1,3})\\s*%') { $signal = [int]$Matches[1] }
+    }
+    @{ connected = $connected; ssid = $ssid; signalPercent = $signal; error = $null } | ConvertTo-Json -Compress
+} catch {
+    @{ connected = $false; ssid = $null; signalPercent = $null; error = $_.Exception.Message } | ConvertTo-Json -Compress
+}
+`.trim()
+
 async function queryWifiConnection() {
   try {
-    const { stdout } = await execAsync('netsh wlan show interfaces', {
-      windowsHide: true,
-      timeout: 5e3
-    })
-    const stateMatch = /^\s*State\s*:\s*(.+)$/im.exec(stdout)
-    const state = stateMatch ? stateMatch[1].trim().toLowerCase() : ''
-    if (state !== 'connected') {
-      return { connected: false, ssid: null, signalPercent: null, error: null }
-    }
-    const ssidMatch = /^\s*SSID\s*:\s*(.+)$/im.exec(stdout)
-    const signalMatch = /^\s*Signal\s*:\s*(\d+)\s*%/im.exec(stdout)
+    const raw = JSON.parse(await runPowerShell(WIFI_STATUS_SCRIPT, 10e3))
     return {
-      connected: true,
-      ssid: cleanString(ssidMatch?.[1]),
-      signalPercent: signalMatch ? Number(signalMatch[1]) : null,
-      error: null
+      connected: Boolean(raw.connected),
+      ssid: cleanString(raw.ssid),
+      signalPercent: typeof raw.signalPercent === 'number' ? raw.signalPercent : null,
+      error: raw.error ?? null
     }
   } catch (err) {
     return {
