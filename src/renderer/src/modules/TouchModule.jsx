@@ -146,7 +146,9 @@ export function TouchModule() {
       >
         <canvas
           ref={canvasRef}
-          className="absolute inset-0"
+          // Explicit CSS size: without it the canvas displays at its physical-pixel
+          // size (1.5× the screen at 150% scaling) and trails drift off the finger.
+          className="absolute inset-0 h-full w-full"
           style={{
             touchAction: 'none'
           }}
