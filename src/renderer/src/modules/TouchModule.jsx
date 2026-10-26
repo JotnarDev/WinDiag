@@ -17,16 +17,22 @@ const TRAIL_COLORS = [
 export function TouchModule() {
   const [isActive, setIsActive] = useState(false)
   const [activePoints, setActivePoints] = useState(0)
+  // null while the request is pending, then whether Windows actually blocked them
+  const [edgeGesturesBlocked, setEdgeGesturesBlocked] = useState(null)
   const canvasRef = useRef(null)
   const pointersRef = useRef(new Map())
   const colorIndexRef = useRef(0)
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    // Size the backing store in physical pixels: at 125–150% display scaling
+    // a CSS-pixel canvas gets stretched and the trails look blurry.
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = Math.round(window.innerWidth * dpr)
+    canvas.height = Math.round(window.innerHeight * dpr)
     const ctx = canvas.getContext('2d')
     if (ctx) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
       ctx.lineWidth = 4
@@ -57,8 +63,12 @@ export function TouchModule() {
     pointersRef.current.clear()
     setActivePoints(0)
     setIsActive(true)
+    setEdgeGesturesBlocked(null)
     void window.api.setFullscreen(true)
-    void window.api.setEdgeGesturesDisabled(true)
+    void window.api
+      .setEdgeGesturesDisabled(true)
+      .then((result) => setEdgeGesturesBlocked(Boolean(result?.applied)))
+      .catch(() => setEdgeGesturesBlocked(false))
   }, [])
   useEffect(() => {
     return () => {
@@ -145,7 +155,10 @@ export function TouchModule() {
           <div className="rounded-md bg-black/70 px-4 py-2 text-sm text-white">
             {'Active points: '}
             {activePoints}
-            {' · Space to clear · Esc to exit · Windows edge-swipe gestures disabled'}
+            {' · Space to clear · Esc to exit'}
+            {edgeGesturesBlocked === true && ' · Windows edge-swipe gestures disabled'}
+            {edgeGesturesBlocked === false &&
+              ' · Edge-swipe gestures still active (run as Administrator to block them)'}
           </div>
         </div>
       </div>
@@ -167,7 +180,7 @@ export function TouchModule() {
             <CardTitle>Start test</CardTitle>
             <CardDescription>
               {
-                "Touch and drag with one or more fingers to draw on the screen. Each contact point is drawn in a different color (useful for detecting dead zones or gaps in the trail). Windows' edge-swipe gestures (Action Center, Task View, Start) are temporarily disabled while the test is active, so swiping in from the edge of the screen doesn't interrupt it. Press Space to clear the canvas and Esc to exit."
+                "Touch and drag with one or more fingers to draw on the screen. Each contact point is drawn in a different color (useful for detecting dead zones or gaps in the trail). When WinDiag runs as Administrator, Windows' edge-swipe gestures (Action Center, Task View, Start) are temporarily disabled while the test is active, so swiping in from the edge of the screen doesn't interrupt it. Press Space to clear the canvas and Esc to exit."
               }
             </CardDescription>
           </div>
