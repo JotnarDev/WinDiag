@@ -104,7 +104,7 @@ export function Sidebar({ activeModule, onSelectModule }) {
             className="flex w-full items-center justify-center gap-2 rounded-full border border-[#FF5A00]/40 bg-[#FF5A00]/[0.12] px-4 py-2 text-[12.5px] font-medium text-[#FF5A00] transition-colors hover:bg-[#FF5A00]/[0.2] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <ShieldAlert className="h-[15px] w-[15px] shrink-0" />
-            {relaunching ? 'Relanzando…' : 'Abrir como Administrador'}
+            {relaunching ? 'Relaunching…' : 'Run as Administrator'}
           </button>
           {relaunchError && (
             <p className="mt-1.5 px-1 text-[11px] leading-snug text-[#FF6B6B]">{relaunchError}</p>

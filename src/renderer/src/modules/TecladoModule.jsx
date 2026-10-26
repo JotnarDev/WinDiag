@@ -638,7 +638,7 @@ export function TecladoModule() {
       setFullCaptureActive(true)
     } catch {
       setCaptureError(
-        'No se pudo activar el bloqueo completo — la tecla Windows podría seguir abriendo el menú Inicio.'
+        "Couldn't enable full capture — the Windows key may still open the Start menu."
       )
       if (document.fullscreenElement) void document.exitFullscreen()
       void window.api.setFullscreen(false)

@@ -75,7 +75,7 @@ async function queryEthernetPorts() {
       .filter((iface) => iface.type === 'wired' && !iface.virtual && !iface.internal)
       .map((iface) => ({
         id: iface.iface,
-        name: cleanString(iface.ifaceName) ?? cleanString(iface.iface) ?? 'Puerto de red',
+        name: cleanString(iface.ifaceName) ?? cleanString(iface.iface) ?? 'Network port',
         connected: iface.operstate === 'up',
         speedMbps: typeof iface.speed === 'number' && iface.speed > 0 ? iface.speed : null,
         macAddress: cleanString(iface.mac)
