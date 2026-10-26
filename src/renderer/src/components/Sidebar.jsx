@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   BatteryFull,
-  Fan,
   FingerprintPattern,
   HardDrive,
   Keyboard,
@@ -50,11 +49,6 @@ const NAV_ITEMS = [
     id: 'disk',
     label: 'Disk Health',
     icon: HardDrive
-  },
-  {
-    id: 'fans',
-    label: 'Fans',
-    icon: Fan
   },
   {
     id: 'ports',

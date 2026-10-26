@@ -728,7 +728,10 @@ export function KeyboardModule() {
     window.addEventListener('blur', handleWindowBlur)
     return () => window.removeEventListener('blur', handleWindowBlur)
   }, [])
+  const hasPressedKey = useMemo(() => Object.values(keyStates).includes('pressed'), [keyStates])
+  // Only needed while a key is held, so it doesn't tick for the whole test
   useEffect(() => {
+    if (!hasPressedKey) return
     const STALE_MS = 400
     const CHECK_INTERVAL_MS = 80
     const interval = setInterval(() => {
@@ -750,7 +753,7 @@ export function KeyboardModule() {
       })
     }, CHECK_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [])
+  }, [hasPressedKey])
   useEffect(() => {
     function handleEscapeDown(e) {
       if (e.code !== 'Escape' || e.repeat) return

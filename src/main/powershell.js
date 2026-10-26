@@ -9,11 +9,16 @@ const execFileAsync = promisify(execFile)
 // is sent base64-encoded on a single line so multi-line scripts, quotes and
 // non-ASCII text survive the trip, and output comes back as UTF-8.
 const DONE_MARKER = '__WINDIAG_PS_DONE__'
+// After start-up the session is only used now and then, so it's closed when
+// idle to give its memory back (a powershell.exe holds tens of MB) and
+// reopened by the next command.
+const IDLE_SHUTDOWN_MS = 60e3
 
 let child = null
 let buffer = ''
 let current = null
 const queue = []
+let idleTimer = null
 
 function startChild() {
   const proc = spawn(
@@ -59,8 +64,22 @@ function finishCurrent(error, output) {
   runNext()
 }
 
+// Detach before killing so a command queued meanwhile starts a fresh shell
+// instead of writing to the one that is exiting.
+function closeIdleChild() {
+  const proc = child
+  child = null
+  buffer = ''
+  proc?.kill()
+}
+
 function runNext() {
-  if (current || queue.length === 0) return
+  if (current) return
+  clearTimeout(idleTimer)
+  if (queue.length === 0) {
+    idleTimer = setTimeout(closeIdleChild, IDLE_SHUTDOWN_MS)
+    return
+  }
   if (!child) startChild()
   current = queue.shift()
   current.timer = setTimeout(() => {
@@ -119,6 +138,7 @@ export function parseJsonArray(text) {
 }
 
 export function stopPowerShell() {
+  clearTimeout(idleTimer)
   queue.length = 0
   const proc = child
   child = null

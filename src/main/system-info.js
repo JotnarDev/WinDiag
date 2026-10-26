@@ -283,38 +283,6 @@ export async function getStaticSystemInfo() {
   }
 }
 
-async function queryFansWmi() {
-  try {
-    const list = parseJsonArray(
-      await runPowerShell(
-        'Get-CimInstance Win32_Fan | Select-Object Name,DesiredSpeed | ConvertTo-Json -Compress'
-      )
-    )
-    return list.map((item, index) => {
-      const record = item
-      return {
-        name: record.Name && record.Name.trim() ? record.Name.trim() : `Fan ${index + 1}`,
-        rpm:
-          typeof record.DesiredSpeed === 'number' && record.DesiredSpeed > 0
-            ? record.DesiredSpeed
-            : null
-      }
-    })
-  } catch {
-    return []
-  }
-}
-
-export async function getFanInfo() {
-  const [fans, tempData] = await Promise.all([queryFansWmi(), si.cpuTemperature()])
-  return {
-    supported: fans.length > 0,
-    fans,
-    cpuTempC: positiveOrNull(tempData.main),
-    maxTempC: positiveOrNull(tempData.max)
-  }
-}
-
 export async function getDynamicSystemInfo() {
   const [loadData, mainDisk, batteryInfo, batteriesRaw] = await Promise.all([
     si.currentLoad(),

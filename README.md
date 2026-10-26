@@ -26,7 +26,7 @@ src/
   main/              Main process (Electron, PowerShell/WMI)
     index.js           window, IPC handlers, keyboard/touch helpers
     powershell.js      shared PowerShell runner
-    system-info.js     static/dynamic hardware info, fans
+    system-info.js     static/dynamic hardware info
     ports.js           USB and Ethernet
     other-devices.js   smart card, GPS, barcode scanner, radios, Wi-Fi
     system-tools.js    Windows tools, services, reports, elevation

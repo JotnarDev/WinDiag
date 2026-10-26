@@ -1,13 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-console.log('[preload] script is running. contextIsolated =', process.contextIsolated)
-
 const api = {
   getStaticSystemInfo: () => ipcRenderer.invoke('system:get-static-info'),
   getDynamicSystemInfo: () => ipcRenderer.invoke('system:get-dynamic-info'),
   setFullscreen: (value) => ipcRenderer.invoke('window:set-fullscreen', value),
-  getFanInfo: () => ipcRenderer.invoke('system:get-fan-info'),
   getPortsSnapshot: () => ipcRenderer.invoke('ports:get-snapshot'),
   getOtherDevicesSnapshot: () => ipcRenderer.invoke('otherdevices:get-snapshot'),
   getSmartCardStatus: () => ipcRenderer.invoke('smartcard:get-status'),
@@ -45,18 +42,5 @@ const api = {
   }
 }
 
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-    console.log('[preload] contextBridge.exposeInMainWorld("api", ...) succeeded')
-  } catch (error) {
-    console.error('[preload] exposeInMainWorld threw:', error)
-  }
-} else {
-  console.log('[preload] contextIsolation is OFF, attaching directly to window')
-  window.electron = electronAPI
-  window.api = api
-}
-
-console.log('[preload] script finished')
+contextBridge.exposeInMainWorld('electron', electronAPI)
+contextBridge.exposeInMainWorld('api', api)

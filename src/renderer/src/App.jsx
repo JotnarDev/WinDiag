@@ -12,7 +12,6 @@ import { OverviewModule } from '@/modules/OverviewModule'
 import { TouchModule } from '@/modules/TouchModule'
 import { KeyboardModule } from '@/modules/KeyboardModule'
 import { UsersModule } from '@/modules/UsersModule'
-import { FansModule } from '@/modules/FansModule'
 
 // Modules that display the live readings from SystemInfoProvider
 const LIVE_DATA_MODULES = new Set(['battery'])
@@ -44,7 +43,6 @@ function AppShell({ activeModule, onSelectModule }) {
         {activeModule === 'audio' && <AudioModule />}
         {activeModule === 'battery' && <BatteryModule />}
         {activeModule === 'disk' && <DiskModule />}
-        {activeModule === 'fans' && <FansModule />}
         {activeModule === 'ports' && <PortsModule />}
         {activeModule === 'otherDevices' && <OtherDevicesModule />}
         {activeModule === 'users' && <UsersModule />}

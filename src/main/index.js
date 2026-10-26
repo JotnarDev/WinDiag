@@ -4,7 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import si from 'systeminformation'
 import icon from '../../resources/icon.png?asset'
 import { runPowerShell, stopPowerShell } from './powershell'
-import { getStaticSystemInfo, getDynamicSystemInfo, getFanInfo } from './system-info'
+import { getStaticSystemInfo, getDynamicSystemInfo } from './system-info'
 import { getPortsSnapshot } from './ports'
 import {
   getOtherDevicesSnapshot,
@@ -60,7 +60,9 @@ function createWindow() {
     icon,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: true
+      sandbox: true,
+      // No text fields need it, and it loads spellcheck dictionaries
+      spellcheck: false
     }
   })
   mainWindow.on('ready-to-show', () => {
@@ -125,7 +127,6 @@ app.whenReady().then(() => {
 
   handle('system:get-static-info', () => getStaticSystemInfo())
   handle('system:get-dynamic-info', () => getDynamicSystemInfo())
-  handle('system:get-fan-info', () => getFanInfo())
   handle('ports:get-snapshot', () => getPortsSnapshot())
   handle('otherdevices:get-snapshot', () => getOtherDevicesSnapshot())
   handle('smartcard:get-status', () => getSmartCardStatus())

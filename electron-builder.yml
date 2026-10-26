@@ -20,3 +20,8 @@ nsis:
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 npmRebuild: false
+# Chromium UI locales: keep English and Spanish only (~40 MB smaller install)
+electronLanguages:
+  - en-US
+  - es
+  - es-419

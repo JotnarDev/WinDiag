@@ -1,5 +1,4 @@
 import { cva } from 'class-variance-authority'
-import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
@@ -34,11 +33,9 @@ const buttonVariants = cva(
   }
 )
 
-function Button({ className, variant = 'default', size = 'default', asChild = false, ...props }) {
-  const Comp = asChild ? Slot.Root : 'button'
-
+function Button({ className, variant = 'default', size = 'default', ...props }) {
   return (
-    <Comp
+    <button
       data-slot="button"
       data-variant={variant}
       data-size={size}
