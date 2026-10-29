@@ -13,14 +13,11 @@ WinDiag es una herramienta de diagnóstico y preparación de equipos Windows, so
 - **Windows:** el main process consulta el sistema con PowerShell, a través de una sesión compartida (`src/main/powershell.js`) y de `systeminformation`.
 - **Permisos:** la app corre siempre como administrador (`requireAdministrator` en `electron-builder.yml`).
 
-### Hay dos proyectos
+### Solo se mantiene la versión Fluent
 
-| Carpeta | Versión | Estado |
-|---|---|---|
-| `windiag-fluent/` | **2.5.0** | **La versión principal.** Rama git `fluent-ui`. El usuario la prefiere ("con fluent es mucho más fluido"). |
-| `windiag/` | 1.0.0 | El diseño original, rama `main`. Tiene parte del trabajo previo a Fluent (hook de teclado, prueba de puertos USB…) sin las funciones 2.x. |
+`windiag-fluent/` (rama git `fluent-ui`, versión **2.5.0**) es el único proyecto que se mantiene. El usuario solo necesita esta versión ("con fluent es mucho más fluido").
 
-`windiag-fluent` empezó como una copia de `windiag` (incluido `.git`). Por eso las dos comparten el último commit (`907267d`), y **todo lo hecho después está sin commitear** en las dos. No hay nada subido a ningún remoto.
+Empezó como una copia del WinDiag original (1.0.0, que sigue en la máquina de desarrollo en la rama `windows-integration`). Ese proyecto ya no se desarrolla ni se copia a las memorias, así que **no hay que pasarle los cambios**.
 
 ### Identidad de la variante Fluent
 
@@ -290,5 +287,4 @@ src/renderer/src/
 - **Preguntas sin respuesta del usuario:**
   - ¿Guardar los datos de la app en una carpeta `data` junto al exe (versión portable)?
   - ¿Quitar el requisito de Sysprep para borrar usuarios?
-  - ¿Pasar los cambios 2.3.3 y 2.3.4 a la versión original?
-- **Nada commiteado** en ninguno de los dos proyectos.
+  - Lo que se haga después del commit `e6b212e` (2.5.0) queda sin commitear hasta que el usuario lo pida.
