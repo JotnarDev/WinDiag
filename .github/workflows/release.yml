@@ -1,0 +1,87 @@
+name: Release
+
+# Builds WinDiag Fluent on Windows and publishes a GitHub Release with:
+#   - windiag-fluent-X.Y.Z-setup.exe     installer (NSIS)
+#   - windiag-fluent-X.Y.Z-portable.zip  portable version, no install needed
+#
+# Trigger: bump the version, commit, then push a matching tag:
+#   git tag v2.5.0 && git push origin v2.5.0
+# Running it by hand (Actions tab) only builds and keeps the files as a
+# workflow artifact; it does not publish a release.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check that the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} does not match package.json version $version."
+          }
+
+      - run: npm ci
+
+      - name: Build installer and portable zip
+        run: npx electron-vite build && npx electron-builder --win --x64 --publish never
+
+      - name: Write release notes from CHANGELOG.md
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -Pattern "^## $([regex]::Escape($version)) " | Select-Object -First 1).LineNumber
+          $notes = @()
+          if ($start) {
+            foreach ($line in $lines[$start..($lines.Count - 1)]) {
+              if ($line -match '^## ') { break }
+              $notes += $line
+            }
+          }
+          $body = @(
+            '## Downloads',
+            '',
+            "- **windiag-fluent-$version-setup.exe**: installer. Adds Start menu and desktop shortcuts.",
+            "- **windiag-fluent-$version-portable.zip**: portable. Extract it anywhere (for example a USB drive) and run ``windiag-fluent.exe``.",
+            '',
+            'Requires Windows 10 or 11, 64-bit. The app asks for administrator rights when it starts.',
+            '',
+            "## What's new"
+          ) + $notes
+          $body -join "`n" | Set-Content -Encoding utf8 release-notes.md
+
+      - name: Keep the build as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windiag-fluent-windows
+          path: |
+            dist/*-setup.exe
+            dist/*-portable.zip
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: WinDiag Fluent ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: |
+            dist/*-setup.exe
+            dist/*-portable.zip

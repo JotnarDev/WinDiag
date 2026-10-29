@@ -17,6 +17,14 @@ win:
   # Several tools need admin rights (Windows Update, disk reliability
   # counters, touch edge gestures, users), so Windows asks via UAC at launch
   requestedExecutionLevel: requireAdministrator
+  # Release assets: an installer and a portable zip that runs without installing
+  target:
+    - target: nsis
+      arch: x64
+    - target: zip
+      arch: x64
+zip:
+  artifactName: ${name}-${version}-portable.${ext}
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

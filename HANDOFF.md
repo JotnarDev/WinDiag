@@ -42,8 +42,9 @@ The user asked for these rules, and they apply to every change:
 1. Make the change.
 2. Bump the version with `npm version X.Y.Z --no-git-tag-version`, which updates `package.json` and `package-lock.json`.
 3. Add the entry at the top of `CHANGELOG.md`, following the existing format: `## X.Y.Z — YYYY-MM-DD`, then `### Added` / `### Fixed` / `### Changed` and one-line `- ` bullets. **This format must not change:** `src/renderer/src/lib/changelog.js` parses it with a regex to show it in Settings → About.
-4. Build and create the zip. The name includes the version: `dist/WinDiag Fluent-X.Y.Z-win.zip`.
-5. Tell the user which version it ended up as.
+4. Build locally if needed: `npm run build:win` creates `dist/windiag-fluent-X.Y.Z-setup.exe` and `dist/windiag-fluent-X.Y.Z-portable.zip`.
+5. To publish (only when the user asks): commit, then `git tag vX.Y.Z && git push origin main vX.Y.Z`. The `Release` workflow (`.github/workflows/release.yml`) builds both files on a Windows runner and publishes them as a GitHub Release, using that version's `CHANGELOG.md` section as release notes. It fails if the tag does not match `package.json`.
+6. Tell the user which version it ended up as.
 
 `__APP_VERSION__` comes from `package.json` (through `electron.vite.config.mjs`) and is shown at the bottom of the menu and in Settings → About.
 
@@ -252,7 +253,7 @@ src/renderer/src/
 ## 5. How the work was done
 
 - **Development happens on Linux**, so nothing Windows-specific was tested on Windows: Mica, the keyboard hook, pnputil, the BIOS updater, BitLocker, Windows Update, deleting users, etc. The user tests on the computers and reports back.
-- **Build:** `npx electron-vite build && npx electron-builder --win zip --x64` produces `dist/WinDiag Fluent-X.Y.Z-win.zip`, which is portable. The copy on the USB drive has no `node_modules`: run `npm install` first. On the development machine, `node_modules/electron/dist` had a manually downloaded Linux Electron, used only for screenshots.
+- **Build:** `npm run build:win` produces the installer (`dist/windiag-fluent-X.Y.Z-setup.exe`) and the portable zip (`dist/windiag-fluent-X.Y.Z-portable.zip`). Official builds come from the GitHub Actions `Release` workflow, not from local builds. The copy on the USB drive has no `node_modules`: run `npm install` first. On the development machine, `node_modules/electron/dist` had a manually downloaded Linux Electron, used only for screenshots.
 - **Visual review:** an Electron script loads `out/renderer` with mocked IPC and takes screenshots in light mode, dark mode and at different widths. It is not in the repo; it lived in the session's scratchpad.
 - **Undefined-names check:** ESLint with only the `no-undef` rule over `src`. It is also checked that every `window.api.X` in the renderer exists in the preload and that every channel has its `handle`.
 - **Formatting:** Prettier (repo config). Careful: it can join or split imports and break a find-and-replace.

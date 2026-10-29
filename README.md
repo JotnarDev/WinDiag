@@ -88,12 +88,25 @@ On Panasonic machines it shows the name technicians use. For example, `FZ55-1` i
 
 ## Usage
 
+Download the latest version from [Releases](https://github.com/JotnarDev/hardware-diagnostics-tool/releases/latest). Each release has two files:
+
+| File | Use it when |
+|---|---|
+| `windiag-fluent-X.Y.Z-setup.exe` | You want the app installed, with Start menu and desktop shortcuts. |
+| `windiag-fluent-X.Y.Z-portable.zip` | You want to run it from any folder or a USB drive, without installing. |
+
+### Installer
+
+Run `windiag-fluent-X.Y.Z-setup.exe` and follow the steps. Uninstall it from *Settings → Apps* like any other app.
+
 ### Portable version (zip)
 
-1. Extract `WinDiag Fluent-X.Y.Z-win.zip` to any folder or to a USB drive.
+1. Extract `windiag-fluent-X.Y.Z-portable.zip` to any folder or to a USB drive.
 2. Run `windiag-fluent.exe` and accept the UAC prompt.
 
-No installation is needed. Settings are saved in a `settings.json` file inside the app's data folder, under `%APPDATA%`.
+The files are not code-signed, so Windows SmartScreen may show "Windows protected your PC" the first time. Click **More info → Run anyway**.
+
+Both versions save settings in a `settings.json` file inside the app's data folder, under `%APPDATA%`.
 
 ### Shortcuts
 
@@ -220,11 +233,21 @@ npm run build        # builds main, preload and renderer into out/
 Build the Windows version:
 
 ```bash
-# portable zip → dist/WinDiag Fluent-<version>-win.zip
-npx electron-vite build && npx electron-builder --win zip --x64
-
-# NSIS installer → dist/windiag-fluent-<version>-setup.exe
+# installer and portable zip → dist/windiag-fluent-<version>-setup.exe
+#                               dist/windiag-fluent-<version>-portable.zip
 npm run build:win
+
+# portable zip only
+npx electron-vite build && npx electron-builder --win zip --x64
+```
+
+### Releases
+
+Releases are built by GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) on a Windows runner. Pushing a `vX.Y.Z` tag builds the installer and the portable zip and publishes them as a GitHub Release, with the notes for that version taken from `CHANGELOG.md`. The tag must match the version in `package.json`, or the build stops.
+
+```bash
+git tag v2.5.0
+git push origin v2.5.0
 ```
 
 **Notes:**
@@ -303,7 +326,7 @@ The project follows [Semantic Versioning](https://semver.org/):
    - One line per change.
    ```
    Do not change the format: Settings → About parses it to show the release notes.
-3. Build the zip, which has the version in its name.
+3. Commit, then create and push the `vX.Y.Z` tag. GitHub Actions builds and publishes the release (see [Releases](#releases)).
 
 | Version | Main change |
 |---|---|
