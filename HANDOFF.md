@@ -15,7 +15,7 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 
 ### Only the Fluent version is maintained
 
-This repository (branch `main` of `JotnarDev/hardware-diagnostics-tool`, version **2.5.0**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
+This repository (branch `main` of `JotnarDev/WinDiag`, version **2.5.0**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
 
 It started as a copy of the original WinDiag (1.0.0, which is still on the development machine on the `windows-integration` branch). That project is no longer developed or copied to the USB drives, so **do not port changes to it**.
 

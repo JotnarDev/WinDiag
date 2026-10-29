@@ -88,7 +88,7 @@ On Panasonic machines it shows the name technicians use. For example, `FZ55-1` i
 
 ## Usage
 
-Download the latest version from [Releases](https://github.com/JotnarDev/hardware-diagnostics-tool/releases/latest). Each release has two files:
+Download the latest version from [Releases](https://github.com/JotnarDev/WinDiag/releases/latest). Each release has two files:
 
 | File | Use it when |
 |---|---|
