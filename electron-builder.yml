@@ -1,5 +1,5 @@
-appId: com.jotnar.windiag
-productName: WinDiag
+appId: com.jotnar.windiag.fluent
+productName: WinDiag Fluent
 directories:
   output: dist
   buildResources: build
@@ -7,13 +7,16 @@ files:
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,HANDOFF.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{jsconfig.json,components.json}'
 asarUnpack:
   - resources/**
 win:
-  executableName: windiag
+  executableName: windiag-fluent
+  # Several tools need admin rights (Windows Update, disk reliability
+  # counters, touch edge gestures, users), so Windows asks via UAC at launch
+  requestedExecutionLevel: requireAdministrator
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

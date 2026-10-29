@@ -1,5 +1,6 @@
 import os from 'os'
 import si from 'systeminformation'
+import { friendlyModel } from './device-model'
 import { parseJsonArray, runPowerShell } from './powershell'
 
 const bytesToGB = (bytes) => Math.round((bytes / 1024 ** 3) * 10) / 10
@@ -28,11 +29,64 @@ const sanitizeDeviceField = (value) => {
   return DEVICE_PLACEHOLDER_PATTERNS.some((pattern) => lower.includes(pattern)) ? null : cleaned
 }
 
+// Remote-desktop, virtual-machine and USB-dock adapters aren't real GPUs.
+// "Microsoft Basic Display Adapter" stays: it means the GPU has no driver.
+const NON_GPU_ADAPTER_PATTERN =
+  /remote display|remote desktop|indirect display|vmware|virtualbox|hyper-v|parsec|citrix|displaylink|spacedesk/i
+
+// Windows doesn't say whether a GPU is integrated or dedicated (systeminfo's
+// vramDynamic flag isn't reliable there), so it's worked out from the name.
+function classifyGpu(vendor, model) {
+  const text = `${vendor ?? ''} ${model ?? ''}`.toLowerCase()
+  if (text.includes('basic display') || text.includes('basic render')) return 'no-driver'
+  if (text.includes('nvidia')) return 'dedicated'
+  if (text.includes('intel')) {
+    // Arc A-series cards (A380, A770…) vs "Intel Arc Graphics" in Core Ultra CPUs
+    return /arc\S*\s+a\d{3}/.test(text) ? 'dedicated' : 'integrated'
+  }
+  if (/\b(amd|ati|radeon)\b/.test(text)) {
+    // APUs: "Radeon(TM) Graphics", "Vega 8 Graphics", "780M Graphics",
+    // "R5 Graphics", "HD 8610G"
+    if (/graphics\s*$/.test(text) || /\bhd \d{4}[gd]\b/.test(text)) return 'integrated'
+    return 'dedicated'
+  }
+  if (text.includes('adreno') || text.includes('qualcomm')) return 'integrated'
+  return 'unknown'
+}
+
+async function buildGpuInfo() {
+  try {
+    const { controllers } = await si.graphics()
+    return controllers
+      .filter(
+        (c) => (c.model || c.vendor) && !NON_GPU_ADAPTER_PATTERN.test(`${c.vendor} ${c.model}`)
+      )
+      .map((c) => {
+        const kind = classifyGpu(c.vendor, c.model)
+        return {
+          name: cleanString(c.model) ?? cleanString(c.vendor) ?? 'Graphics adapter',
+          vendor: cleanString(c.vendor),
+          kind,
+          // Integrated GPUs report a small reserved slice; they really share system RAM
+          vramMB: kind === 'dedicated' ? positiveOrNull(c.vram) : null,
+          driverVersion: cleanString(c.driverVersion)
+        }
+      })
+  } catch {
+    return []
+  }
+}
+
 async function buildDeviceInfo() {
   const sys = await si.system()
+  const manufacturer = sanitizeDeviceField(sys.manufacturer)
+  const modelId = sanitizeDeviceField(sys.model)
+  const model = friendlyModel(manufacturer, modelId)
   return {
-    manufacturer: sanitizeDeviceField(sys.manufacturer),
-    model: sanitizeDeviceField(sys.model),
+    manufacturer,
+    model,
+    // What Windows reports ("FZ55-1"), when it differs from the name shown
+    modelId: model !== modelId ? modelId : null,
     serialNumber: sanitizeDeviceField(sys.serial)
   }
 }
@@ -47,16 +101,23 @@ async function buildBiosInfo() {
 }
 
 const WINDOWS_LICENSING_APP_ID = '55c92734-d682-4d71-983e-d6ec3f16059f'
-async function queryWindowsActivation() {
+// Filtered inside WMI: listing every SoftwareLicensingProduct and filtering
+// in PowerShell takes tens of seconds on some devices
+const ACTIVATION_SCRIPT = `
+try {
+    $query = "SELECT LicenseStatus FROM SoftwareLicensingProduct WHERE ApplicationID = '${WINDOWS_LICENSING_APP_ID}' AND PartialProductKey IS NOT NULL"
+    ConvertTo-Json -InputObject @(Get-CimInstance -Query $query -ErrorAction Stop | ForEach-Object { [int]$_.LicenseStatus }) -Compress
+} catch { '' }
+`.trim()
+
+/** true/false once Windows answers, null if it couldn't be read. */
+export async function getWindowsActivation() {
   try {
-    const trimmed = await runPowerShell(
-      `Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -and $_.ApplicationId -eq '${WINDOWS_LICENSING_APP_ID}' } | Select-Object -ExpandProperty LicenseStatus | ConvertTo-Json -Compress`,
-      10e3
-    )
-    if (!trimmed) return null
-    const parsed = JSON.parse(trimmed)
-    const statuses = (Array.isArray(parsed) ? parsed : [parsed]).map(Number)
-    if (statuses.length === 0) return null
+    const output = await runPowerShell(ACTIVATION_SCRIPT, 60e3)
+    if (!output) return null
+    const statuses = JSON.parse(output).map(Number)
+    if (statuses.length === 0) return false
+    // 1 = Licensed
     return statuses.includes(1)
   } catch {
     return null
@@ -64,13 +125,13 @@ async function queryWindowsActivation() {
 }
 
 async function buildOsInfo() {
-  const [osData, activated] = await Promise.all([si.osInfo(), queryWindowsActivation()])
+  // Activation is slow to read, so the page asks for it separately
+  const osData = await si.osInfo()
   return {
     name: cleanString(osData.distro) ?? cleanString(osData.platform),
     version: cleanString(osData.release),
     build: cleanString(osData.build),
-    architecture: cleanString(osData.arch),
-    activated
+    architecture: cleanString(osData.arch)
   }
 }
 
@@ -205,7 +266,8 @@ export async function getStaticSystemInfo() {
     memData,
     memModulesData,
     disksData,
-    batteryData
+    batteryData,
+    gpus
   ] = await Promise.all([
     buildDeviceInfo(),
     buildBiosInfo(),
@@ -215,7 +277,8 @@ export async function getStaticSystemInfo() {
     si.mem(),
     si.memLayout(),
     si.diskLayout(),
-    si.battery()
+    si.battery(),
+    buildGpuInfo()
   ])
   const modules = memModulesData
     .filter((m) => (m.size ?? 0) > 0)
@@ -279,7 +342,8 @@ export async function getStaticSystemInfo() {
       totalGB: Math.round(disks.reduce((sum, d) => sum + d.capacityGB, 0) * 10) / 10,
       disks
     },
-    battery: batteryInfo
+    battery: batteryInfo,
+    gpus
   }
 }
 

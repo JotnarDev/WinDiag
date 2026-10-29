@@ -1,24 +1,42 @@
 import { useCallback, useEffect, useState } from 'react'
-import { RefreshCw, TriangleAlert } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { ArrowSyncRegular, DeleteRegular, OpenRegular } from '@fluentui/react-icons'
+import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/Button'
+import { Card, Section } from '@/components/ui/Card'
+import { Badge, ContentDialog, InfoBar, ProgressRing } from '@/components/ui/feedback'
 
 const SYSPREP_POLL_MS = 3e3
-function userTags(u) {
-  const tags = []
-  if (u.isCurrentUser) tags.push('You')
-  if (u.isAdmin) tags.push('Administrator')
-  if (!u.enabled) tags.push('Disabled')
-  return tags
+
+// Fluent PersonPicture: initials on a neutral circle
+function Avatar({ name }) {
+  const initials = name
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('')
+  return (
+    <span
+      aria-hidden
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-control-alt text-caption font-semibold text-text-secondary"
+    >
+      {initials || '?'}
+    </span>
+  )
+}
+
+function accountNote(user) {
+  if (user.isBuiltIn) return 'Built-in account'
+  if (user.isCurrentUser) return 'Signed in now'
+  return null
 }
 
 export function UsersModule() {
   const [users, setUsers] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [confirmingDelete, setConfirmingDelete] = useState(null)
-  const [deletingName, setDeletingName] = useState(null)
+  const [pendingDelete, setPendingDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [feedback, setFeedback] = useState(null)
   const [sysprepRunning, setSysprepRunning] = useState(null)
   const [openingSysprep, setOpeningSysprep] = useState(false)
@@ -56,146 +74,136 @@ export function UsersModule() {
       if (timeoutId) clearTimeout(timeoutId)
     }
   }, [])
-  const handleDelete = async (name) => {
-    setDeletingName(name)
+  const handleDelete = async () => {
+    const name = pendingDelete.name
+    setDeleting(true)
     setFeedback(null)
     const result = await window.api.deleteWindowsUser(name)
-    setFeedback({
-      text: result.message,
-      isError: !result.success
-    })
-    setDeletingName(null)
-    setConfirmingDelete(null)
-    if (result.success) {
-      void load()
-    }
+    setFeedback({ text: result.message, isError: !result.success })
+    setDeleting(false)
+    setPendingDelete(null)
+    if (result.success) void load()
   }
   const handleOpenSysprep = async () => {
     setOpeningSysprep(true)
     await window.api.launchSystemTool('sysprep')
     setOpeningSysprep(false)
   }
-  const isInitialLoad = users === null
   const sysprepReady = sysprepRunning === true
   return (
-    <div>
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Users</h1>
-          <p className="text-sm text-zinc-500">
-            Local Windows accounts. Deleting keeps the profile folder on disk.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0 gap-2"
-          disabled={isLoading}
-          onClick={() => void load()}
-        >
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+    <Page
+      title="Users"
+      description="Local Windows accounts on this device. Deleting an account keeps its profile folder on disk."
+      actions={
+        <Button icon={ArrowSyncRegular} disabled={isLoading} onClick={() => void load()}>
           Refresh
         </Button>
-      </header>
-      {sysprepRunning === false && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-900/50 bg-amber-950/40 p-3">
-          <p className="flex items-start gap-2 text-sm text-amber-400">
-            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-            Sysprep must be open to delete a user account.
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0 border-amber-800/60 bg-transparent"
-            disabled={openingSysprep}
-            onClick={() => void handleOpenSysprep()}
+      }
+    >
+      <div className="flex flex-col gap-3">
+        {sysprepRunning === false && (
+          <InfoBar
+            severity="warning"
+            title="Sysprep must be open to delete an account."
+            action={
+              <Button
+                icon={OpenRegular}
+                disabled={openingSysprep}
+                onClick={() => void handleOpenSysprep()}
+              >
+                {openingSysprep ? 'Opening…' : 'Open Sysprep'}
+              </Button>
+            }
           >
-            {openingSysprep ? 'Opening…' : 'Open Sysprep'}
-          </Button>
-        </div>
-      )}
-      {feedback && (
-        <p className={cn('mb-3 text-sm', feedback.isError ? 'text-red-400' : 'text-emerald-400')}>
-          {feedback.text}
-        </p>
-      )}
-      {error && (
-        <p className="mb-3 text-sm text-red-400">
-          {'Could not read user accounts: '}
-          {error}
-        </p>
-      )}
-      {isInitialLoad && !error && (
-        <p className="text-sm text-zinc-500">Reading local user accounts…</p>
-      )}
-      {users && users.length === 0 && !error && (
-        <p className="text-sm text-zinc-500">No local user accounts were found.</p>
-      )}
-      {users && users.length > 0 && (
-        <Card className="py-0">
-          <CardContent className="divide-y divide-zinc-100 px-0">
-            {users.map((u) => {
-              const isProtected =
-                u.name.toLowerCase() === 'administrator' || !u.enabled || u.isCurrentUser
-              const isConfirming = confirmingDelete === u.name
-              const isBusy = deletingName === u.name
-              const tags = userTags(u)
-              return (
-                <div key={u.sid} className="flex items-center justify-between gap-4 px-4 py-2.5">
-                  <div className="min-w-0">
-                    <span className="text-sm font-medium text-zinc-100">{u.name}</span>
-                    {tags.length > 0 && (
-                      <span className="ml-2 text-xs text-zinc-400">{tags.join(' · ')}</span>
-                    )}
-                  </div>
-                  {isConfirming ? (
-                    <div className="flex shrink-0 items-center gap-3 text-xs">
-                      <span className="text-zinc-500">
-                        {'Delete "'}
-                        {u.name}
-                        {'"?'}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={isBusy}
-                        className="font-medium text-red-400 hover:underline disabled:opacity-50"
-                        onClick={() => void handleDelete(u.name)}
-                      >
-                        {isBusy ? 'Deleting…' : 'Yes, delete'}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={isBusy}
-                        className="text-zinc-500 hover:underline disabled:opacity-50"
-                        onClick={() => setConfirmingDelete(null)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : isProtected ? (
-                    <span className="shrink-0 text-xs text-zinc-300">—</span>
-                  ) : !sysprepReady ? (
-                    <span
-                      className="shrink-0 text-xs text-zinc-300"
-                      title="Sysprep must be open first"
-                    >
-                      Delete
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="shrink-0 text-xs font-medium text-red-400 hover:underline"
-                      onClick={() => setConfirmingDelete(u.name)}
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </CardContent>
+            Accounts are deleted while preparing the device, so WinDiag waits until Sysprep is
+            running.
+          </InfoBar>
+        )}
+        {feedback && (
+          <InfoBar
+            severity={feedback.isError ? 'error' : 'success'}
+            onDismiss={() => setFeedback(null)}
+          >
+            {feedback.text}
+          </InfoBar>
+        )}
+        {error && (
+          <InfoBar severity="error" title="Couldn't read user accounts.">
+            {error}
+          </InfoBar>
+        )}
+      </div>
+      {users === null && !error && (
+        <Card className="flex items-center gap-3 px-4 py-5 text-text-secondary">
+          <ProgressRing size={16} label="Reading accounts" />
+          Reading local user accounts…
         </Card>
       )}
-    </div>
+      {users && users.length === 0 && !error && (
+        <p className="text-text-secondary">No local user accounts were found.</p>
+      )}
+      {users && users.length > 0 && (
+        <Section title={`Accounts (${users.length})`} className="mt-6">
+          {users.map((u) => {
+            const note = accountNote(u)
+            return (
+              <Card
+                key={u.sid}
+                className="flex min-h-[60px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5"
+              >
+                <Avatar name={u.name} />
+                <div className="min-w-0 flex-1">
+                  <p className="selectable truncate">{u.name}</p>
+                  {note && <p className="text-caption text-text-secondary">{note}</p>}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {u.isCurrentUser && <Badge tone="accent">You</Badge>}
+                  {u.isAdmin && <Badge>Administrator</Badge>}
+                  {!u.enabled && <Badge>Disabled</Badge>}
+                </div>
+                <Button
+                  icon={DeleteRegular}
+                  disabled={!sysprepReady}
+                  title={sysprepReady ? undefined : 'Open Sysprep first'}
+                  onClick={() => setPendingDelete(u)}
+                >
+                  Delete
+                </Button>
+              </Card>
+            )
+          })}
+        </Section>
+      )}
+      {/* Same messages as Local Users and Groups (lusrmgr.msc) */}
+      <ContentDialog
+        open={pendingDelete !== null && pendingDelete.isBuiltIn}
+        title="Local Users and Groups"
+        closeText="OK"
+        onClose={() => setPendingDelete(null)}
+      >
+        The following error occurred while attempting to delete the user {pendingDelete?.name}:
+        <br />
+        <br />
+        Cannot perform this operation on built-in accounts.
+      </ContentDialog>
+      <ContentDialog
+        open={pendingDelete !== null && !pendingDelete.isBuiltIn}
+        title="Local Users and Groups"
+        primaryText={deleting ? 'Deleting…' : 'Yes'}
+        primaryVariant="danger"
+        onPrimary={() => void handleDelete()}
+        closeText="No"
+        onClose={() => setPendingDelete(null)}
+        busy={deleting}
+      >
+        Each user account has a unique identifier in addition to their user name. Deleting a user
+        account deletes this identifier and it cannot be restored, even if you create a new account
+        with an identical user name. This can prevent the user from accessing resources they
+        currently have permission to access.
+        <br />
+        <br />
+        Are you sure you want to delete the user {pendingDelete?.name}?
+      </ContentDialog>
+    </Page>
   )
 }

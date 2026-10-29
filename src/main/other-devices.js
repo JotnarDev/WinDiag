@@ -29,7 +29,14 @@ function coerceArray(value) {
 
 // Every detector below looks at the same few PnP classes, so they share one
 // WMI query (filtered server-side) instead of each enumerating all devices.
-const DETECTED_PNP_CLASSES = ['SmartCardReader', 'Sensor', 'SensorDevice', 'Keyboard', 'HIDClass']
+const DETECTED_PNP_CLASSES = [
+  'SmartCardReader',
+  'Sensor',
+  'SensorDevice',
+  'Keyboard',
+  'HIDClass',
+  'Bluetooth'
+]
 
 async function queryPnpEntities() {
   const classFilter = DETECTED_PNP_CLASSES.map((c) => `PNPClass = '${c}'`).join(' OR ')
@@ -176,9 +183,50 @@ async function detectRadios() {
   }
 }
 
+// The Bluetooth radio itself sits on a bus (USB, PCI, or UART via ACPI);
+// paired devices and the enumerators under it (BTHENUM\, BTHLE\, BTH\…) don't.
+const BLUETOOTH_RADIO_ID = /^(USB|PCI|ACPI)\\/i
+
+function detectBluetoothAdapterName(pnpRows) {
+  const radio = ofClass(pnpRows, 'Bluetooth').find((row) =>
+    BLUETOOTH_RADIO_ID.test(row.PNPDeviceID ?? '')
+  )
+  return cleanString(radio?.Name)
+}
+
+// Hardware names of the Wi-Fi and mobile broadband adapters (e.g. "Sierra
+// Wireless EM7455 Qualcomm Snapdragon X7 LTE-A"). The radio list above only
+// has generic names like "Cellular".
+const NETWORK_ADAPTERS_SCRIPT = `
+Get-NetAdapter -Physical -ErrorAction SilentlyContinue |
+    Where-Object { $_.NdisPhysicalMedium -in 8, 9 } |
+    ForEach-Object { [PSCustomObject]@{ medium = [int]$_.NdisPhysicalMedium; name = $_.InterfaceDescription } } |
+    ConvertTo-Json -Compress
+`.trim()
+
+// NDIS_PHYSICAL_MEDIUM: 8 = wireless WAN (4G/5G modem), 9 = native 802.11
+async function queryNetworkAdapterNames() {
+  try {
+    const rows = parseJsonArray(await runPowerShell(NETWORK_ADAPTERS_SCRIPT))
+    const nameOf = (medium) => cleanString(rows.find((row) => row.medium === medium)?.name)
+    return { wifi: nameOf(9), cellular: nameOf(8) }
+  } catch {
+    return { wifi: null, cellular: null }
+  }
+}
+
 export async function getOtherDevicesSnapshot() {
-  const [pnpRows, radios] = await Promise.all([queryPnpEntities(), detectRadios()])
+  const [pnpRows, radios, networkAdapters] = await Promise.all([
+    queryPnpEntities(),
+    detectRadios(),
+    queryNetworkAdapterNames()
+  ])
   return {
+    adapterNames: {
+      wifi: networkAdapters.wifi,
+      bluetooth: detectBluetoothAdapterName(pnpRows),
+      cellular: networkAdapters.cellular
+    },
     smartCardReaders: detectSmartCardReaders(pnpRows),
     gpsSensors: detectGpsSensors(pnpRows),
     barcodeScannerCandidates: detectBarcodeScannerCandidates(pnpRows),

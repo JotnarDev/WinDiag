@@ -19,6 +19,9 @@ export function SystemInfoProvider({ children, live = false }) {
   const hasLoadedStaticOnce = useRef(false)
   const loadStatic = useCallback(async () => {
     setIsLoading(true)
+    // Windows answers the activation query slowly, so it's read on the side
+    // and filled into os.activated (undefined = still checking)
+    const activation = window.api.getWindowsActivation().catch(() => null)
     try {
       const data = await window.api.getStaticSystemInfo()
       setStaticInfo(data)
@@ -29,6 +32,8 @@ export function SystemInfoProvider({ children, live = false }) {
       setIsLoading(false)
       hasLoadedStaticOnce.current = true
     }
+    const activated = await activation
+    setStaticInfo((prev) => prev && { ...prev, os: { ...prev.os, activated } })
   }, [])
   useEffect(() => {
     if (hasLoadedStaticOnce.current) return

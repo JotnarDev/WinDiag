@@ -7,15 +7,13 @@ const cleanString = (value) => {
   return trimmed.length > 0 ? trimmed : null
 }
 
-const BUILT_IN_ACCOUNT_NAMES = new Set([
-  'administrator',
-  'guest',
-  'defaultaccount',
-  'wdagutilityaccount'
-])
+// Built-in accounts are recognized by the last part of their SID (RID),
+// since their names are localized ("Administrador") and can be renamed:
+// Administrator, Guest, DefaultAccount, WDAGUtilityAccount
+const BUILT_IN_ACCOUNT_RIDS = new Set(['500', '501', '503', '504'])
 
-function isBuiltInAccountName(name) {
-  return BUILT_IN_ACCOUNT_NAMES.has(name.toLowerCase())
+function isBuiltInAccount(sid) {
+  return BUILT_IN_ACCOUNT_RIDS.has(sid.split('-').pop())
 }
 
 const USERS_PS_SCRIPT = `
@@ -62,7 +60,7 @@ export async function getWindowsUsers() {
         enabled: Boolean(raw.Enabled),
         isAdmin: Boolean(raw.IsAdmin),
         isCurrentUser: Boolean(raw.IsCurrent),
-        isBuiltIn: isBuiltInAccountName(name),
+        isBuiltIn: isBuiltInAccount(sid),
         passwordRequired: Boolean(raw.PasswordRequired),
         lastLogon: cleanString(raw.LastLogon)
       })
@@ -90,22 +88,12 @@ export async function deleteWindowsUser(name) {
       message: `User "${trimmedName}" was not found (it may have already been deleted).`
     }
   }
-  if (target.name.toLowerCase() === 'administrator') {
+  // Same rule as Local Users and Groups: any account can be deleted (the
+  // signed-in one and disabled ones included) except the built-in ones
+  if (target.isBuiltIn) {
     return {
       success: false,
-      message: `"Administrator" is a protected built-in account and can't be deleted here.`
-    }
-  }
-  if (target.isCurrentUser) {
-    return {
-      success: false,
-      message: `"${target.name}" is the account you're signed in with and can't be deleted.`
-    }
-  }
-  if (!target.enabled) {
-    return {
-      success: false,
-      message: `"${target.name}" is disabled and can't be deleted here.`
+      message: `The following error occurred while attempting to delete the user ${target.name}: Cannot perform this operation on built-in accounts.`
     }
   }
   if (!(await isRunningElevated())) return notElevatedResult('delete a user account')

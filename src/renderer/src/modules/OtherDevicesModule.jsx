@@ -1,48 +1,75 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Bluetooth,
-  CreditCard,
-  LoaderCircle,
-  QrCode,
-  RotateCcw,
-  Satellite,
-  Signal,
-  Wifi
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+  ArrowSyncRegular,
+  BluetoothRegular,
+  CellularData1Regular,
+  ContactCardRegular,
+  LocationRippleRegular,
+  QrCodeRegular,
+  Wifi1Regular
+} from '@fluentui/react-icons'
+import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/Button'
+import { Section } from '@/components/ui/Card'
+import { Badge, InfoBar, ProgressRing } from '@/components/ui/feedback'
+import { TextBox } from '@/components/ui/inputs'
 
-const RADIO_STATE_LABEL = {
-  on: 'Connected',
-  off: 'Off',
-  disabled: 'Disabled',
-  unknown: 'Unknown'
-}
-
-const RADIO_STATE_CLASS = {
-  on: 'border-emerald-800/60 bg-emerald-950/40 text-emerald-400',
-  off: 'border-zinc-700 bg-zinc-800/60 text-zinc-400',
-  disabled: 'border-amber-900/50 bg-amber-950/40 text-amber-400',
-  unknown: 'border-zinc-700 bg-zinc-800/60 text-zinc-400'
+const RADIO_STATE = {
+  on: { label: 'On', tone: 'success' },
+  off: { label: 'Off', tone: 'neutral' },
+  disabled: { label: 'Disabled', tone: 'caution' },
+  unknown: { label: 'Unknown', tone: 'neutral' }
 }
 
 function RadioStateBadge({ state }) {
+  const { label, tone } = RADIO_STATE[state] ?? RADIO_STATE.unknown
+  return <Badge tone={tone}>{label}</Badge>
+}
+
+/** A settings-style card with an optional details area under the header. */
+function DeviceCard({ icon: Icon, title, description, loading, children, details }) {
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium',
-        RADIO_STATE_CLASS[state]
+    <div className="rounded-overlay border border-card-stroke bg-card">
+      <div className="flex min-h-[68px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <Icon aria-hidden className="size-5 shrink-0" />
+        <div className="min-w-0 flex-1 basis-48">
+          <div>{title}</div>
+          <div className="text-caption text-text-secondary">
+            {loading ? 'Detecting…' : description}
+          </div>
+        </div>
+        {loading ? (
+          <ProgressRing size={16} label={`Detecting ${title}`} />
+        ) : (
+          children && <div className="flex shrink-0 flex-wrap items-center gap-2">{children}</div>
+        )}
+      </div>
+      {!loading && details && (
+        <div className="border-t border-divider px-4 py-3 sm:pl-[52px]">{details}</div>
       )}
-    >
-      {RADIO_STATE_LABEL[state]}
-    </span>
+    </div>
+  )
+}
+
+function BusyButton({ busy, busyText, onClick, children }) {
+  return (
+    <Button onClick={onClick} disabled={busy}>
+      {busy ? (
+        <span className="flex items-center gap-2">
+          <ProgressRing size={16} label={busyText} />
+          {busyText}
+        </span>
+      ) : (
+        children
+      )}
+    </Button>
   )
 }
 
 const SCAN_MAX_AVG_INTERVAL_MS = 30
 const SCAN_MIN_CHARS = 3
 const SCAN_IDLE_RESET_MS = 600
+
 export function OtherDevicesModule() {
   const [snapshot, setSnapshot] = useState(null)
   const [loadingSnapshot, setLoadingSnapshot] = useState(true)
@@ -137,312 +164,217 @@ export function OtherDevicesModule() {
   const wifiRadio = radios.find((r2) => r2.kind === 'wifi') ?? null
   const bluetoothRadio = radios.find((r2) => r2.kind === 'bluetooth') ?? null
   const cellularRadio = radios.find((r2) => r2.kind === 'cellular') ?? null
+  // Hardware names ("Intel Wi-Fi 6 AX201", "Sierra Wireless EM7455…") beat the
+  // radios' generic ones ("Wi-Fi", "Cellular")
+  const adapterNames = snapshot?.adapterNames ?? {}
+  const radioDescription = (adapterName, radio, missingText) =>
+    adapterName ?? radio?.name ?? missingText
   return (
-    <div>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Other devices</h1>
-          <p className="text-sm text-zinc-500">
-            Detects and tests less common peripherals when this machine actually has them: Wi-Fi,
-            Bluetooth and mobile broadband (4G) adapters, a smart card reader, a real GPS sensor, or
-            a barcode/QR scanner.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void loadSnapshot()} className="gap-2">
-          <RotateCcw className="h-4 w-4" />
-          Re-scan devices
+    <Page
+      title="Wireless & peripherals"
+      description="Detects and tests less common hardware when this device actually has it."
+      actions={
+        <Button
+          icon={ArrowSyncRegular}
+          onClick={() => void loadSnapshot()}
+          disabled={loadingSnapshot}
+        >
+          Scan again
         </Button>
-      </header>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Wifi className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Wi-Fi</CardTitle>
-              <CardDescription>
-                {loadingSnapshot
-                  ? 'Detecting…'
-                  : wifiRadio
-                    ? wifiRadio.name
-                    : 'No Wi-Fi adapter detected'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingSnapshot ? (
-              <p className="text-sm text-zinc-500">Detecting…</p>
-            ) : !wifiRadio ? (
-              <p className="text-sm text-zinc-500">
-                {"This machine doesn't report a Wi-Fi radio."}
-              </p>
-            ) : (
-              <>
-                <RadioStateBadge state={wifiRadio.state} />
-                <div>
-                  <Button
-                    size="sm"
-                    onClick={() => void checkWifi()}
-                    disabled={checkingWifi}
-                    className="gap-2"
-                  >
-                    {checkingWifi && <LoaderCircle className="h-4 w-4 animate-spin" />}Check network
-                  </Button>
-                </div>
-                {wifiStatus && (
-                  <div className="space-y-1 text-xs">
-                    {wifiStatus.error ? (
-                      <p className="text-amber-400">{wifiStatus.error}</p>
-                    ) : wifiStatus.connected ? (
-                      <>
-                        <p className="font-medium text-zinc-300">
-                          {wifiStatus.ssid ?? 'Connected'}
-                        </p>
-                        {wifiStatus.signalPercent !== null && (
-                          <p className="text-zinc-500">
-                            {'Signal: '}
-                            {wifiStatus.signalPercent}%
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-zinc-500">Not connected to a network.</p>
+      }
+    >
+      <Section title="Wireless">
+        <DeviceCard
+          icon={Wifi1Regular}
+          title="Wi-Fi"
+          loading={loadingSnapshot}
+          description={radioDescription(adapterNames.wifi, wifiRadio, 'No Wi-Fi adapter detected')}
+          details={
+            !wifiRadio
+              ? adapterNames.wifi && (
+                  <p className="text-text-secondary">
+                    The adapter is installed, but Windows doesn&apos;t report its radio state.
+                  </p>
+                )
+              : wifiStatus &&
+                (wifiStatus.error ? (
+                  <p className="text-caution">{wifiStatus.error}</p>
+                ) : wifiStatus.connected ? (
+                  <p>
+                    Connected to{' '}
+                    <span className="font-semibold">{wifiStatus.ssid ?? 'a network'}</span>
+                    {wifiStatus.signalPercent !== null && (
+                      <span className="text-text-secondary">
+                        {' '}
+                        · Signal {wifiStatus.signalPercent}%
+                      </span>
                     )}
+                  </p>
+                ) : (
+                  <p className="text-text-secondary">Not connected to a network.</p>
+                ))
+          }
+        >
+          {wifiRadio && (
+            <>
+              <RadioStateBadge state={wifiRadio.state} />
+              <BusyButton busy={checkingWifi} busyText="Checking…" onClick={() => void checkWifi()}>
+                Check connection
+              </BusyButton>
+            </>
+          )}
+        </DeviceCard>
+        <DeviceCard
+          icon={BluetoothRegular}
+          title="Bluetooth"
+          loading={loadingSnapshot}
+          description={radioDescription(
+            adapterNames.bluetooth,
+            bluetoothRadio,
+            'No Bluetooth adapter detected'
+          )}
+          details={
+            !bluetoothRadio &&
+            adapterNames.bluetooth && (
+              <p className="text-text-secondary">
+                The adapter is installed, but Windows doesn&apos;t report its radio state.
+              </p>
+            )
+          }
+        >
+          {bluetoothRadio && <RadioStateBadge state={bluetoothRadio.state} />}
+        </DeviceCard>
+        <DeviceCard
+          icon={CellularData1Regular}
+          title="Mobile broadband (4G)"
+          loading={loadingSnapshot}
+          description={radioDescription(
+            adapterNames.cellular,
+            cellularRadio,
+            "No modem detected (most laptops and desktops don't have one)"
+          )}
+          details={
+            !cellularRadio &&
+            adapterNames.cellular && (
+              <p className="text-text-secondary">
+                The modem is installed, but Windows doesn&apos;t report its radio state.
+              </p>
+            )
+          }
+        >
+          {cellularRadio && <RadioStateBadge state={cellularRadio.state} />}
+        </DeviceCard>
+      </Section>
+
+      <Section title="Peripherals">
+        <DeviceCard
+          icon={ContactCardRegular}
+          title="Smart card reader"
+          loading={loadingSnapshot}
+          description={
+            smartCardReaders.length > 0
+              ? smartCardReaders.map((r2) => r2.name).join(' · ')
+              : 'No smart card reader in Device Manager'
+          }
+          details={
+            smartCardStatus && (
+              <div className="flex flex-col gap-2">
+                {smartCardStatus.error && <p className="text-caution">{smartCardStatus.error}</p>}
+                {smartCardStatus.readers.map((r2) => (
+                  <div key={r2.name} className="flex items-center justify-between gap-3">
+                    <span className="truncate">{r2.name}</span>
+                    <Badge tone={r2.cardPresent ? 'success' : 'neutral'}>
+                      {r2.cardPresent ? 'Card present' : 'No card'}
+                    </Badge>
                   </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Bluetooth className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Bluetooth</CardTitle>
-              <CardDescription>
-                {loadingSnapshot
-                  ? 'Detecting…'
-                  : bluetoothRadio
-                    ? bluetoothRadio.name
-                    : 'No Bluetooth adapter detected'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loadingSnapshot ? (
-              <p className="text-sm text-zinc-500">Detecting…</p>
-            ) : !bluetoothRadio ? (
-              <p className="text-sm text-zinc-500">
-                {"This machine doesn't report a Bluetooth radio."}
-              </p>
-            ) : (
-              <RadioStateBadge state={bluetoothRadio.state} />
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Signal className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Mobile broadband (4G)</CardTitle>
-              <CardDescription>
-                {loadingSnapshot
-                  ? 'Detecting…'
-                  : cellularRadio
-                    ? cellularRadio.name
-                    : 'No mobile broadband adapter detected'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loadingSnapshot ? (
-              <p className="text-sm text-zinc-500">Detecting…</p>
-            ) : !cellularRadio ? (
-              <p className="text-sm text-zinc-500">
-                {
-                  "Most laptops and desktops don't have a built-in cellular modem — this machine doesn't report one."
-                }
-              </p>
-            ) : (
-              <RadioStateBadge state={cellularRadio.state} />
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <CreditCard className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Smart card reader</CardTitle>
-              <CardDescription>
-                {loadingSnapshot
-                  ? 'Detecting…'
-                  : smartCardReaders.length > 0
-                    ? `${smartCardReaders.length} reader(s) detected`
-                    : 'No smart card reader detected'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingSnapshot ? (
-              <p className="text-sm text-zinc-500">Detecting…</p>
-            ) : smartCardReaders.length === 0 ? (
-              <p className="text-sm text-zinc-500">
-                {"This machine doesn't report a smart card reader in Device Manager."}
-              </p>
-            ) : (
-              <>
-                <ul className="space-y-1 text-xs text-zinc-500">
-                  {smartCardReaders.map((r2) => (
-                    <li key={r2.id} className="truncate">
-                      {r2.name}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  size="sm"
-                  onClick={() => void checkSmartCard()}
-                  disabled={checkingSmartCard}
-                  className="gap-2"
-                >
-                  {checkingSmartCard && <LoaderCircle className="h-4 w-4 animate-spin" />}Check card
-                  status
-                </Button>
-                {smartCardStatus && (
-                  <div className="space-y-1.5">
-                    {smartCardStatus.error && (
-                      <p className="text-xs text-amber-400">{smartCardStatus.error}</p>
-                    )}
-                    {smartCardStatus.readers.map((r2) => (
-                      <div
-                        key={r2.name}
-                        className={cn(
-                          'flex items-center justify-between rounded-md border px-2.5 py-1.5 text-xs',
-                          r2.cardPresent
-                            ? 'border-emerald-800/60 bg-emerald-950/40 text-emerald-400'
-                            : 'border-zinc-700 bg-zinc-800/60 text-zinc-400'
-                        )}
-                      >
-                        <span className="truncate">{r2.name}</span>
-                        <span className="ml-2 shrink-0 font-medium">
-                          {r2.cardPresent ? 'Card present' : 'No card'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Satellite className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>GPS</CardTitle>
-              <CardDescription>
-                {loadingSnapshot
-                  ? 'Detecting…'
-                  : gpsSensors.length > 0
-                    ? `${gpsSensors.length} GPS sensor(s) detected`
-                    : 'No dedicated GPS sensor detected'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingSnapshot ? (
-              <p className="text-sm text-zinc-500">Detecting…</p>
-            ) : gpsSensors.length === 0 ? (
-              <p className="text-sm text-zinc-500">
-                Most laptops resolve location over Wi-Fi instead of real GPS hardware — this machine
-                has no dedicated GPS sensor listed in Device Manager.
-              </p>
-            ) : (
-              <>
-                <ul className="space-y-1 text-xs text-zinc-500">
-                  {gpsSensors.map((s) => (
-                    <li key={s.id} className="truncate">
-                      {s.name}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  size="sm"
-                  onClick={() => void checkGps()}
-                  disabled={checkingGps}
-                  className="gap-2"
-                >
-                  {checkingGps && <LoaderCircle className="h-4 w-4 animate-spin" />}Get a fix
-                </Button>
-                {gpsFix && (
-                  <div className="space-y-1 text-xs">
-                    {gpsFix.error ? (
-                      <p className="text-amber-400">{gpsFix.error}</p>
-                    ) : gpsFix.latitude !== null && gpsFix.longitude !== null ? (
-                      <>
-                        <p className="font-medium text-zinc-300">
-                          {gpsFix.latitude.toFixed(5)}
-                          {', '}
-                          {gpsFix.longitude.toFixed(5)}
-                        </p>
-                        <p className="text-zinc-500">
-                          Accuracy: ±{Math.round(gpsFix.accuracyMeters ?? 0)}
-                          {' m · Source:'} {gpsFix.source ?? 'unknown'}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-zinc-500">No fix.</p>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <QrCode className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Barcode / QR scanner</CardTitle>
-              <CardDescription>
-                {barcodeCandidates.length > 0
-                  ? `Possible match: ${barcodeCandidates[0].name}`
-                  : 'Works with any scanner — no specific device required'}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-zinc-500">
-              {
-                "Most scanners connect as a plain keyboard, so there's no reliable way to detect one in advance. Click the box below and scan a code — real scanners type far faster than a person can, which is how this test tells them apart."
-              }
-            </p>
-            <input
-              type="text"
-              value={scanBuffer}
-              onChange={(e) => setScanBuffer(e.target.value)}
-              onKeyDown={handleScanKeyDown}
-              placeholder="Click here and scan a code…"
-              className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 focus:border-primary focus:outline-none"
-            />
-            {lastScan && (
-              <div
-                className={cn(
-                  'rounded-md border px-3 py-2 text-xs',
-                  lastScan.isScanner
-                    ? 'border-emerald-800/60 bg-emerald-950/40 text-emerald-400'
-                    : 'border-amber-900/50 bg-amber-950/40 text-amber-400'
-                )}
-              >
-                <p className="truncate font-medium">{lastScan.code}</p>
-                <p>
-                  {lastScan.isScanner
-                    ? `Detected as a scanner (~${lastScan.avgIntervalMs} ms between keys)`
-                    : `Looks like manual typing (~${lastScan.avgIntervalMs} ms between keys) — try scanning instead`}
-                </p>
+                ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            )
+          }
+        >
+          {smartCardReaders.length > 0 && (
+            <BusyButton
+              busy={checkingSmartCard}
+              busyText="Checking…"
+              onClick={() => void checkSmartCard()}
+            >
+              Check card
+            </BusyButton>
+          )}
+        </DeviceCard>
+        <DeviceCard
+          icon={LocationRippleRegular}
+          title="GPS"
+          loading={loadingSnapshot}
+          description={
+            gpsSensors.length > 0
+              ? gpsSensors.map((s) => s.name).join(' · ')
+              : 'No dedicated GPS sensor (most laptops locate themselves over Wi-Fi)'
+          }
+          details={
+            gpsFix &&
+            (gpsFix.error ? (
+              <p className="text-caution">{gpsFix.error}</p>
+            ) : gpsFix.latitude !== null && gpsFix.longitude !== null ? (
+              <p>
+                <span className="selectable font-semibold">
+                  {gpsFix.latitude.toFixed(5)}, {gpsFix.longitude.toFixed(5)}
+                </span>
+                <span className="text-text-secondary">
+                  {' '}
+                  · ±{Math.round(gpsFix.accuracyMeters ?? 0)} m · Source:{' '}
+                  {gpsFix.source ?? 'unknown'}
+                </span>
+              </p>
+            ) : (
+              <p className="text-text-secondary">No fix.</p>
+            ))
+          }
+        >
+          {gpsSensors.length > 0 && (
+            <BusyButton busy={checkingGps} busyText="Locating…" onClick={() => void checkGps()}>
+              Get a fix
+            </BusyButton>
+          )}
+        </DeviceCard>
+        <DeviceCard
+          icon={QrCodeRegular}
+          title="Barcode / QR scanner"
+          description={
+            barcodeCandidates.length > 0
+              ? `Possible match: ${barcodeCandidates[0].name}`
+              : 'Works with any scanner; no specific device required'
+          }
+          details={
+            <div className="flex flex-col gap-3">
+              <p className="text-caption text-text-secondary">
+                Most scanners act as a keyboard, so they can&apos;t be detected in advance. Click
+                the box and scan a code: scanners type far faster than a person, which is how the
+                test tells them apart.
+              </p>
+              <TextBox
+                id="barcode-input"
+                aria-label="Scanned code"
+                value={scanBuffer}
+                onChange={(e) => setScanBuffer(e.target.value)}
+                onKeyDown={handleScanKeyDown}
+                placeholder="Click here and scan a code…"
+                className="max-w-md"
+              />
+              {lastScan && (
+                <InfoBar
+                  severity={lastScan.isScanner ? 'success' : 'warning'}
+                  title={lastScan.isScanner ? 'Scanner detected.' : 'Looks like manual typing.'}
+                >
+                  <span className="selectable font-semibold">{lastScan.code}</span> · ~
+                  {lastScan.avgIntervalMs} ms between keys
+                  {!lastScan.isScanner && '. Try scanning instead.'}
+                </InfoBar>
+              )}
+            </div>
+          }
+        />
+      </Section>
+    </Page>
   )
 }

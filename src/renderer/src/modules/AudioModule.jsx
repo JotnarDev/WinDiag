@@ -1,12 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Camera, Mic, Speaker, Video, VideoOff } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  CameraRegular,
+  MicRegular,
+  Speaker2Regular,
+  SpeakerBoxRegular,
+  VideoOffRegular,
+  VideoRegular
+} from '@fluentui/react-icons'
+import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/Button'
+import { Card, Section, SettingsCard } from '@/components/ui/Card'
+import { InfoBar, ProgressBar } from '@/components/ui/feedback'
+import { Select } from '@/components/ui/inputs'
 import { cn } from '@/lib/utils'
 
 const SINGLE_CHANNEL_DURATION_MS = 1200
 const BOTH_CHANNELS_SEGMENT_MS = 1e3
 const MIC_LEVEL_UPDATE_MS = 66
+
+const CHANNEL_LABELS = { left: 'left channel', right: 'right channel', both: 'left, then right' }
 
 export function AudioModule() {
   const [status, setStatus] = useState('idle')
@@ -275,194 +287,147 @@ export function AudioModule() {
   const isActive = status === 'active'
   const levelPercent = Math.round(micLevel * 100)
   return (
-    <div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Webcam, microphone and speaker test</h1>
-        <p className="text-sm text-zinc-500">
-          Live preview of what the camera and microphone capture, and plays test tones per channel
-          to verify the speakers.
-        </p>
-      </header>
+    <Page
+      title="Audio & camera"
+      description="Live camera preview, microphone input level and a test tone per speaker channel."
+      actions={
+        isActive ? (
+          <Button icon={VideoOffRegular} onClick={stopAll}>
+            Stop camera & mic
+          </Button>
+        ) : (
+          <Button
+            variant="accent"
+            icon={VideoRegular}
+            onClick={() => void startTest()}
+            disabled={status === 'requesting'}
+          >
+            {status === 'requesting' ? 'Requesting access…' : 'Start camera & mic'}
+          </Button>
+        )
+      }
+    >
       {status === 'error' && (
-        <Card className="mb-4 border-red-900/50 bg-red-950/40">
-          <CardContent className="py-4 text-sm text-red-400">
-            {'Could not access the camera or microphone: '}
-            {errorMessage}
-            {". Check the app's permissions in Windows (Settings → Privacy → Camera/Microphone)."}
-          </CardContent>
-        </Card>
+        <InfoBar
+          severity="error"
+          title="Couldn't access the camera or microphone."
+          className="mb-4"
+        >
+          {errorMessage}. Check Settings → Privacy & security → Camera / Microphone.
+        </InfoBar>
       )}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Camera className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Camera</CardTitle>
-              <CardDescription>Live preview of the captured video</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md bg-zinc-900">
-              <video
-                ref={videoRef}
-                autoPlay={true}
-                muted={true}
-                playsInline={true}
-                className={cn('h-full w-full -scale-x-100 object-cover', !isActive && 'hidden')}
-              />
-              {!isActive && (
-                <div className="flex flex-col items-center gap-2 text-zinc-500">
-                  <VideoOff className="h-8 w-8" />
-                  <span className="text-sm">No video signal</span>
-                </div>
-              )}
-            </div>
-            {videoDevices.length > 1 && (
-              <div className="mt-3 flex flex-col gap-1">
-                <label htmlFor="camera-device" className="text-xs font-medium text-zinc-500">
-                  Camera
-                </label>
-                <select
-                  id="camera-device"
-                  value={selectedVideoDeviceId}
-                  onChange={(event) => void switchCamera(event.target.value)}
-                  className="w-full max-w-xs rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200"
-                >
-                  {videoDevices.map((device) => (
-                    <option key={device.deviceId} value={device.deviceId}>
-                      {device.label}
-                    </option>
-                  ))}
-                </select>
+      <Section title="Camera and microphone">
+        <Card className="grid grid-cols-1 gap-5 p-5 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-overlay bg-black">
+            <video
+              ref={videoRef}
+              autoPlay={true}
+              muted={true}
+              playsInline={true}
+              aria-label="Camera preview"
+              className={cn('h-full w-full -scale-x-100 object-cover', !isActive && 'hidden')}
+            />
+            {!isActive && (
+              <div className="flex flex-col items-center gap-2 text-white/70">
+                <CameraRegular aria-hidden className="size-8" />
+                <span>Camera is off</span>
               </div>
             )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Mic className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Microphone</CardTitle>
-              <CardDescription>Real-time audio input level</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center gap-3">
-            <div className="h-6 w-full overflow-hidden rounded-full bg-zinc-800">
-              <div
-                className={cn(
-                  'h-full rounded-full transition-[width] duration-100',
-                  levelPercent < 60
-                    ? 'bg-emerald-500'
-                    : levelPercent < 85
-                      ? 'bg-amber-500'
-                      : 'bg-red-500'
-                )}
-                style={{
-                  width: isActive ? `${levelPercent}%` : '0%'
-                }}
-              />
-            </div>
-            <p className="text-xs text-zinc-500">
-              {isActive
-                ? 'Speak or make a sound near the microphone: the bar should move.'
-                : 'Start the test to see the microphone level.'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-      <Card className="mt-4">
-        <CardContent className="flex flex-wrap items-center gap-3 py-4">
-          {!isActive ? (
-            <Button
-              onClick={() => void startTest()}
-              disabled={status === 'requesting'}
-              className="gap-2"
-            >
-              <Video className="h-4 w-4" />
-              {status === 'requesting' ? 'Requesting access…' : 'Start test'}
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={stopAll} className="gap-2">
-              <VideoOff className="h-4 w-4" />
-              Stop test
-            </Button>
-          )}
-          <span className="text-xs text-zinc-500">
-            Microphone audio is not played through the speakers (only its level is measured), to
-            avoid feedback/echo.
-          </span>
-        </CardContent>
-      </Card>
-      <Card className="mt-4">
-        <CardHeader className="flex flex-row items-center gap-2">
-          <Speaker className="h-5 w-5 text-zinc-400" />
-          <div>
-            <CardTitle>Speakers</CardTitle>
-            <CardDescription>Plays a test tone per channel to verify the speakers</CardDescription>
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {outputDevices.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <label htmlFor="output-device" className="text-xs font-medium text-zinc-500">
-                Output device
-              </label>
-              <select
-                id="output-device"
-                value={selectedOutputId}
-                onChange={(event) => setSelectedOutputId(event.target.value)}
-                className="w-full max-w-xs rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200"
+          <div className="flex flex-col gap-5">
+            {videoDevices.length > 1 && (
+              <Select
+                id="camera-device"
+                label="Camera"
+                value={selectedVideoDeviceId}
+                onChange={(value) => void switchCamera(value)}
               >
-                <option value="default">System default</option>
-                {outputDevices.map((device) => (
+                {videoDevices.map((device) => (
                   <option key={device.deviceId} value={device.deviceId}>
                     {device.label}
                   </option>
                 ))}
-              </select>
+              </Select>
+            )}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <MicRegular aria-hidden className="size-4" />
+                <span>Input level</span>
+                {isActive && (
+                  <span className="ml-auto text-caption text-text-secondary">{levelPercent}%</span>
+                )}
+              </div>
+              <ProgressBar
+                label="Microphone level"
+                value={isActive ? levelPercent : 0}
+                tone={levelPercent < 60 ? 'accent' : levelPercent < 85 ? 'caution' : 'critical'}
+                className="h-1"
+              />
+              <p className="text-caption text-text-secondary">
+                {isActive
+                  ? 'Speak or make a sound near the microphone: the bar should move.'
+                  : 'Start the camera and microphone to see the input level.'}
+              </p>
             </div>
-          )}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => void playChannelTest('left')}
-              disabled={playingChannel !== null}
-              className="gap-2"
-            >
-              <Speaker className="h-4 w-4" />
-              Left channel
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => void playChannelTest('right')}
-              disabled={playingChannel !== null}
-              className="gap-2"
-            >
-              <Speaker className="h-4 w-4" />
-              Right channel
-            </Button>
-            <Button
-              onClick={() => void playChannelTest('both')}
-              disabled={playingChannel !== null}
-              className="gap-2"
-            >
-              <Speaker className="h-4 w-4" />
-              Both channels
-            </Button>
-          </div>
-          <p className="text-xs text-zinc-500">
-            {playingChannel
-              ? `Playing test tone (${playingChannel === 'left' ? 'left channel' : playingChannel === 'right' ? 'right channel' : 'both channels'})…`
-              : 'You should hear a brief tone coming from the corresponding side.'}
-          </p>
-          {speakerError && (
-            <p className="text-sm text-red-400">
-              {'Could not play the sound: '}
-              {speakerError}
+            <p className="mt-auto text-caption text-text-tertiary">
+              The microphone isn&apos;t played back through the speakers (only its level is
+              measured), so there&apos;s no feedback or echo.
             </p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </Card>
+      </Section>
+
+      <Section title="Speakers">
+        {outputDevices.length > 0 && (
+          <SettingsCard icon={SpeakerBoxRegular} title="Output device">
+            <Select
+              id="output-device"
+              value={selectedOutputId}
+              onChange={setSelectedOutputId}
+              className="w-64 max-w-full"
+            >
+              <option value="default">System default</option>
+              {outputDevices.map((device) => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label}
+                </option>
+              ))}
+            </Select>
+          </SettingsCard>
+        )}
+        <SettingsCard
+          icon={Speaker2Regular}
+          title="Channel test"
+          description={
+            playingChannel
+              ? `Playing a tone on the ${CHANNEL_LABELS[playingChannel]}…`
+              : 'Plays a short tone; it should come only from the matching side.'
+          }
+        >
+          <Button onClick={() => void playChannelTest('left')} disabled={playingChannel !== null}>
+            Left
+          </Button>
+          <Button onClick={() => void playChannelTest('right')} disabled={playingChannel !== null}>
+            Right
+          </Button>
+          <Button
+            variant="accent"
+            onClick={() => void playChannelTest('both')}
+            disabled={playingChannel !== null}
+          >
+            Both
+          </Button>
+        </SettingsCard>
+        {speakerError && (
+          <InfoBar
+            severity="error"
+            title="Couldn't play the sound."
+            onDismiss={() => setSpeakerError(null)}
+          >
+            {speakerError}
+          </InfoBar>
+        )}
+      </Section>
+    </Page>
   )
 }

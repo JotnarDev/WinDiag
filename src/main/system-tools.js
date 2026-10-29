@@ -90,7 +90,7 @@ export async function launchProductKeyDialog() {
 // nothing below inspects error messages. Admin-only operations check
 // elevation up front, and other outcomes come from state queries or exit codes.
 const NOT_ELEVATED_SUFFIX =
-  'Close WinDiag and reopen it as Administrator (use "Run as Administrator" in the sidebar or right-click the app → "Run as administrator")'
+  'Close WinDiag and reopen it as Administrator (use "Run as administrator" at the bottom of the navigation pane, or right-click the app → "Run as administrator")'
 
 export function notElevatedResult(action) {
   return {
@@ -101,74 +101,97 @@ export function notElevatedResult(action) {
 
 const errorMessage = (err) => (err instanceof Error ? err.message : String(err))
 
-// Stopping wuauserv alone is temporary: Windows starts it again on demand.
-// Disabling sets the service start type to Disabled (it can't be started at
-// all) and adds the NoAutoUpdate machine policy as a second layer.
-const WU_POLICY_KEY = 'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU'
+// Disabling only the wuauserv service doesn't last on Windows 10/11: the
+// Windows Update Medic service quietly sets it back to Manual. Machine
+// policies aren't touched by it, so they do the real work: automatic updates
+// off, and Windows Update pointed at a local server that doesn't exist (this
+// one is honoured on Home editions too). Disabling the service is a bonus.
+const WU_KEY = 'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate'
+const WU_AU_KEY = `${WU_KEY}\\AU`
+const BLOCKED_UPDATE_SERVER = 'http://127.0.0.1'
+const WU_POLICY_VALUES = [
+  [WU_AU_KEY, 'NoAutoUpdate', 'REG_DWORD', '1'],
+  [WU_AU_KEY, 'UseWUServer', 'REG_DWORD', '1'],
+  [WU_KEY, 'WUServer', 'REG_SZ', BLOCKED_UPDATE_SERVER],
+  [WU_KEY, 'WUStatusServer', 'REG_SZ', BLOCKED_UPDATE_SERVER],
+  [WU_KEY, 'DoNotConnectToWindowsUpdateInternetLocations', 'REG_DWORD', '1']
+]
 
-const runQuiet = (file, args) =>
+// sc/reg print their errors on stdout, which is what's worth showing
+const commandError = (err) =>
+  (typeof err?.stdout === 'string' && err.stdout.trim()) || errorMessage(err)
+
+const runCommand = (file, args) =>
   execFileAsync(file, args, { windowsHide: true, timeout: 15e3 }).then(
-    () => true,
-    () => false
+    () => null,
+    (err) => commandError(err)
   )
 
+// What the switch shows: the wuauserv service itself (running, startup type)
+// plus whether WinDiag's blocking policy is in place. "off" means the service
+// is stopped and disabled; Windows (the Update Medic service) can turn it
+// back on by itself, and then the switch shows it on again.
 export async function getWindowsUpdateState() {
   try {
-    // StartType is an enum, so its name is always English
-    const value = (await runPowerShell('(Get-Service -Name wuauserv).StartType.ToString()'))
-      .trim()
-      .toLowerCase()
-    if (value === 'disabled') return 'disabled'
-    if (value) return 'enabled'
-    return 'unknown'
+    // Status and StartType are enums, so their names are always English
+    const output = await runPowerShell(`
+try {
+    $service = Get-Service -Name wuauserv -ErrorAction Stop
+    $au = Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' -ErrorAction SilentlyContinue
+    [PSCustomObject]@{
+        running   = $service.Status -eq 'Running'
+        startType = $service.StartType.ToString()
+        policy    = [bool]($au -and $au.NoAutoUpdate -eq 1)
+    } | ConvertTo-Json -Compress
+} catch { '' }`)
+    const { running, startType, policy } = JSON.parse(output)
+    const disabled = !running && startType === 'Disabled'
+    return { state: disabled ? 'disabled' : 'enabled', running, startType, policy }
   } catch {
-    return 'unknown'
+    return { state: 'unknown', running: null, startType: null, policy: null }
   }
 }
 
 export async function disableWindowsUpdates() {
-  if ((await getWindowsUpdateState()) === 'disabled') {
-    return { success: true, message: 'Windows Update was already disabled.' }
-  }
   if (!(await isRunningElevated())) return notElevatedResult('disable Windows Update')
-  try {
-    await execFileAsync('sc', ['config', 'wuauserv', 'start=', 'disabled'], {
-      windowsHide: true,
-      timeout: 15e3
-    })
-  } catch (err) {
-    return { success: false, message: errorMessage(err) }
+  for (const [key, name, type, data] of WU_POLICY_VALUES) {
+    const error = await runCommand('reg', ['add', key, '/v', name, '/t', type, '/d', data, '/f'])
+    if (error) return { success: false, message: `Couldn't set the ${name} policy: ${error}` }
   }
-  // Exit codes here also cover "already stopped" / "value already set"
-  await runQuiet('net', ['stop', 'wuauserv'])
-  await runQuiet('reg', [
-    'add',
-    WU_POLICY_KEY,
-    '/v',
-    'NoAutoUpdate',
-    '/t',
-    'REG_DWORD',
-    '/d',
-    '1',
-    '/f'
-  ])
-  return { success: true, message: 'Windows Update disabled.' }
+  const serviceError = await runCommand('sc', ['config', 'wuauserv', 'start=', 'disabled'])
+  // Fails harmlessly when the service is already stopped
+  await runCommand('net', ['stop', 'wuauserv'])
+  const after = await getWindowsUpdateState()
+  if (after.running) {
+    return {
+      success: false,
+      message:
+        'The policies were written, but the Windows Update service is still running (it may be installing something). Try again in a minute.'
+    }
+  }
+  return {
+    success: true,
+    message: serviceError
+      ? `Windows Update disabled by policy (the service itself couldn't be disabled: ${serviceError}).`
+      : 'Windows Update disabled.'
+  }
 }
 
 export async function enableWindowsUpdates() {
   if (!(await isRunningElevated())) return notElevatedResult('enable Windows Update')
-  try {
-    // "demand" (Manual) is the Windows default for wuauserv
-    await execFileAsync('sc', ['config', 'wuauserv', 'start=', 'demand'], {
-      windowsHide: true,
-      timeout: 15e3
-    })
-  } catch (err) {
-    return { success: false, message: errorMessage(err) }
+  // Fails harmlessly for values that don't exist
+  for (const [key, name] of WU_POLICY_VALUES) {
+    await runCommand('reg', ['delete', key, '/v', name, '/f'])
   }
-  // Fails harmlessly when the policy value doesn't exist
-  await runQuiet('reg', ['delete', WU_POLICY_KEY, '/v', 'NoAutoUpdate', '/f'])
-  await runQuiet('net', ['start', 'wuauserv'])
+  // "demand" (Manual) is the Windows default for wuauserv
+  const serviceError = await runCommand('sc', ['config', 'wuauserv', 'start=', 'demand'])
+  if (serviceError) {
+    return {
+      success: false,
+      message: `Couldn't re-enable the Windows Update service: ${serviceError}`
+    }
+  }
+  await runCommand('net', ['start', 'wuauserv'])
   return { success: true, message: 'Windows Update enabled.' }
 }
 

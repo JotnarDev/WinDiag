@@ -1,95 +1,297 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * Fluent 2 (Windows 11) design tokens. Values follow the WinUI 3 theme
+ * resources; the app follows the Windows light/dark setting and accent color.
+ */
 
 @theme inline {
   --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+
+  /* Fluent type ramp */
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-subtitle: 20px;
+  --text-subtitle--line-height: 28px;
+  --text-title: 28px;
+  --text-title--line-height: 36px;
+  --text-title-large: 40px;
+  --text-title-large--line-height: 52px;
+
+  /* Controls have 4px corners, cards and overlays 8px */
+  --radius-control: 4px;
+  --radius-overlay: 8px;
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-on-accent: var(--text-on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-secondary: var(--accent-fill-secondary);
+  --color-accent-fill-tertiary: var(--accent-fill-tertiary);
+  --color-solid-bg: var(--solid-bg);
+  --color-layer: var(--layer);
   --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-card-secondary: var(--card-secondary);
+  --color-card-stroke: var(--card-stroke);
+  --color-control: var(--control);
+  --color-control-hover: var(--control-hover);
+  --color-control-pressed: var(--control-pressed);
+  --color-control-disabled: var(--control-disabled);
+  --color-control-stroke: var(--control-stroke);
+  --color-control-stroke-bottom: var(--control-stroke-bottom);
+  --color-control-strong: var(--control-strong);
+  --color-control-alt: var(--control-alt);
+  --color-subtle-hover: var(--subtle-hover);
+  --color-subtle-pressed: var(--subtle-pressed);
+  --color-divider: var(--divider);
+  --color-smoke: var(--smoke);
+  --color-flyout: var(--flyout);
+  --color-input-active: var(--input-active);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-caution: var(--caution);
+  --color-caution-bg: var(--caution-bg);
+  --color-critical: var(--critical);
+  --color-critical-bg: var(--critical-bg);
+  --color-neutral-bg: var(--neutral-bg);
+
+  --shadow-card: var(--elevation-card);
+  --shadow-flyout: var(--elevation-flyout);
+  --shadow-dialog: var(--elevation-dialog);
 }
 
-/* WinDiag dark palette (orange accent) */
 :root {
-  --radius: 0.75rem;
-  --background: #141414;
-  --foreground: #f2f2f2;
-  --card: #1e1e1e;
-  --card-foreground: #f2f2f2;
-  --popover: #1e1e1e;
-  --popover-foreground: #f2f2f2;
-  --primary: #ff5a00;
-  --primary-foreground: #141414;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #f2f2f2;
-  --muted: #242424;
-  --muted-foreground: #9a9a9a;
-  --accent: #2a1b10;
-  --accent-foreground: #f2f2f2;
-  --destructive: #ff453a;
-  --border: #2e2e2e;
-  --input: #2e2e2e;
-  --ring: #ff5a00;
+  color-scheme: light;
+  /* Replaced at start-up with the Windows accent color */
+  --accent: #0078d4;
+
+  --text-primary: rgb(0 0 0 / 0.896);
+  --text-secondary: rgb(0 0 0 / 0.606);
+  --text-tertiary: rgb(0 0 0 / 0.446);
+  --text-disabled: rgb(0 0 0 / 0.361);
+  --text-on-accent: #ffffff;
+
+  /* Accent shades are derived from the system accent at a fixed lightness, so
+     text and fills keep their contrast whatever accent the user picked */
+  --accent-fill: oklch(from var(--accent) 0.5 c h);
+  --accent-fill-secondary: oklch(from var(--accent) 0.5 c h / 0.9);
+  --accent-fill-tertiary: oklch(from var(--accent) 0.5 c h / 0.8);
+  --accent-text: oklch(from var(--accent) 0.45 c h);
+
+  --solid-bg: #f3f3f3;
+  --layer: rgb(255 255 255 / 0.5);
+  --card: rgb(255 255 255 / 0.7);
+  --card-secondary: rgb(246 246 246 / 0.5);
+  --card-stroke: rgb(0 0 0 / 0.0578);
+  --control: rgb(255 255 255 / 0.7);
+  --control-hover: rgb(249 249 249 / 0.5);
+  --control-pressed: rgb(249 249 249 / 0.3);
+  --control-disabled: rgb(249 249 249 / 0.3);
+  --control-stroke: rgb(0 0 0 / 0.0578);
+  --control-stroke-bottom: rgb(0 0 0 / 0.1622);
+  --control-strong: rgb(0 0 0 / 0.446);
+  --control-alt: rgb(0 0 0 / 0.0241);
+  --subtle-hover: rgb(0 0 0 / 0.0373);
+  --subtle-pressed: rgb(0 0 0 / 0.0241);
+  --divider: rgb(0 0 0 / 0.0803);
+  --smoke: rgb(0 0 0 / 0.3);
+  --flyout: #fcfcfc;
+  --input-active: #ffffff;
+
+  --success: #0f7b0f;
+  --success-bg: #dff6dd;
+  --caution: #9d5d00;
+  --caution-bg: #fff4ce;
+  --critical: #c42b1c;
+  --critical-bg: #fde7e9;
+  --neutral-bg: rgb(246 246 246 / 0.5);
+
+  --elevation-card: 0 2px 4px rgb(0 0 0 / 0.04);
+  --elevation-flyout: 0 8px 16px rgb(0 0 0 / 0.14);
+  --elevation-dialog: 0 32px 64px rgb(0 0 0 / 0.1876), 0 2px 21px rgb(0 0 0 / 0.1474);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --text-primary: #ffffff;
+    --text-secondary: rgb(255 255 255 / 0.786);
+    --text-tertiary: rgb(255 255 255 / 0.544);
+    --text-disabled: rgb(255 255 255 / 0.363);
+    --text-on-accent: #000000;
+
+    --accent-fill: oklch(from var(--accent) 0.8 c h);
+    --accent-fill-secondary: oklch(from var(--accent) 0.8 c h / 0.9);
+    --accent-fill-tertiary: oklch(from var(--accent) 0.8 c h / 0.8);
+    --accent-text: oklch(from var(--accent) 0.85 c h);
+
+    --solid-bg: #202020;
+    --layer: rgb(58 58 58 / 0.3);
+    --card: rgb(255 255 255 / 0.0512);
+    --card-secondary: rgb(255 255 255 / 0.0326);
+    --card-stroke: rgb(0 0 0 / 0.1);
+    --control: rgb(255 255 255 / 0.0605);
+    --control-hover: rgb(255 255 255 / 0.0837);
+    --control-pressed: rgb(255 255 255 / 0.0326);
+    --control-disabled: rgb(255 255 255 / 0.0419);
+    --control-stroke: rgb(255 255 255 / 0.0698);
+    --control-stroke-bottom: rgb(255 255 255 / 0.0465);
+    --control-strong: rgb(255 255 255 / 0.544);
+    --control-alt: rgb(0 0 0 / 0.1);
+    --subtle-hover: rgb(255 255 255 / 0.0605);
+    --subtle-pressed: rgb(255 255 255 / 0.0419);
+    --divider: rgb(255 255 255 / 0.0837);
+    --smoke: rgb(0 0 0 / 0.3);
+    --flyout: #2c2c2c;
+    --input-active: #1e1e1e;
+
+    --success: #6ccb5f;
+    --success-bg: #393d1b;
+    --caution: #fce100;
+    --caution-bg: #433519;
+    --critical: #ff99a4;
+    --critical-bg: #442726;
+    --neutral-bg: rgb(255 255 255 / 0.0326);
+
+    --elevation-card: 0 2px 4px rgb(0 0 0 / 0.13);
+    --elevation-flyout: 0 8px 16px rgb(0 0 0 / 0.26);
+    --elevation-dialog: 0 32px 64px rgb(0 0 0 / 0.56), 0 2px 21px rgb(0 0 0 / 0.55);
+  }
+}
+
+/* A palette's tint, mixed into the window background */
+html[data-tint] {
+  --solid-bg: color-mix(in oklab, #f3f3f3 88%, var(--tint));
+  --flyout: color-mix(in oklab, #fcfcfc 94%, var(--tint));
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-tint] {
+    --solid-bg: color-mix(in oklab, #202020 88%, var(--tint));
+    --flyout: color-mix(in oklab, #2c2c2c 92%, var(--tint));
+  }
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  /* Hide scrollbars everywhere; content still scrolls */
-  * {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  ::-webkit-scrollbar {
-    display: none;
+  html,
+  body,
+  #root {
+    height: 100%;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    margin: 0;
+    /* Windows 10 has no Mica: the solid window background is used instead */
+    background-color: var(--solid-bg);
+    color: var(--text-primary);
     font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
     -webkit-font-smoothing: antialiased;
+    user-select: none;
+    cursor: default;
   }
+
+  /* With Mica the window backdrop shows through the page */
+  html.mica body {
+    background-color: transparent;
+  }
+
+  html.mica[data-tint] body {
+    background-color: color-mix(in oklab, transparent 90%, var(--tint));
+  }
+
+  /* Values a technician may want to copy (serials, models) stay selectable */
+  .selectable {
+    user-select: text;
+    cursor: text;
+  }
+
+  /* Fluent focus visual: a 2px outer stroke, shown for keyboard focus only */
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 1px;
+  }
+
+  /* Thin scroll bars, like Windows 11's collapsed ones */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--control-strong) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Windows contrast themes: let the system colors through and keep every
+   control outlined, so nothing relies on a subtle fill alone */
+@media (forced-colors: active) {
+  :root {
+    --card-stroke: CanvasText;
+    --control-stroke: ButtonText;
+    --control-stroke-bottom: ButtonText;
+    --divider: CanvasText;
+  }
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Title bar drag region; anything clickable inside it opts back out */
+.app-drag {
+  -webkit-app-region: drag;
+}
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@keyframes fluent-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fluent-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes fluent-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Page entrance: content slides up slightly, like WinUI's entrance transition */
+.page-enter {
+  animation: fluent-enter 0.3s cubic-bezier(0, 0, 0, 1);
+}
+
+dialog::backdrop {
+  background: var(--smoke);
 }

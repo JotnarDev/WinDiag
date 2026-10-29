@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Keyboard, Maximize, Mouse, RotateCcw, Shrink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ArrowResetRegular, CursorClickRegular, KeyboardRegular } from '@fluentui/react-icons'
+import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/Button'
+import { Card, Section } from '@/components/ui/Card'
+import { InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'
 import { cn } from '@/lib/utils'
 
 const UNIT = 2.75
@@ -517,7 +519,14 @@ const NUMPAD_BLOCK = [
   ]
 ]
 
-function KeyCap({ def, state }) {
+const ALL_CODES = new Set(
+  [MAIN_BLOCK, NAV_BLOCK, NUMPAD_BLOCK].flatMap((block) =>
+    block.flatMap((row) => row.filter((def) => !def.spacer).map((def) => def.code))
+  )
+)
+
+// Memoized so a key press only re-renders the key that changed
+const KeyCap = memo(function KeyCap({ def, state }) {
   const width = (def.width ?? 1) * UNIT
   if (def.spacer) {
     return (
@@ -536,16 +545,17 @@ function KeyCap({ def, state }) {
         height: `${UNIT}rem`
       }}
       className={cn(
-        'flex select-none items-center justify-center rounded-md border text-[11px] font-medium transition-colors duration-150',
-        state === 'idle' && 'border-zinc-700 bg-zinc-900 text-zinc-300',
-        state === 'pressed' && 'scale-95 border-blue-600 bg-blue-600 text-white shadow-sm',
-        state === 'tested' && 'border-emerald-600 bg-emerald-600 text-white'
+        'flex items-center justify-center rounded-control border text-caption transition-[background-color,color,transform] duration-100',
+        state === 'idle' &&
+          'border-control-stroke bg-control text-text-primary shadow-[inset_0_-1px_0_var(--control-stroke-bottom)]',
+        state === 'pressed' && 'scale-95 border-transparent bg-accent-fill text-text-on-accent',
+        state === 'tested' && 'border-transparent bg-success-bg font-semibold text-success'
       )}
     >
       {def.label}
     </div>
   )
-}
+})
 
 function KeyRow({ row, keyStates }) {
   return (
@@ -594,29 +604,18 @@ function emptyMouseClickCounts() {
   }
 }
 
-export function KeyboardModule() {
+export function KeyboardModule({ onNavigate }) {
   const [keyStates, setKeyStates] = useState({})
   const containerRef = useRef(null)
   const contentRef = useRef(null)
   const [scale, setScale] = useState(1)
   const [scaledHeight, setScaledHeight] = useState(null)
-  const [fullCaptureActive, setFullCaptureActive] = useState(false)
-  const [captureError, setCaptureError] = useState(null)
-  const fullCaptureActiveRef = useRef(false)
+  // null while the hook starts, then whether system keys are intercepted
+  // (or 'off' when that's turned off in Settings)
+  const [systemKeysBlocked, setSystemKeysBlocked] = useState(null)
   const lastSeenRef = useRef({})
   const [mousePressed, setMousePressed] = useState(emptyMouseButtonState)
   const [mouseClickCounts, setMouseClickCounts] = useState(emptyMouseClickCounts)
-  const allCodes = useMemo(() => {
-    const codes = new Set()
-    for (const block of [MAIN_BLOCK, NAV_BLOCK, NUMPAD_BLOCK]) {
-      for (const row of block) {
-        for (const def of row) {
-          if (!def.spacer) codes.add(def.code)
-        }
-      }
-    }
-    return codes
-  }, [])
   const testedCount = useMemo(
     () => Object.values(keyStates).filter((s) => s === 'tested').length,
     [keyStates]
@@ -626,65 +625,13 @@ export function KeyboardModule() {
     setMousePressed(emptyMouseButtonState())
     setMouseClickCounts(emptyMouseClickCounts())
   }, [])
-  const enableFullCapture = useCallback(async () => {
-    setCaptureError(null)
-    try {
-      await window.api.setFullscreen(true)
-      await document.documentElement.requestFullscreen()
-      const nav = navigator
-      if (nav.keyboard?.lock) {
-        await nav.keyboard.lock(['MetaLeft', 'MetaRight'])
-      }
-      setFullCaptureActive(true)
-    } catch {
-      setCaptureError(
-        "Couldn't enable full capture — the Windows key may still open the Start menu."
-      )
-      if (document.fullscreenElement) void document.exitFullscreen()
-      void window.api.setFullscreen(false)
-      setFullCaptureActive(false)
-    }
-  }, [])
-  const disableFullCapture = useCallback(() => {
-    const nav = navigator
-    nav.keyboard?.unlock?.()
-    if (document.fullscreenElement) void document.exitFullscreen()
-    void window.api.setFullscreen(false)
-    setFullCaptureActive(false)
-  }, [])
   useEffect(() => {
-    fullCaptureActiveRef.current = fullCaptureActive
-  }, [fullCaptureActive])
-  useEffect(() => {
-    if (!fullCaptureActive) return
-    function handleFullscreenChange() {
-      if (!document.fullscreenElement) {
-        void window.api.setFullscreen(false)
-        setFullCaptureActive(false)
-      }
-    }
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [fullCaptureActive])
-  useEffect(() => {
-    return () => {
-      if (!fullCaptureActiveRef.current) return
-      const nav = navigator
-      nav.keyboard?.unlock?.()
-      if (document.fullscreenElement) void document.exitFullscreen()
-      void window.api.setFullscreen(false)
-    }
-  }, [])
-  useEffect(() => {
-    void window.api.setKeyboardCaptureActive(true)
+    let cancelled = false
     const unsubscribe = window.api.onKeyInputEvent((event) => {
-      if (!allCodes.has(event.code)) return
+      if (!ALL_CODES.has(event.code)) return
       if (event.type === 'keyDown') {
         lastSeenRef.current[event.code] = Date.now()
         if (event.isAutoRepeat) return
-        if (event.code === 'CapsLock' || event.code === 'NumLock') {
-          void window.api.revertLockKeyToggle(event.code)
-        }
         setKeyStates((prev) =>
           prev[event.code] === 'pressed'
             ? prev
@@ -694,17 +641,30 @@ export function KeyboardModule() {
               }
         )
       } else {
-        setKeyStates((prev) => ({
-          ...prev,
-          [event.code]: 'tested'
-        }))
+        setKeyStates((prev) =>
+          prev[event.code] === 'tested'
+            ? prev
+            : {
+                ...prev,
+                [event.code]: 'tested'
+              }
+        )
       }
     })
+    window.api
+      .setKeyboardCaptureActive(true)
+      .then((blocked) => {
+        if (!cancelled) setSystemKeysBlocked(blocked === 'off' ? 'off' : Boolean(blocked))
+      })
+      .catch(() => {
+        if (!cancelled) setSystemKeysBlocked(false)
+      })
     return () => {
+      cancelled = true
       void window.api.setKeyboardCaptureActive(false)
       unsubscribe()
     }
-  }, [allCodes])
+  }, [])
   useEffect(() => {
     function handleWindowBlur() {
       setKeyStates((prev) => {
@@ -729,9 +689,11 @@ export function KeyboardModule() {
     return () => window.removeEventListener('blur', handleWindowBlur)
   }, [])
   const hasPressedKey = useMemo(() => Object.values(keyStates).includes('pressed'), [keyStates])
-  // Only needed while a key is held, so it doesn't tick for the whole test
+  // Without the hook, Windows sometimes eats a key-up (e.g. the Windows key),
+  // so a key that stops auto-repeating is released by timeout. The hook
+  // reports every key-up, so this only runs as a fallback while a key is held.
   useEffect(() => {
-    if (!hasPressedKey) return
+    if (!hasPressedKey || systemKeysBlocked === true) return
     const STALE_MS = 400
     const CHECK_INTERVAL_MS = 80
     const interval = setInterval(() => {
@@ -753,34 +715,11 @@ export function KeyboardModule() {
       })
     }, CHECK_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [hasPressedKey])
+  }, [hasPressedKey, systemKeysBlocked])
+  // Fallback for Print Screen when the hook isn't running: Windows only
+  // reports it as a hotkey, so there's no real key-up
   useEffect(() => {
-    function handleEscapeDown(e) {
-      if (e.code !== 'Escape' || e.repeat) return
-      setKeyStates((prev) =>
-        prev.Escape === 'pressed'
-          ? prev
-          : {
-              ...prev,
-              Escape: 'pressed'
-            }
-      )
-    }
-    function handleEscapeUp(e) {
-      if (e.code !== 'Escape') return
-      setKeyStates((prev) => ({
-        ...prev,
-        Escape: 'tested'
-      }))
-    }
-    window.addEventListener('keydown', handleEscapeDown)
-    window.addEventListener('keyup', handleEscapeUp)
-    return () => {
-      window.removeEventListener('keydown', handleEscapeDown)
-      window.removeEventListener('keyup', handleEscapeUp)
-    }
-  }, [])
-  useEffect(() => {
+    if (systemKeysBlocked !== false) return
     void window.api.setPrintScreenBlocked(true)
     const unsubscribe = window.api.onPrintScreenPressed(() => {
       setKeyStates((prev) => ({
@@ -798,7 +737,7 @@ export function KeyboardModule() {
       void window.api.setPrintScreenBlocked(false)
       unsubscribe()
     }
-  }, [])
+  }, [systemKeysBlocked])
   useLayoutEffect(() => {
     const container = containerRef.current
     const content = contentRef.current
@@ -850,93 +789,88 @@ export function KeyboardModule() {
       window.removeEventListener('contextmenu', handleContextMenu)
     }
   }, [])
+  const progress = (testedCount / ALL_CODES.size) * 100
+  const mouseButtonClass = (pressed) =>
+    cn('transition-colors duration-100', pressed && 'bg-accent-fill')
   return (
-    <div
-      className={cn(fullCaptureActive && 'fixed inset-0 z-50 overflow-y-auto bg-background p-8')}
+    <Page
+      title="Keyboard & mouse"
+      description="Press every key and click every mouse button. Keys are matched by physical position, so any keyboard language works."
+      actions={
+        <Button icon={ArrowResetRegular} onClick={reset}>
+          Reset
+        </Button>
+      }
     >
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{'Keyboard & mouse test'}</h1>
-          <p className="text-sm text-zinc-500">
-            Press each key on your physical keyboard and use the mouse or trackpad below — key
-            detection is based on physical position (key code), not character, so it works
-            regardless of the configured language.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {fullCaptureActive ? (
-            <Button variant="outline" onClick={disableFullCapture} className="gap-2">
-              <Shrink className="h-4 w-4" />
-              Exit full capture (Esc)
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => void enableFullCapture()} className="gap-2">
-              <Maximize className="h-4 w-4" />
-              Enable full capture
-            </Button>
-          )}
-          <Button variant="outline" onClick={reset} className="gap-2">
-            <RotateCcw className="h-4 w-4" />
-            Reset test
-          </Button>
-        </div>
-      </header>
-      {captureError && (
-        <Card className="mb-4 border-amber-900/50 bg-amber-950/40">
-          <CardContent className="py-3 text-sm text-amber-400">{captureError}</CardContent>
+      {systemKeysBlocked === null && (
+        <Card className="mb-3 flex items-center gap-3 px-4 py-3 text-text-secondary">
+          <ProgressRing size={16} label="Preparing" />
+          Intercepting system keys…
         </Card>
       )}
-      {!fullCaptureActive && (
-        <p className="mb-4 -mt-4 text-xs text-zinc-400">
-          {
-            '"Enable full capture" switches to full screen so the Windows key can also be captured without opening the Start menu (Caps Lock and Num Lock are always corrected, and Print Screen is always blocked, even without full capture).'
-          }
-        </p>
+      {systemKeysBlocked === true && (
+        <InfoBar severity="info" className="mb-3">
+          While this window is in front, system keys (Windows, Print Screen, Esc, Alt+Tab and the
+          lock keys) light up here but don&apos;t act. Use the mouse to leave this page.
+        </InfoBar>
       )}
-      <Card className="mb-4">
-        <CardHeader className="flex flex-row items-center gap-2">
-          <Keyboard className="h-5 w-5 text-zinc-400" />
-          <div className="flex-1">
-            <CardTitle>Keyboard progress</CardTitle>
-            <CardDescription>
-              {testedCount}
-              {' / '}
-              {allCodes.size}
-              {' keys tested'}
-            </CardDescription>
+      {systemKeysBlocked === 'off' && (
+        <InfoBar
+          severity="info"
+          className="mb-3"
+          action={<Button onClick={() => onNavigate('settings')}>Settings</Button>}
+        >
+          Blocking system keys is turned off, so keys like Windows and Print Screen act normally
+          during the test.
+        </InfoBar>
+      )}
+      {systemKeysBlocked === false && (
+        <InfoBar severity="warning" title="Couldn't intercept system keys." className="mb-3">
+          The Windows key may open Start and shortcuts like Alt+Tab still work. Lock keys are
+          switched back after each press.
+        </InfoBar>
+      )}
+
+      <Section title="Keyboard">
+        <Card className="flex flex-col gap-5 p-5">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <KeyboardRegular aria-hidden className="size-5 shrink-0" />
+            <div className="min-w-48 flex-1">
+              <p>
+                <span className="font-semibold">{testedCount}</span>
+                <span className="text-text-secondary"> of {ALL_CODES.size} keys tested</span>
+              </p>
+              <ProgressBar
+                label="Keys tested"
+                value={progress}
+                tone={testedCount === ALL_CODES.size ? 'success' : 'accent'}
+                className="mt-2 max-w-md"
+              />
+            </div>
+            <div className="flex items-center gap-4 text-caption text-text-secondary">
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 rounded-[2px] border border-control-strong bg-control" />
+                Not tested
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 rounded-[2px] bg-accent-fill" />
+                Pressed
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 rounded-[2px] bg-success" />
+                Tested
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-zinc-500">
-            <span className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded border border-zinc-700 bg-zinc-900" />
-              {' Untested'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded border border-blue-600 bg-blue-600" />
-              {' Pressed'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded border border-emerald-600 bg-emerald-600" />
-              {' Tested'}
-            </span>
-          </div>
-        </CardHeader>
-      </Card>
-      <Card className="mb-4">
-        <CardContent className="overflow-hidden py-6">
           <div
             ref={containerRef}
-            className="w-full"
-            style={{
-              height: scaledHeight ?? void 0
-            }}
+            className="w-full overflow-hidden"
+            style={{ height: scaledHeight ?? undefined }}
           >
             <div
               ref={contentRef}
               className="flex w-fit items-start gap-4"
-              style={{
-                transform: `scale(${scale})`,
-                transformOrigin: 'top left'
-              }}
+              style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
             >
               <div className="flex flex-col gap-1">
                 {MAIN_BLOCK.map((row, i) => (
@@ -955,85 +889,77 @@ export function KeyboardModule() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-2">
-          <Mouse className="h-5 w-5 text-zinc-400" />
-          <div>
-            <CardTitle>Mouse</CardTitle>
-            <CardDescription>
-              {
-                "Click each button — left, middle, right, and the side back/forward buttons if your mouse has them — anywhere on the window. The matching part of the mouse below lights up as you press it, and each button's click count is shown underneath."
-              }
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-5">
-          <div className="relative h-64 w-36 drop-shadow-lg">
-            <div className="absolute left-1 top-28 z-0 flex flex-col gap-2.5">
-              <div
-                title="Back"
-                className={cn(
-                  'h-6 w-4 rounded-l-md border border-r-0 border-zinc-700 bg-gradient-to-b from-zinc-700 to-zinc-900 shadow-sm transition-colors duration-150',
-                  mousePressed.back &&
-                    'border-emerald-600 bg-gradient-to-b from-emerald-500 to-emerald-500'
-                )}
-              />
-              <div
-                title="Forward"
-                className={cn(
-                  'h-6 w-4 rounded-l-md border border-r-0 border-zinc-700 bg-gradient-to-b from-zinc-700 to-zinc-900 shadow-sm transition-colors duration-150',
-                  mousePressed.forward &&
-                    'border-emerald-600 bg-gradient-to-b from-emerald-500 to-emerald-500'
-                )}
-              />
+        </Card>
+      </Section>
+
+      <Section title="Mouse">
+        <Card className="flex flex-wrap items-center gap-8 p-5">
+          <div className="relative h-56 w-32 shrink-0" aria-hidden>
+            <div className="absolute top-24 left-0 z-0 flex flex-col gap-2">
+              {['back', 'forward'].map((id) => (
+                <div
+                  key={id}
+                  className={cn(
+                    'h-6 w-3 rounded-l-control border border-r-0 border-control-strong bg-control',
+                    mousePressed[id] && 'border-transparent bg-accent-fill'
+                  )}
+                />
+              ))}
             </div>
-            <div className="absolute inset-0 z-10 overflow-hidden rounded-t-full rounded-b-[42%] border border-zinc-700 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900">
+            <div className="absolute inset-y-0 right-0 left-2 z-10 overflow-hidden rounded-t-full rounded-b-[42%] border border-control-strong bg-control">
               <div
                 className={cn(
-                  'absolute left-0 top-0 h-28 w-1/2 transition-colors duration-150',
-                  mousePressed.left && 'bg-emerald-500'
+                  'absolute top-0 left-0 h-24 w-1/2',
+                  mouseButtonClass(mousePressed.left)
                 )}
               />
               <div
                 className={cn(
-                  'absolute right-0 top-0 h-28 w-1/2 transition-colors duration-150',
-                  mousePressed.right && 'bg-emerald-500'
+                  'absolute top-0 right-0 h-24 w-1/2',
+                  mouseButtonClass(mousePressed.right)
                 )}
               />
-              <div className="absolute left-1/2 top-0 h-28 w-px -translate-x-1/2 bg-zinc-300/70" />
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-zinc-300/40" />
+              <div className="absolute top-0 left-1/2 h-24 w-px -translate-x-1/2 bg-control-strong" />
+              <div className="absolute inset-x-0 top-24 h-px bg-control-strong" />
             </div>
             <div
               className={cn(
-                'absolute left-1/2 top-3 z-20 h-12 w-4 -translate-x-1/2 rounded-full border border-zinc-400/70 bg-gradient-to-b from-zinc-200 via-zinc-300 to-zinc-200 shadow-inner transition-colors duration-150',
-                mousePressed.middle &&
-                  'border-emerald-600 bg-gradient-to-b from-emerald-500 via-emerald-500 to-emerald-500'
+                'absolute top-4 left-[calc(50%+4px)] z-20 h-10 w-3.5 -translate-x-1/2 rounded-full border border-control-strong bg-solid-bg',
+                mousePressed.middle && 'border-transparent bg-accent-fill'
               )}
-            >
-              <div className="absolute inset-x-1 top-1/2 h-px -translate-y-1/2 bg-zinc-500/50" />
+            />
+          </div>
+          <div className="flex min-w-56 flex-1 flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <CursorClickRegular aria-hidden className="mt-0.5 size-5 shrink-0" />
+              <p className="text-text-secondary">
+                Click each button anywhere in the window: left, middle (wheel), right, and the side
+                back/forward buttons if the mouse has them.
+              </p>
             </div>
+            <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2" aria-label="Mouse buttons">
+              {MOUSE_BUTTON_ORDER.map((id) => (
+                <li
+                  key={id}
+                  className={cn(
+                    'flex items-center justify-between rounded-control border border-control-stroke px-3 py-1.5 transition-colors',
+                    mousePressed[id]
+                      ? 'border-transparent bg-accent-fill text-text-on-accent'
+                      : mouseClickCounts[id] > 0
+                        ? 'border-transparent bg-success-bg text-success'
+                        : 'bg-control'
+                  )}
+                >
+                  <span>{MOUSE_BUTTON_LABELS[id]}</span>
+                  <span className="text-caption">
+                    {mouseClickCounts[id]} {mouseClickCounts[id] === 1 ? 'click' : 'clicks'}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {MOUSE_BUTTON_ORDER.map((id) => (
-              <span
-                key={id}
-                className={cn(
-                  'rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm transition-colors',
-                  mousePressed[id]
-                    ? 'border-emerald-600 bg-emerald-600 text-white'
-                    : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                )}
-              >
-                {MOUSE_BUTTON_LABELS[id]}
-                {' · '}
-                {mouseClickCounts[id]}
-              </span>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </Section>
+    </Page>
   )
 }

@@ -3,9 +3,19 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
   getStaticSystemInfo: () => ipcRenderer.invoke('system:get-static-info'),
+  getWindowsActivation: () => ipcRenderer.invoke('system:get-activation'),
   getDynamicSystemInfo: () => ipcRenderer.invoke('system:get-dynamic-info'),
   setFullscreen: (value) => ipcRenderer.invoke('window:set-fullscreen', value),
-  getPortsSnapshot: () => ipcRenderer.invoke('ports:get-snapshot'),
+  getAppearance: () => ipcRenderer.invoke('window:get-appearance'),
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  updateSettings: (patch) => ipcRenderer.invoke('settings:update', patch),
+  resetSettings: () => ipcRenderer.invoke('settings:reset'),
+  onAppearanceChanged: (callback) => {
+    const listener = (_event, appearance) => callback(appearance)
+    ipcRenderer.on('window:appearance-changed', listener)
+    return () => ipcRenderer.removeListener('window:appearance-changed', listener)
+  },
+  getUsbPorts: () => ipcRenderer.invoke('ports:get-usb-ports'),
   getOtherDevicesSnapshot: () => ipcRenderer.invoke('otherdevices:get-snapshot'),
   getSmartCardStatus: () => ipcRenderer.invoke('smartcard:get-status'),
   getGpsFix: () => ipcRenderer.invoke('gps:get-fix'),
@@ -24,6 +34,13 @@ const api = {
   isElevated: () => ipcRenderer.invoke('system:is-elevated'),
   relaunchAsAdmin: () => ipcRenderer.invoke('system:relaunch-as-admin'),
   getMainDiskHealth: () => ipcRenderer.invoke('disk:get-health'),
+  findDefaultDriverFolder: () => ipcRenderer.invoke('drivers:find-default-folder'),
+  chooseDriverFolder: (defaultPath) => ipcRenderer.invoke('drivers:choose-folder', defaultPath),
+  chooseDriverCatalog: (defaultPath) => ipcRenderer.invoke('drivers:choose-catalog', defaultPath),
+  createDriverCatalog: (folder) => ipcRenderer.invoke('drivers:create-catalog', folder),
+  updateBios: (updaterPath) => ipcRenderer.invoke('drivers:update-bios', updaterPath),
+  scanDrivers: (source) => ipcRenderer.invoke('drivers:scan', source),
+  installDriver: (infPath, deviceId) => ipcRenderer.invoke('drivers:install', infPath, deviceId),
   setPrintScreenBlocked: (blocked) =>
     ipcRenderer.invoke('keyboard:set-printscreen-blocked', blocked),
   onPrintScreenPressed: (callback) => {
@@ -31,7 +48,6 @@ const api = {
     ipcRenderer.on('keyboard:printscreen-pressed', listener)
     return () => ipcRenderer.removeListener('keyboard:printscreen-pressed', listener)
   },
-  revertLockKeyToggle: (key) => ipcRenderer.invoke('keyboard:revert-lock-key', key),
   setKeyboardCaptureActive: (active) => ipcRenderer.invoke('keyboard:set-capture-active', active),
   setEdgeGesturesDisabled: (disabled) =>
     ipcRenderer.invoke('touch:set-edge-gestures-disabled', disabled),

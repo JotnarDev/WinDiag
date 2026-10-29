@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FingerprintPattern } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DismissRegular, EraserRegular, TapSingleRegular } from '@fluentui/react-icons'
+import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { InfoBar } from '@/components/ui/feedback'
 
 const TRAIL_COLORS = [
   '#22d3ee',
@@ -17,6 +19,7 @@ const TRAIL_COLORS = [
 export function TouchModule() {
   const [isActive, setIsActive] = useState(false)
   const [activePoints, setActivePoints] = useState(0)
+  const [maxPoints, setMaxPoints] = useState(0)
   // null while the request is pending, then whether Windows actually blocked them
   const [edgeGesturesBlocked, setEdgeGesturesBlocked] = useState(null)
   const canvasRef = useRef(null)
@@ -62,6 +65,7 @@ export function TouchModule() {
     colorIndexRef.current = 0
     pointersRef.current.clear()
     setActivePoints(0)
+    setMaxPoints(0)
     setIsActive(true)
     setEdgeGesturesBlocked(null)
     void window.api.setFullscreen(true)
@@ -96,6 +100,7 @@ export function TouchModule() {
         color
       })
       setActivePoints(pointersRef.current.size)
+      setMaxPoints((max) => Math.max(max, pointersRef.current.size))
       ctx2d.fillStyle = color
       ctx2d.beginPath()
       ctx2d.arc(e.clientX, e.clientY, 3, 0, Math.PI * 2)
@@ -140,57 +145,78 @@ export function TouchModule() {
     return (
       <div
         className="fixed inset-0 z-50 bg-black"
-        style={{
-          touchAction: 'none'
-        }}
+        style={{ touchAction: 'none', colorScheme: 'dark' }}
       >
         <canvas
           ref={canvasRef}
           // Explicit CSS size: without it the canvas displays at its physical-pixel
           // size (1.5× the screen at 150% scaling) and trails drift off the finger.
           className="absolute inset-0 h-full w-full"
-          style={{
-            touchAction: 'none'
-          }}
+          style={{ touchAction: 'none' }}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center">
-          <div className="rounded-md bg-black/70 px-4 py-2 text-sm text-white">
-            {'Active points: '}
-            {activePoints}
-            {' · Space to clear · Esc to exit'}
-            {edgeGesturesBlocked === true && ' · Windows edge-swipe gestures disabled'}
-            {edgeGesturesBlocked === false &&
-              ' · Edge-swipe gestures still active (run as Administrator to block them)'}
+        {/* Touch-friendly controls, so the test can be left without a keyboard */}
+        <div className="absolute top-1/2 right-4 flex -translate-y-1/2 flex-col gap-2">
+          <button
+            type="button"
+            aria-label="Clear the canvas"
+            title="Clear (Space)"
+            onClick={clearCanvas}
+            className="flex size-12 items-center justify-center rounded-full border border-white/15 bg-[#2c2c2c]/90 text-white hover:bg-[#3a3a3a]"
+          >
+            <EraserRegular className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Exit test"
+            title="Exit (Esc)"
+            onClick={exitTest}
+            className="flex size-12 items-center justify-center rounded-full border border-white/15 bg-[#2c2c2c]/90 text-white hover:bg-[#3a3a3a]"
+          >
+            <DismissRegular className="size-5" />
+          </button>
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center px-4">
+          <div className="rounded-overlay border border-white/10 bg-[#2c2c2c]/90 px-4 py-2 text-center text-white">
+            <span className="font-semibold">{activePoints}</span> active ·{' '}
+            <span className="font-semibold">{maxPoints}</span> max simultaneous
+            {edgeGesturesBlocked === false && (
+              <span className="block text-caption text-[#fce100]">
+                Edge swipes are still active (run as administrator to block them)
+              </span>
+            )}
           </div>
         </div>
       </div>
     )
   }
   return (
-    <div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Touch test</h1>
-        <p className="text-sm text-zinc-500">
-          Full-screen black canvas that draws the trail left by each contact point, to verify the
-          continuity and accuracy of the touch digitizer.
-        </p>
-      </header>
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-2">
-          <FingerprintPattern className="h-5 w-5 text-zinc-400" />
+    <Page
+      title="Touch"
+      description="Draws the trail of every contact point to check the digitizer's accuracy, continuity and multi-touch."
+    >
+      <Card className="flex flex-col gap-4 p-5">
+        <div className="flex items-start gap-4">
+          <TapSingleRegular aria-hidden className="mt-0.5 size-5 shrink-0" />
           <div>
-            <CardTitle>Start test</CardTitle>
-            <CardDescription>
-              {
-                "Touch and drag with one or more fingers to draw on the screen. Each contact point is drawn in a different color (useful for detecting dead zones or gaps in the trail). When WinDiag runs as Administrator, Windows' edge-swipe gestures (Action Center, Task View, Start) are temporarily disabled while the test is active, so swiping in from the edge of the screen doesn't interrupt it. Press Space to clear the canvas and Esc to exit."
-              }
-            </CardDescription>
+            <p>Full-screen touch canvas</p>
+            <p className="text-caption text-text-secondary">
+              Drag one or more fingers across the whole screen, edges and corners included. Each
+              finger draws in its own color: gaps in a line point to dead zones, and the counter
+              shows how many simultaneous touches the screen supports. Use the buttons on the right
+              edge (or Space / Esc) to clear or exit.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={startTest}>Start touch test</Button>
-        </CardContent>
+        </div>
+        <InfoBar severity="info" className="sm:ml-9">
+          When WinDiag runs as administrator, Windows&apos; edge-swipe gestures (notifications,
+          widgets, Task View) are turned off during the test so they don&apos;t interrupt it.
+        </InfoBar>
+        <div className="sm:pl-9">
+          <Button variant="accent" onClick={startTest}>
+            Start touch test
+          </Button>
+        </div>
       </Card>
-    </div>
+    </Page>
   )
 }

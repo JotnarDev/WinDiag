@@ -1,138 +1,215 @@
-import { Cable, RefreshCw, Usb } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { usePortsContext } from '@/context/PortsContext'
+import { useEffect, useState } from 'react'
+import {
+  ArrowResetRegular,
+  CheckmarkCircleFilled,
+  CircleRegular,
+  EyeOffRegular,
+  PauseRegular,
+  PlayRegular
+} from '@fluentui/react-icons'
+import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/Button'
+import { Card, Section } from '@/components/ui/Card'
+import { Badge, InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'
 import { cn } from '@/lib/utils'
 
-export function PortsModule() {
-  const { snapshot, isLoading, recentlyConnected, refresh: load } = usePortsContext()
-  const usbDevices = snapshot?.usbDevices ?? []
-  const ethernetPorts = snapshot?.ethernet ?? []
-  const isInitialLoad = snapshot === null
+const POLL_MS = 1500
+
+function PortCard({ port, number, result, isActive, onIgnore }) {
   return (
-    <div>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Ports</h1>
-          <p className="text-sm text-zinc-500">
-            Snapshot of USB and network ports. Plug or unplug a device, then click Refresh to see
-            the change — anything newly detected is highlighted.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => void load()}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-          Refresh
-        </Button>
-      </header>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Usb className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>USB</CardTitle>
-              <CardDescription>
-                {
-                  "Every USB device Windows currently detects as connected (internal hub/controller entries are hidden — those aren't real ports)"
-                }
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isInitialLoad ? (
-              <p className="text-sm text-zinc-500">Detecting devices…</p>
-            ) : usbDevices.length === 0 ? (
-              <p className="text-sm text-zinc-500">No USB device is currently connected.</p>
-            ) : (
-              <ul className="space-y-2">
-                {usbDevices.map((device) => {
-                  const isNew = Boolean(recentlyConnected[device.id])
-                  const subtitle = [device.manufacturer, device.type]
-                    .filter((part) => Boolean(part))
-                    .join(' · ')
-                  return (
-                    <li
-                      key={device.id}
-                      className={cn(
-                        'flex items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors',
-                        isNew
-                          ? 'border-emerald-800/60 bg-emerald-950/40'
-                          : 'border-zinc-800 bg-zinc-900/60'
-                      )}
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-zinc-200">{device.name}</p>
-                        {subtitle && <p className="truncate text-xs text-zinc-500">{subtitle}</p>}
-                      </div>
-                      {isNew && (
-                        <span className="ml-3 shrink-0 rounded-full bg-emerald-950/60 px-2 py-0.5 text-xs font-medium text-emerald-400">
-                          Connected
-                        </span>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2">
-            <Cable className="h-5 w-5 text-zinc-400" />
-            <div>
-              <CardTitle>Network / Ethernet</CardTitle>
-              <CardDescription>Cable status for each wired network port</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isInitialLoad ? (
-              <p className="text-sm text-zinc-500">Detecting network ports…</p>
-            ) : ethernetPorts.length === 0 ? (
-              <p className="text-sm text-zinc-500">
-                This device has no detectable wired network ports.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {ethernetPorts.map((port) => (
-                  <li
-                    key={port.id}
-                    className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-zinc-200">{port.name}</p>
-                      {port.macAddress && (
-                        <p className="truncate text-xs text-zinc-500">{port.macAddress}</p>
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        'ml-3 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium',
-                        port.connected
-                          ? 'bg-emerald-950/60 text-emerald-400'
-                          : 'bg-zinc-800 text-zinc-400'
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'h-1.5 w-1.5 rounded-full',
-                          port.connected ? 'bg-emerald-500' : 'bg-zinc-400'
-                        )}
-                      />
-                      {port.connected
-                        ? `Connected${port.speedMbps ? ` · ${port.speedMbps} Mbps` : ''}`
-                        : 'No cable'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+    <li
+      className={cn(
+        'flex min-h-[68px] items-center gap-3 rounded-overlay border px-4 py-3 transition-colors duration-200',
+        result ? 'border-card-stroke bg-success-bg' : 'border-card-stroke bg-card'
+      )}
+    >
+      {result ? (
+        <CheckmarkCircleFilled aria-hidden className="size-5 shrink-0 text-success" />
+      ) : (
+        <CircleRegular aria-hidden className="size-5 shrink-0 text-text-tertiary" />
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2">
+          Port {number}
+          {port.typeC && <Badge>USB-C</Badge>}
+          {result?.superSpeed && <Badge>USB 3</Badge>}
+        </p>
+        <p className="truncate text-caption text-text-secondary">
+          {result
+            ? [result.deviceName, result.wasConnectedAtStart && 'already connected']
+                .filter(Boolean)
+                .join(' · ')
+            : isActive
+              ? 'Waiting for a device…'
+              : 'Not tested'}
+        </p>
       </div>
-    </div>
+      {!result && (
+        <Button
+          variant="subtle"
+          icon={EyeOffRegular}
+          aria-label={`Ignore port ${number}`}
+          title="Ignore this port (not a real external port)"
+          onClick={onIgnore}
+        />
+      )}
+    </li>
+  )
+}
+
+export function PortsModule() {
+  const [isActive, setIsActive] = useState(false)
+  // null until the first scan; then { supported, ports }
+  const [scan, setScan] = useState(null)
+  // port id → { deviceName, superSpeed, wasConnectedAtStart }
+  const [tested, setTested] = useState({})
+  const [ignored, setIgnored] = useState(() => new Set())
+
+  const ports = (scan?.ports ?? []).filter((p) => !ignored.has(p.id))
+  const testedCount = ports.filter((p) => tested[p.id]).length
+  const isComplete = ports.length > 0 && testedCount === ports.length
+
+  useEffect(() => {
+    if (!isActive) return
+    let cancelled = false
+    let timeoutId = null
+    let isFirstScan = true
+
+    async function poll() {
+      if (!document.hidden) {
+        try {
+          const result = await window.api.getUsbPorts()
+          if (cancelled) return
+          setScan(result)
+          const wasConnectedAtStart = isFirstScan
+          isFirstScan = false
+          setTested((prev) => {
+            let next = prev
+            for (const port of result.ports) {
+              if (!port.connected || prev[port.id]) continue
+              if (next === prev) next = { ...prev }
+              next[port.id] = {
+                deviceName: port.deviceName,
+                superSpeed: port.superSpeed,
+                wasConnectedAtStart
+              }
+            }
+            return next
+          })
+        } catch {
+          // a failed scan just waits for the next round
+        }
+      }
+      if (!cancelled) timeoutId = setTimeout(() => void poll(), POLL_MS)
+    }
+
+    void poll()
+    return () => {
+      cancelled = true
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [isActive])
+
+  // Stop scanning once every port has had something plugged in
+  useEffect(() => {
+    if (isActive && isComplete) setIsActive(false)
+  }, [isActive, isComplete])
+
+  const reset = () => {
+    setIsActive(false)
+    setScan(null)
+    setTested({})
+    setIgnored(new Set())
+  }
+
+  return (
+    <Page
+      title="USB ports"
+      description="Finds this device's USB ports (USB-A and USB-C) and checks that each one detects a device."
+      actions={
+        <>
+          {!isActive && !isComplete && (
+            <Button variant="accent" icon={PlayRegular} onClick={() => setIsActive(true)}>
+              {scan ? 'Resume' : 'Start test'}
+            </Button>
+          )}
+          {isActive && (
+            <Button icon={PauseRegular} onClick={() => setIsActive(false)}>
+              Pause
+            </Button>
+          )}
+          {scan && (
+            <Button icon={ArrowResetRegular} onClick={reset}>
+              Reset
+            </Button>
+          )}
+        </>
+      }
+    >
+      {scan === null && !isActive && (
+        <InfoBar severity="info">
+          Start the test, then plug a device (a USB stick or mouse) into each port, in any order.
+          Every port turns green once something is detected on it; ports that already have something
+          plugged in count as tested.
+        </InfoBar>
+      )}
+      {isActive && scan === null && (
+        <Card className="flex items-center gap-3 px-4 py-5 text-text-secondary">
+          <ProgressRing size={16} label="Detecting ports" />
+          Detecting USB ports…
+        </Card>
+      )}
+      {scan && !scan.supported && (
+        <InfoBar severity="error">Couldn&apos;t read the USB ports on this device.</InfoBar>
+      )}
+      {scan?.supported && scan.ports.length === 0 && (
+        <InfoBar severity="warning">No user-accessible USB ports were reported.</InfoBar>
+      )}
+      {ports.length > 0 && (
+        <>
+          <Card className="flex flex-col gap-3 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p>
+                <span className="font-display text-subtitle font-semibold">
+                  {testedCount} of {ports.length}
+                </span>{' '}
+                <span className="text-text-secondary">ports tested</span>
+              </p>
+              {isActive && (
+                <span className="flex items-center gap-2 text-text-secondary">
+                  <ProgressRing size={16} label="Scanning" />
+                  Scanning…
+                </span>
+              )}
+            </div>
+            <ProgressBar
+              label="Ports tested"
+              value={(testedCount / ports.length) * 100}
+              tone={isComplete ? 'success' : 'accent'}
+            />
+          </Card>
+          {isComplete && (
+            <InfoBar severity="success" className="mt-3">
+              All {ports.length} USB ports detected a device.
+            </InfoBar>
+          )}
+          <Section title="Ports" className="mt-7">
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {ports.map((port) => (
+                <PortCard
+                  key={port.id}
+                  port={port}
+                  // numbered over all detected ports, so ignoring one doesn't renumber the rest
+                  number={scan.ports.indexOf(port) + 1}
+                  result={tested[port.id]}
+                  isActive={isActive}
+                  onIgnore={() => setIgnored((prev) => new Set(prev).add(port.id))}
+                />
+              ))}
+            </ul>
+          </Section>
+        </>
+      )}
+    </Page>
   )
 }
