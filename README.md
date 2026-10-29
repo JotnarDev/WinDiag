@@ -6,7 +6,7 @@ A diagnostics and setup tool for Windows computers, with a Fluent (Windows 11) d
 - **Author:** JOTNAR.
 - **Stack:** Electron 44 · electron-vite 5 · React 19 · Tailwind CSS 4 · Fluent UI icons · systeminformation.
 
-> If you are an AI or a developer taking over the project, also read [HANDOFF.md](HANDOFF.md) (in Spanish). It explains how each version was built, the decisions made and the working rules.
+> If you are an AI or a developer taking over the project, also read [HANDOFF.md](HANDOFF.md). It explains how each version was built, the decisions made and the working rules.
 
 ---
 

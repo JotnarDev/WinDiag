@@ -1,115 +1,115 @@
-# WinDiag — resumen para una IA que continúe el proyecto
+# WinDiag — handoff for an AI continuing the project
 
-Este archivo explica qué se cambió en cada versión de WinDiag Fluent, cómo se hizo y qué reglas seguir. Léelo antes de tocar el código. El detalle de cada versión también está en `windiag-fluent/CHANGELOG.md`, que la app muestra en Settings → About.
+This file explains what changed in each version of WinDiag Fluent, how it was done and which rules to follow. Read it before touching the code. The details of each version are also in `CHANGELOG.md`, which the app shows under Settings → About.
 
 ---
 
-## 1. Qué es
+## 1. What it is
 
-WinDiag es una herramienta de diagnóstico y preparación de equipos Windows, sobre todo portátiles rugerizados: Panasonic Toughbook (CF-19, CF-20, CF-31, CF-33, CF-54, CF-C2, FZ-55, FZ-A3, FZ-G1, FZ-M1), Getac y Dell Latitude Rugged. La usa un técnico (JOTNAR) para probar el hardware, instalar drivers y BIOS y dejar el equipo listo.
+WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged laptops: Panasonic Toughbook (CF-19, CF-20, CF-31, CF-33, CF-54, CF-C2, FZ-55, FZ-A3, FZ-G1, FZ-M1), Getac and Dell Latitude Rugged. A technician (JOTNAR) uses it to test the hardware, install drivers and BIOS updates, and get the computer ready.
 
-- **Stack:** Electron 44 + electron-vite 5 + React 19 + Tailwind 4. JavaScript, no TypeScript.
-- **Diseño:** Fluent 2 / Windows 11, con iconos de `@fluentui/react-icons`.
-- **Windows:** el main process consulta el sistema con PowerShell, a través de una sesión compartida (`src/main/powershell.js`) y de `systeminformation`.
-- **Permisos:** la app corre siempre como administrador (`requireAdministrator` en `electron-builder.yml`).
+- **Stack:** Electron 44 + electron-vite 5 + React 19 + Tailwind 4. JavaScript, not TypeScript.
+- **Design:** Fluent 2 / Windows 11, with icons from `@fluentui/react-icons`.
+- **Windows:** the main process queries the system with PowerShell, through a shared session (`src/main/powershell.js`), and with `systeminformation`.
+- **Permissions:** the app always runs as administrator (`requireAdministrator` in `electron-builder.yml`).
 
-### Solo se mantiene la versión Fluent
+### Only the Fluent version is maintained
 
-`windiag-fluent/` (rama git `fluent-ui`, versión **2.5.0**) es el único proyecto que se mantiene. El usuario solo necesita esta versión ("con fluent es mucho más fluido").
+This repository (branch `main` of `JotnarDev/hardware-diagnostics-tool`, version **2.5.0**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
 
-Empezó como una copia del WinDiag original (1.0.0, que sigue en la máquina de desarrollo en la rama `windows-integration`). Ese proyecto ya no se desarrolla ni se copia a las memorias, así que **no hay que pasarle los cambios**.
+It started as a copy of the original WinDiag (1.0.0, which is still on the development machine on the `windows-integration` branch). That project is no longer developed or copied to the USB drives, so **do not port changes to it**.
 
-### Identidad de la variante Fluent
+### Identity of the Fluent variant
 
 - appId `com.jotnar.windiag.fluent`
 - productName `WinDiag Fluent`
-- ejecutable `windiag-fluent.exe`
+- executable `windiag-fluent.exe`
 - `setAppUserModelId('com.jotnar.windiag.fluent')`
 
-La identidad es distinta de la original para que las dos puedan convivir instaladas.
+The identity differs from the original so both can be installed side by side.
 
 ---
 
-## 2. Cómo se maneja el versionado (SemVer)
+## 2. Versioning (SemVer)
 
-Las reglas las pidió el usuario y se aplican en cada cambio:
+The user asked for these rules, and they apply to every change:
 
-- **Major:** un rediseño o un cambio que rompe cómo se usa la app. **2.0.0 = el paso a Fluent.**
-- **Minor:** una función o página nueva. El patch vuelve a 0.
-- **Patch:** la corrección de algo que ya existía.
+- **Major:** a redesign or a change that breaks how the app is used. **2.0.0 = the move to Fluent.**
+- **Minor:** a new feature or page. Patch goes back to 0.
+- **Patch:** a fix to something that already existed.
 
-**Procedimiento en cada cambio:**
-1. Hacer el cambio.
-2. Subir la versión con `npm version X.Y.Z --no-git-tag-version`, que actualiza `package.json` y `package-lock.json`.
-3. Agregar la entrada al principio de `CHANGELOG.md`, siguiendo el formato existente: `## X.Y.Z — AAAA-MM-DD`, luego `### Added` / `### Fixed` / `### Changed` y viñetas `- ` de una línea. **Este formato no se puede cambiar:** `src/renderer/src/lib/changelog.js` lo lee con regex para mostrarlo en Settings → About.
-4. Compilar y generar el zip. El nombre lleva la versión: `dist/WinDiag Fluent-X.Y.Z-win.zip`.
-5. Decirle al usuario en qué versión quedó.
+**Procedure for every change:**
+1. Make the change.
+2. Bump the version with `npm version X.Y.Z --no-git-tag-version`, which updates `package.json` and `package-lock.json`.
+3. Add the entry at the top of `CHANGELOG.md`, following the existing format: `## X.Y.Z — YYYY-MM-DD`, then `### Added` / `### Fixed` / `### Changed` and one-line `- ` bullets. **This format must not change:** `src/renderer/src/lib/changelog.js` parses it with a regex to show it in Settings → About.
+4. Build and create the zip. The name includes the version: `dist/WinDiag Fluent-X.Y.Z-win.zip`.
+5. Tell the user which version it ended up as.
 
-`__APP_VERSION__` sale de `package.json` (vía `electron.vite.config.mjs`) y se muestra en el pie del menú y en Settings → About.
+`__APP_VERSION__` comes from `package.json` (through `electron.vite.config.mjs`) and is shown at the bottom of the menu and in Settings → About.
 
 ---
 
-## 3. Qué cambió en cada versión y cómo se hizo
+## 3. What changed in each version and how
 
-### 2.0.0 — Paso a Fluent (major)
+### 2.0.0 — Move to Fluent (major)
 
-Se reescribió toda la interfaz con el estilo de Windows 11.
+The whole interface was rewritten in the Windows 11 style.
 
-- **Ventana:**
-  - `titleBarStyle: 'hidden'` con `titleBarOverlay` de 48 px; Windows dibuja los botones de minimizar, maximizar y cerrar.
-  - Mica (`backgroundMaterial`) cuando el build es ≥ 22621 y la transparencia está activada.
-  - El tamaño sale del área de trabajo de la pantalla: máximo 1100×760 y mínimo 640×480, porque la mayoría de equipos usan escala del 150 %.
-- **Navegación:** `components/AppShell.jsx` contiene la barra de título y un NavigationView con los grupos de `NAV_GROUPS`: Overview, *Hardware tests* y *Tools*. Debajo de 1008 px de ancho el panel se compacta o pasa a overlay. En el pie están *Run as administrator*, *Settings* y la versión.
-- **Componentes UI propios, sin librerías pesadas:**
-  - `components/ui/Button.jsx`, con variantes accent, standard, subtle y danger.
-  - `components/ui/Card.jsx`: Card, Section, SettingsCard (con prop `stacked` desde 2.4.0), Expander y PropertyList.
-  - `components/ui/feedback.jsx`: InfoBar, Badge, ProgressBar, ProgressRing, ToggleSwitch y ContentDialog (sobre `<dialog>` nativo).
-  - `components/ui/inputs.jsx`: Select y TextBox.
+- **Window:**
+  - `titleBarStyle: 'hidden'` with a 48 px `titleBarOverlay`; Windows draws the minimize, maximize and close buttons.
+  - Mica (`backgroundMaterial`) when the build is ≥ 22621 and transparency is on.
+  - The size comes from the screen's work area: at most 1100×760 and at least 640×480, because most computers use 150 % scaling.
+- **Navigation:** `components/AppShell.jsx` holds the title bar and a NavigationView with the `NAV_GROUPS` groups: Overview, *Hardware tests* and *Tools*. Below 1008 px of width the pane becomes compact or switches to overlay. The footer has *Run as administrator*, *Settings* and the version.
+- **Custom UI components, no heavy libraries:**
+  - `components/ui/Button.jsx`, with accent, standard, subtle and danger variants.
+  - `components/ui/Card.jsx`: Card, Section, SettingsCard (with a `stacked` prop since 2.4.0), Expander and PropertyList.
+  - `components/ui/feedback.jsx`: InfoBar, Badge, ProgressBar, ProgressRing, ToggleSwitch and ContentDialog (built on the native `<dialog>`).
+  - `components/ui/inputs.jsx`: Select and TextBox.
   - `components/Page.jsx`.
-- **Tokens de color:** están en `assets/main.css`, para claro y oscuro. Los tonos del acento se derivan con `oklch(from var(--accent) L c h)`. También cubre `forced-colors` y `prefers-reduced-motion`.
+- **Color tokens:** in `assets/main.css`, for light and dark. Accent shades are derived with `oklch(from var(--accent) L c h)`. It also handles `forced-colors` and `prefers-reduced-motion`.
 - **Settings:**
-  - `src/main/settings.js` guarda un JSON en `userData/settings.json`. Su objeto `SCHEMA` valida cada clave, y lo que no es válido se descarta.
-  - IPC: `settings:get`, `settings:update` y `settings:reset`.
-  - `SettingsContext` en el renderer.
-  - `main.jsx` espera a tener la apariencia y los settings antes del primer render, para que la ventana no parpadee.
-- **Páginas:** se reescribieron todas en Fluent.
-  - Se creó **Technician tools** (`ToolsModule`), que reúne Windows Update, activación, reportes y utilidades.
-  - Se eliminaron lucide-react, class-variance-authority y los componentes shadcn.
+  - `src/main/settings.js` saves a JSON file in `userData/settings.json`. Its `SCHEMA` object validates each key, and anything invalid is discarded.
+  - IPC: `settings:get`, `settings:update` and `settings:reset`.
+  - `SettingsContext` in the renderer.
+  - `main.jsx` waits for the appearance and settings before the first render, so the window does not flicker.
+- **Pages:** all of them were rewritten in Fluent.
+  - **Technician tools** (`ToolsModule`) was created; it groups Windows Update, activation, reports and utilities.
+  - lucide-react, class-variance-authority and the shadcn components were removed.
 - **Users:**
-  - Se puede borrar cualquier cuenta excepto las integradas, incluida la del usuario actual. Las integradas se detectan por el RID del SID: 500, 501, 503 y 504.
-  - Se muestran los mismos mensajes que *Local Users and Groups* (lusrmgr) de Windows.
-  - Sigue siendo obligatorio que Sysprep esté abierto.
-- **Teclado:** `keyboard-hook.js` es un hook WH_KEYBOARD_LL en un proceso PowerShell propio (C# con Add-Type). Mientras la prueba de teclado está al frente, bloquea Windows, Print Screen, Esc, Alt+Tab y las teclas de bloqueo. Incluye la corrección de Right Shift (scan 0x36 con la marca *extended*).
+  - Any account can be deleted except the built-in ones, including the current user's. Built-in accounts are detected by the SID's RID: 500, 501, 503 and 504.
+  - The same messages as Windows *Local Users and Groups* (lusrmgr) are shown.
+  - Sysprep must still be open.
+- **Keyboard:** `keyboard-hook.js` is a WH_KEYBOARD_LL hook in its own PowerShell process (C# through Add-Type). While the keyboard test is in the foreground, it blocks the Windows key, Print Screen, Esc, Alt+Tab and the lock keys. It includes the Right Shift fix (scan code 0x36 with the *extended* flag).
 
-### 2.1.0 — Página Drivers (minor)
+### 2.1.0 — Drivers page (minor)
 
-Compara los drivers instalados con una carpeta de drivers e instala los más nuevos.
+Compares the installed drivers with a driver folder and installs the newer ones.
 
-- **`src/main/inf-parser.js` (funciones puras, sin Electron):**
-  - Lee un `.inf` en UTF-16 con o sin BOM, UTF-8 o latin1.
-  - Saca `DriverVer` (resuelve las `%strings%`), el proveedor, la clase y los hardware IDs de las secciones de modelos que aplican a la arquitectura. En x64 solo cuentan las secciones `NTamd64`; las que no tienen decoración se ignoran, lo que de paso descarta drivers de XP.
+- **`src/main/inf-parser.js` (pure functions, no Electron):**
+  - Reads an `.inf` in UTF-16 with or without BOM, UTF-8 or latin1.
+  - Extracts `DriverVer` (resolving `%strings%`), the provider, the class and the hardware IDs from the model sections that apply to the architecture. On x64 only `NTamd64` sections count; undecorated ones are ignored, which also drops XP drivers.
 - **`src/main/drivers.js`:**
-  - Busca `X:\02 Drivers` en todas las unidades.
-  - Recorre la carpeta hasta 12 niveles y se salta las carpetas que terminan en `- OLD`.
-  - Parsea los `.inf` con concurrencia 8 y guarda una caché en memoria por tamaño y fecha del archivo.
-  - Hace **una sola** consulta PowerShell que cruza Win32_PnPEntity (hardware y compatible IDs, código de error) con Win32_PnPSignedDriver (versión, fecha, inf).
-- **Emparejamiento:**
-  - Compara los hardware IDs del dispositivo con los del `.inf`.
-  - Los compatible IDs solo se usan si el dispositivo no tiene driver.
-  - Gana el candidato más nuevo: primero por versión y, si empatan, por fecha.
-  - Cada dispositivo queda como `outdated`, `missing` (sin driver o con error 28) o `current`.
-- **Instalación:**
-  - Usa `pnputil /add-driver <inf> /install`. El código 3010 significa que hace falta reiniciar; el 259 significa que no se aplicó.
-  - Después vuelve a leer la versión del dispositivo. Si no cambió, avisa que Windows se quedó con el driver que considera mejor.
-  - **Solo acepta `.inf` encontrados en el último escaneo** (`scannedInfPaths`).
-- **UI (`DriversModule.jsx`):** secciones *Updates available* (con *Update all*), *Missing drivers* y un expander *Up to date*. El último resultado se guarda en una variable del módulo, para no perderlo al cambiar de página.
-- **IPC:** `drivers:find-default-folder`, `drivers:choose-folder`, `drivers:scan` y `drivers:install`.
+  - Looks for `X:\02 Drivers` on every drive.
+  - Walks the folder up to 12 levels deep and skips folders ending in `- OLD`.
+  - Parses the `.inf` files with a concurrency of 8 and keeps an in-memory cache keyed by file size and date.
+  - Runs **a single** PowerShell query that joins Win32_PnPEntity (hardware and compatible IDs, error code) with Win32_PnPSignedDriver (version, date, inf).
+- **Matching:**
+  - Compares the device's hardware IDs with the ones in the `.inf`.
+  - Compatible IDs are only used if the device has no driver.
+  - The newest candidate wins: first by version and, on a tie, by date.
+  - Each device ends up as `outdated`, `missing` (no driver or error 28) or `current`.
+- **Installation:**
+  - Uses `pnputil /add-driver <inf> /install`. Exit code 3010 means a restart is needed; 259 means it was not applied.
+  - Afterwards it reads the device's version again. If it did not change, it warns that Windows kept the driver it considers better.
+  - **Only accepts `.inf` files found in the last scan** (`scannedInfPaths`).
+- **UI (`DriversModule.jsx`):** *Updates available* (with *Update all*), *Missing drivers* and an *Up to date* expander. The last result is kept in a module-level variable, so it is not lost when switching pages.
+- **IPC:** `drivers:find-default-folder`, `drivers:choose-folder`, `drivers:scan` and `drivers:install`.
 
-### 2.2.0 — Catálogo `.json` (minor)
+### 2.2.0 — `.json` catalog (minor)
 
-Sirve para no leer 440 `.inf` por la red cuando los drivers están en un servidor.
+Avoids reading 440 `.inf` files over the network when the drivers are on a server.
 
-- **`src/main/driver-catalog.js` (funciones puras):** `catalogEntry`, `buildCatalog` y `parseCatalog`. El formato es:
+- **`src/main/driver-catalog.js` (pure functions):** `catalogEntry`, `buildCatalog` and `parseCatalog`. The format is:
 
   ```json
   {
@@ -117,7 +117,7 @@ Sirve para no leer 440 `.inf` por la red cuando los drivers están en un servido
     "format": 1,
     "arch": "x64",
     "root": "",
-    "generated": "AAAA-MM-DD",
+    "generated": "YYYY-MM-DD",
     "bios": [ ... ],
     "drivers": [
       {
@@ -126,25 +126,25 @@ Sirve para no leer 440 `.inf` por la red cuando los drivers están en un servido
         "provider": "...",
         "class": "...",
         "version": "1.2.3.4",
-        "date": "AAAA-MM-DD",
+        "date": "YYYY-MM-DD",
         "hardwareIds": ["PCI\\VEN_..."]
       }
     ]
   }
   ```
 
-  Un `root` vacío significa que las rutas parten de la carpeta del `.json`. Las entradas sin path, version o hardwareIds se ignoran, así que el usuario puede agregar o quitar entradas a mano.
-- **Settings:** clave `driverCatalog`, con un campo de ruta y un botón Browse… en Settings → Drivers.
-- **Página Drivers:**
-  - *Compare with* muestra el catálogo (si hay uno) y la carpeta.
-  - *Create catalog…* escanea la carpeta y guarda el `.json`, por defecto dentro de la misma carpeta.
-  - Después de crearlo aparece el botón *Use this catalog*.
-- **Rutas de red:** se recomienda usar `\\servidor\recurso` y no letras mapeadas, porque una app elevada no ve las unidades mapeadas por el usuario. Los mensajes de error lo explican.
-- **Catálogo real:** está en la memoria **MIKE 2**, en `02 Drivers/drivers-catalog.json` (212 drivers, 8683 IDs y 10 BIOS).
+  An empty `root` means paths are relative to the `.json` file's folder. Entries without path, version or hardwareIds are ignored, so the user can add or remove entries by hand.
+- **Settings:** `driverCatalog` key, with a path field and a Browse… button in Settings → Drivers.
+- **Drivers page:**
+  - *Compare with* shows the catalog (if there is one) and the folder.
+  - *Create catalog…* scans the folder and saves the `.json`, by default inside that same folder.
+  - After it is created, a *Use this catalog* button appears.
+- **Network paths:** use `\\server\share` instead of mapped letters, because an elevated app cannot see the drives mapped by the user. The error messages explain this.
+- **Real catalog:** on the **MIKE 2** USB drive, at `02 Drivers/drivers-catalog.json` (212 drivers, 8683 IDs and 10 BIOS entries).
 
-### 2.3.0 — Actualización de BIOS (minor)
+### 2.3.0 — BIOS updates (minor)
 
-- Las BIOS son `.exe` y no `.inf`, así que solo se comparan desde la lista `"bios"` del catálogo:
+- BIOS updates are `.exe` files, not `.inf`, so they are only compared from the catalog's `"bios"` list:
 
   ```json
   {
@@ -159,132 +159,131 @@ Sirve para no leer 440 `.inf` por la red cuando los drivers están en un servido
   }
   ```
 
-- **Datos del equipo:** la consulta de dispositivos también devuelve el `system` (Win32_ComputerSystem para Manufacturer, Model y SystemSKUNumber; Win32_BIOS para SMBIOSBIOSVersion y ReleaseDate).
-- **Comparación:** `matchBios` y `compareBiosVersions` comparan los grupos numéricos de la versión.
+- **Computer data:** the device query also returns `system` (Win32_ComputerSystem for Manufacturer, Model and SystemSKUNumber; Win32_BIOS for SMBIOSBIOSVersion and ReleaseDate).
+- **Comparison:** `matchBios` and `compareBiosVersions` compare the numeric groups of the version.
 - **`launchBiosUpdate(path)`:**
-  - Solo acepta el updater que ofreció el último escaneo.
-  - Se niega si el equipo está solo con batería (`si.battery()`).
-  - Suspende BitLocker por un reinicio (`Suspend-BitLocker -RebootCount 1`). Si no se pudo y BitLocker está activo, se detiene.
-  - Lanza el `.exe` desacoplado (`spawn` detached). Los `.cmd` y `.bat` se lanzan con `cmd /d /s /c`.
-- **UI:** una tarjeta *BIOS* en la página Drivers y un ContentDialog de confirmación con las advertencias.
-- **Create catalog…:** agrega como BIOS los `.exe` que encuentra en carpetas con "bios" en el nombre (`guessBiosEntry`). Saca la versión del nombre del archivo. Al guardar encima de un catálogo existente, **conserva las entradas de BIOS que ya tenía**, porque se revisan a mano.
+  - Only accepts the updater offered by the last scan.
+  - Refuses if the computer is running on battery only (`si.battery()`).
+  - Suspends BitLocker for one restart (`Suspend-BitLocker -RebootCount 1`). If that fails and BitLocker is on, it stops.
+  - Launches the `.exe` detached (`spawn` detached). `.cmd` and `.bat` files are launched with `cmd /d /s /c`.
+- **UI:** a *BIOS* card on the Drivers page and a confirmation ContentDialog with the warnings.
+- **Create catalog…:** adds as BIOS entries the `.exe` files found in folders with "bios" in their name (`guessBiosEntry`). It takes the version from the file name. When saving over an existing catalog, it **keeps the BIOS entries that were already there**, because they are reviewed by hand.
 
-### 2.3.1 — Modelos Panasonic y generación (patch)
+### 2.3.1 — Panasonic models and generation (patch)
 
-- **El problema:** Panasonic guarda el modelo como `<modelo>-<generación>`, por ejemplo `FZ55-1` = FZ-55 MK1, `CF-33-2` = MK2 y `CF-54-3` = MK3. Además, en las versiones de BIOS de Panasonic el primer número es la generación (`V1.00L31` = MK1). Los archivos usan la forma `V100L31`, mientras que Windows reporta `V1.00L31`.
-- **`src/main/device-model.js`:** `friendlyModel()` convierte `FZ55-1` en `FZ-55 MK1`. Overview muestra el nombre amigable y debajo el *Model ID* original, y la tarjeta BIOS hace lo mismo.
+- **The problem:** Panasonic stores the model as `<model>-<generation>`, for example `FZ55-1` = FZ-55 MK1, `CF-33-2` = MK2 and `CF-54-3` = MK3. Also, in Panasonic BIOS versions the first number is the generation (`V1.00L31` = MK1). Files use the `V100L31` form, while Windows reports `V1.00L31`.
+- **`src/main/device-model.js`:** `friendlyModel()` turns `FZ55-1` into `FZ-55 MK1`. Overview shows the friendly name with the original *Model ID* below it, and the BIOS card does the same.
 - **`driver-catalog.js`:**
-  - `normalizeBiosVersion()` convierte `V100L31` en `V1.00L31`.
-  - `normalizeModel()` deja solo letras y números, así `FZ-55` coincide con `FZ55-1`.
-  - `installedPrefix` exige que la BIOS instalada empiece así.
-  - **Doble verificación:** la generación del modelo (`-1`) tiene que coincidir con la de `installedPrefix` (`V1.`). Si algo no cuadra, no se ofrece ninguna BIOS.
+  - `normalizeBiosVersion()` turns `V100L31` into `V1.00L31`.
+  - `normalizeModel()` keeps only letters and numbers, so `FZ-55` matches `FZ55-1`.
+  - `installedPrefix` requires the installed BIOS to start with that text.
+  - **Double check:** the model's generation (`-1`) must match the one in `installedPrefix` (`V1.`). If anything does not match, no BIOS is offered.
 
-### 2.3.2 — Error `launchBiosUpdate is not defined` (patch)
+### 2.3.2 — `launchBiosUpdate is not defined` error (patch)
 
-- **Causa:** Prettier había juntado en una sola línea el `import { … } from './drivers'` de `src/main/index.js`. Un cambio posterior buscaba el texto con el formato de varias líneas, no lo encontró y no se aplicó. Faltaban `launchBiosUpdate`, `chooseCatalogFile` y `createCatalog`.
-- **Lección:** después de editar con scripts, verifica que cada reemplazo se haya aplicado (con un `assert`) y corre la revisión de nombres indefinidos de la sección 5.
+- **Cause:** Prettier had collapsed the `import { … } from './drivers'` in `src/main/index.js` onto a single line. A later change searched for the multi-line form, did not find it and was not applied. `launchBiosUpdate`, `chooseCatalogFile` and `createCatalog` were missing.
+- **Lesson:** after editing with scripts, verify that every replacement was applied (with an `assert`) and run the undefined-names check from section 5.
 
-### 2.3.3 — Switch de Windows Update (patch)
+### 2.3.3 — Windows Update switch (patch)
 
-- **Antes:** el estado se basaba en la política `NoAutoUpdate` y se leía una sola vez. Si Windows (*Update Medic*) volvía a encender el servicio, el switch seguía diciendo Off.
-- **Ahora:**
-  - `getWindowsUpdateState()` devuelve `{ state, running, startType, policy }` y marca *Off* solo si el servicio está detenido **y** en Disabled.
-  - `ToolsModule` lo vuelve a consultar cada 5 s mientras la página está abierta, y pausa la consulta mientras aplica un cambio.
-  - Muestra el detalle "Service running · startup Manual · blocked by policy".
-- **Cómo se desactiva Windows Update (sin cambios):**
-  - Las políticas en `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate` (NoAutoUpdate, UseWUServer, un WUServer falso en 127.0.0.1 y DoNotConnect…).
-  - Además, `sc config wuauserv start= disabled` y `net stop`.
+- **Before:** the state was based on the `NoAutoUpdate` policy and was read only once. If Windows (*Update Medic*) turned the service back on, the switch still said Off.
+- **Now:**
+  - `getWindowsUpdateState()` returns `{ state, running, startType, policy }` and reports *Off* only if the service is stopped **and** set to Disabled.
+  - `ToolsModule` polls it every 5 s while the page is open, and pauses polling while applying a change.
+  - It shows details such as "Service running · startup Manual · blocked by policy".
+- **How Windows Update is turned off (unchanged):**
+  - Policies in `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate` (NoAutoUpdate, UseWUServer, a fake WUServer at 127.0.0.1, DoNotConnect…).
+  - Plus `sc config wuauserv start= disabled` and `net stop`.
 
-### 2.3.4 — Detección de activación (patch)
+### 2.3.4 — Activation detection (patch)
 
-- **Antes:** la consulta listaba todas las `SoftwareLicensingProduct` y las filtraba en PowerShell. Tardaba más de 10 s, el timeout la mataba y la activación quedaba vacía.
-- **Ahora:**
-  - Una consulta WQL filtrada en WMI: `ApplicationID='55c92734-…' AND PartialProductKey IS NOT NULL`, con 60 s de timeout.
-  - La lee el IPC aparte `system:get-activation`, y `SystemInfoContext` mete el resultado en `os.activated` cuando llega.
-  - Mientras tanto, `os.activated` vale `undefined` y la app muestra "Checking activation…". El valor `null` significa "Activation unknown".
+- **Before:** the query listed every `SoftwareLicensingProduct` and filtered them in PowerShell. It took more than 10 s, the timeout killed it and activation stayed empty.
+- **Now:**
+  - A WQL query filtered in WMI: `ApplicationID='55c92734-…' AND PartialProductKey IS NOT NULL`, with a 60 s timeout.
+  - It runs through a separate IPC, `system:get-activation`, and `SystemInfoContext` puts the result into `os.activated` when it arrives.
+  - Until then, `os.activated` is `undefined` and the app shows "Checking activation…". The value `null` means "Activation unknown".
 
-### 2.4.0 — Paletas de colores (minor)
+### 2.4.0 — Color palettes (minor)
 
 - **`src/renderer/src/lib/palette.js`:**
-  - `PALETTES`: Windows (el acento del sistema), Ocean, Forest, Sunset, Grape, Slate y Custom.
-  - `applyPalette()` fija `--accent` y, si hay tinte, `--tint` y `data-tint` en `<html>`.
-- **CSS:** `html[data-tint]` mezcla el tinte en `--solid-bg` y `--flyout` con `color-mix`. Con Mica, el tinte se aplica como una capa encima.
-- **Settings:** claves `palette`, `customAccent` y `customTint` (`''` = sin tinte). La UI tiene muestras tipo radio, y Custom agrega `<input type=color>` que previsualiza en vivo y guarda 400 ms después de soltarlo.
-- **Aplicación:** la paleta se aplica en `main.jsx` antes del primer render, en `SettingsContext` cuando cambian los settings y cuando cambia el acento de Windows.
+  - `PALETTES`: Windows (the system accent), Ocean, Forest, Sunset, Grape, Slate and Custom.
+  - `applyPalette()` sets `--accent` and, if there is a tint, `--tint` and `data-tint` on `<html>`.
+- **CSS:** `html[data-tint]` mixes the tint into `--solid-bg` and `--flyout` with `color-mix`. With Mica, the tint is applied as a layer on top.
+- **Settings:** keys `palette`, `customAccent` and `customTint` (`''` = no tint). The UI uses radio-style swatches, and Custom adds an `<input type=color>` that previews live and saves 400 ms after release.
+- **When it is applied:** in `main.jsx` before the first render, in `SettingsContext` when settings change, and when the Windows accent color changes.
 
-### 2.5.0 — Notas de versión en About (minor)
+### 2.5.0 — Release notes in About (minor)
 
-- Settings → About ahora es un Expander que muestra todas las versiones. `lib/changelog.js` importa `CHANGELOG.md?raw` y lo parsea.
+- Settings → About is now an Expander that lists every version. `lib/changelog.js` imports `CHANGELOG.md?raw` and parses it.
 
 ---
 
-## 4. Estructura del código (Fluent)
+## 4. Code structure (Fluent)
 
 ```
 src/main/
-  index.js          ventana, apariencia (Mica/acento), IPC (handle() valida el origen)
-  powershell.js     sesión PowerShell compartida (runPowerShell) y aislada
-  settings.js       settings.json con SCHEMA
-  system-info.js    specs estáticas/dinámicas, activación
-  system-tools.js   Windows Update, reportes, elevación, sysprep, chkdsk
-  drivers.js        escaneo, pnputil, BIOS, crear catálogo
-  inf-parser.js     parser de .inf (puro)
-  driver-catalog.js catálogo JSON, BIOS, versiones (puro)
-  device-model.js   nombres Panasonic (puro)
+  index.js          window, appearance (Mica/accent), IPC (handle() validates the sender)
+  powershell.js     shared PowerShell session (runPowerShell) and isolated runs
+  settings.js       settings.json with SCHEMA
+  system-info.js    static/dynamic specs, activation
+  system-tools.js   Windows Update, reports, elevation, sysprep, chkdsk
+  drivers.js        scanning, pnputil, BIOS, catalog creation
+  inf-parser.js     .inf parser (pure)
+  driver-catalog.js JSON catalog, BIOS, versions (pure)
+  device-model.js   Panasonic names (pure)
   users.js, ports.js, other-devices.js, disk-health.js, edge-gestures.js, keyboard-hook.js
-src/preload/index.js  window.api (cada método = un canal IPC)
+src/preload/index.js  window.api (each method = one IPC channel)
 src/renderer/src/
-  App.jsx (mapa MODULES), main.jsx, components/, context/, lib/, modules/
+  App.jsx (MODULES map), main.jsx, components/, context/, lib/, modules/
 ```
 
-**Para agregar una página:**
-1. Un módulo en `modules/`.
-2. Una entrada en `MODULES` (`App.jsx`) y en `NAV_GROUPS` (`AppShell.jsx`).
-3. Su id en `PAGE_IDS` de `settings.js`.
+**To add a page:**
+1. A module in `modules/`.
+2. An entry in `MODULES` (`App.jsx`) and in `NAV_GROUPS` (`AppShell.jsx`).
+3. Its id in `PAGE_IDS` in `settings.js`.
 
-**Para agregar un IPC:**
-1. `handle('canal', …)` en `index.js`.
-2. El método en `preload/index.js`.
-3. La llamada `window.api.metodo()` en el renderer.
-
----
-
-## 5. Cómo se trabajó
-
-- **El desarrollo se hace en Linux**, así que nada específico de Windows se probó en Windows: Mica, el hook de teclado, pnputil, el actualizador de BIOS, BitLocker, Windows Update, borrar usuarios, etc. El usuario prueba en los equipos y reporta.
-- **Compilar:** `npx electron-vite build && npx electron-builder --win zip --x64` genera `dist/WinDiag Fluent-X.Y.Z-win.zip`, que es portable. La copia en la memoria no trae `node_modules`: hay que hacer `npm install` antes. En la máquina de desarrollo, `windiag-fluent/node_modules/electron/dist` tenía un Electron de Linux descargado a mano, que solo servía para las capturas.
-- **Revisión visual:** un script de Electron carga `out/renderer` con IPC simulado y saca capturas en claro, en oscuro y a distintos anchos. No está en el repo; estaba en el scratchpad de la sesión.
-- **Revisión de nombres indefinidos:** ESLint con solo la regla `no-undef` sobre `src`. Además se verifica que cada `window.api.X` del renderer exista en el preload y que cada canal tenga su `handle`.
-- **Formato:** Prettier (configuración del repo). Ojo: puede juntar o separar imports y romper un buscar-y-reemplazar.
-- **Pruebas de funciones puras:** `inf-parser`, `driver-catalog` y `device-model` se probaron con Node sobre la carpeta real de drivers y con casos de Panasonic.
+**To add an IPC call:**
+1. `handle('channel', …)` in `index.js`.
+2. The method in `preload/index.js`.
+3. The `window.api.method()` call in the renderer.
 
 ---
 
-## 6. Reglas y preferencias del usuario
+## 5. How the work was done
 
-- El usuario escribe en español y se le responde en español. **Los textos de la app van en inglés.**
-- **Commits solo cuando el usuario lo pide** ("haz el commit"). Los mensajes terminan con `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. El usuario de git es `jotnar`.
-- Confirmar antes de borrar o sobrescribir, y revisar primero el destino.
-- **Equipos objetivo:**
-  - casi todos usan escala del 150 % (hay que probar canvas y touch con DPR 1.5);
-  - pueden tener solo 4 GB de RAM, así que nada de procesos persistentes ni dependencias pesadas.
-- **Memoria "MIKE 2"** (`/media/jotnar/MIKE 2` en Linux):
-  - **Es la memoria de trabajo.** Los builds se guardan ahí siguiendo su `LEEME - Organizacion.txt`.
-  - `01 Diagnostico y Utilidades/WinDiag (App) - ACTUAL <fecha>` es la versión en uso, y `Abrir WinDiag.bat` la lanza.
-  - `04 Desarrollo y Pruebas/WinDiag - Build de prueba <fecha>` guarda los builds sin probar.
-  - Lo viejo se renombra con el sufijo " - OLD".
-  - No se toca ACTUAL ni el `.bat` sin que el usuario lo pida, y cada cambio se anota en el LEEME.
-- **Nunca tocar `sdb`:** es el disco del sistema Linux.
+- **Development happens on Linux**, so nothing Windows-specific was tested on Windows: Mica, the keyboard hook, pnputil, the BIOS updater, BitLocker, Windows Update, deleting users, etc. The user tests on the computers and reports back.
+- **Build:** `npx electron-vite build && npx electron-builder --win zip --x64` produces `dist/WinDiag Fluent-X.Y.Z-win.zip`, which is portable. The copy on the USB drive has no `node_modules`: run `npm install` first. On the development machine, `node_modules/electron/dist` had a manually downloaded Linux Electron, used only for screenshots.
+- **Visual review:** an Electron script loads `out/renderer` with mocked IPC and takes screenshots in light mode, dark mode and at different widths. It is not in the repo; it lived in the session's scratchpad.
+- **Undefined-names check:** ESLint with only the `no-undef` rule over `src`. It is also checked that every `window.api.X` in the renderer exists in the preload and that every channel has its `handle`.
+- **Formatting:** Prettier (repo config). Careful: it can join or split imports and break a find-and-replace.
+- **Pure function tests:** `inf-parser`, `driver-catalog` and `device-model` were tested with Node against the real driver folder and with Panasonic cases.
 
 ---
 
-## 7. Pendiente / sin probar
+## 6. User rules and preferences
 
-- **Sin probar en Windows:** todo lo de las versiones 2.x, en especial la instalación con pnputil, el actualizador de BIOS, BitLocker, las rutas de red, el switch de Windows Update, la activación y Mica con tinte.
-- **Catálogo por revisar:**
-  - CF-C2 tiene dos BIOS V2 (`V2.00L21` y `V2.50L16`); confirmar si la V2.50 es para otro submodelo y, si es así, usar `sku`.
-  - `ec_33_1_m195057.exe` y `BiosUpdate_R18-0354.exe` quedaron sin versión, así que se ignoran.
-- **Preguntas sin respuesta del usuario:**
-  - ¿Guardar los datos de la app en una carpeta `data` junto al exe (versión portable)?
-  - ¿Quitar el requisito de Sysprep para borrar usuarios?
-  - Lo que se haga después del commit `e6b212e` (2.5.0) queda sin commitear hasta que el usuario lo pida.
+- The user writes in Spanish and is answered in Spanish. **App text is in English.**
+- **Commit only when the user asks** ("haz el commit"). Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. The git user is `jotnar`.
+- Confirm before deleting or overwriting, and check the target first.
+- **Target computers:**
+  - almost all use 150 % scaling (test canvas and touch at DPR 1.5);
+  - they may have only 4 GB of RAM, so no persistent processes or heavy dependencies.
+- **"MIKE 2" USB drive** (`/media/jotnar/MIKE 2` on Linux):
+  - **It is the working drive.** Builds are stored there following its `LEEME - Organizacion.txt`.
+  - `01 Diagnostico y Utilidades/WinDiag (App) - ACTUAL <date>` is the version in use, and `Abrir WinDiag.bat` launches it.
+  - `04 Desarrollo y Pruebas/WinDiag - Build de prueba <date>` holds untested builds.
+  - Old items are renamed with the " - OLD" suffix.
+  - Do not touch ACTUAL or the `.bat` unless the user asks, and log every change in the LEEME.
+- **Never touch `sdb`:** it is the Linux system disk.
+
+---
+
+## 7. Pending / untested
+
+- **Untested on Windows:** everything in the 2.x versions, especially pnputil installation, the BIOS updater, BitLocker, network paths, the Windows Update switch, activation and Mica with a tint.
+- **Catalog to review:**
+  - CF-C2 has two V2 BIOS files (`V2.00L21` and `V2.50L16`); confirm whether V2.50 is for another sub-model and, if so, use `sku`.
+  - `ec_33_1_m195057.exe` and `BiosUpdate_R18-0354.exe` have no version, so they are ignored.
+- **Open questions for the user:**
+  - Store the app's data in a `data` folder next to the exe (portable mode)?
+  - Remove the Sysprep requirement for deleting users?
