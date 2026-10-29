@@ -141,6 +141,7 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
   - *Create catalog…* scans the folder and saves the `.json`, by default inside that same folder.
   - After it is created, a *Use this catalog* button appears.
 - **Network paths:** use `\\server\share` instead of mapped letters, because an elevated app cannot see the drives mapped by the user. The error messages explain this.
+- **User guide:** `docs/DRIVERS.md` explains the folder structure, network share, credentials (`cmdkey`), catalog and BIOS entries. Keep it in sync when the drivers code changes.
 - **Real catalog:** on the **MIKE 2** USB drive, at `02 Drivers/drivers-catalog.json` (212 drivers, 8683 IDs and 10 BIOS entries).
 
 ### 2.3.0 — BIOS updates (minor)

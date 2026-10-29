@@ -121,6 +121,8 @@ Both versions save settings in a `settings.json` file inside the app's data fold
 
 ## Drivers, catalog and BIOS
 
+> **Setting up a driver folder or a server share?** Follow the step-by-step guide in [docs/DRIVERS.md](docs/DRIVERS.md): folder structure, network share and credentials, creating and updating the catalog, BIOS entries and a checklist. This section is the short version.
+
 ### Compare with a folder
 
 1. The app looks for a `02 Drivers` folder at the root of every drive, or you can pick another one with **Browse…**.
@@ -293,6 +295,7 @@ src/
     assets/main.css             Fluent tokens (light/dark), palette tint
 CHANGELOG.md                    version history (read by Settings → About)
 HANDOFF.md                      guide for whoever continues the project
+docs/DRIVERS.md                 how to set up a driver folder, server share and catalog
 electron-builder.yml            Windows packaging
 ```
 
