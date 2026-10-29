@@ -23,7 +23,7 @@ win:
       arch: x64
     - target: zip
       arch: x64
-zip:
+  # Names the zip; the installer uses nsis.artifactName below
   artifactName: ${name}-${version}-portable.${ext}
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
