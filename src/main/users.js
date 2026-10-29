@@ -1,5 +1,5 @@
 import { parseJsonArray, runPowerShell } from './powershell'
-import { isRunningElevated, notElevatedResult } from './system-tools'
+import { isRunningElevated, isSysprepRunning, notElevatedResult } from './system-tools'
 
 const cleanString = (value) => {
   if (typeof value !== 'string') return null
@@ -75,17 +75,15 @@ function escapeForSingleQuotedPs(value) {
   return value.replace(/'/g, "''")
 }
 
-export async function deleteWindowsUser(name) {
-  const trimmedName = name.trim()
-  if (!trimmedName) {
-    return { success: false, message: 'No username was provided.' }
-  }
+// Accounts are picked by SID, which stays the same if the account is renamed
+// between the list being shown and the delete
+export async function deleteWindowsUser(sid) {
   const users = await getWindowsUsers()
-  const target = users.find((u) => u.name.toLowerCase() === trimmedName.toLowerCase())
+  const target = users.find((u) => u.sid === sid)
   if (!target) {
     return {
       success: false,
-      message: `User "${trimmedName}" was not found (it may have already been deleted).`
+      message: 'That user was not found (it may have already been deleted). Refresh the list.'
     }
   }
   // Same rule as Local Users and Groups: any account can be deleted (the
@@ -97,8 +95,16 @@ export async function deleteWindowsUser(name) {
     }
   }
   if (!(await isRunningElevated())) return notElevatedResult('delete a user account')
+  // Accounts are only deleted while preparing the device; the page asks for
+  // the same, but the rule has to hold here too
+  if (!(await isSysprepRunning())) {
+    return {
+      success: false,
+      message: 'Open Sysprep first. Accounts can only be deleted while Sysprep is open.'
+    }
+  }
   const output = await runPowerShell(
-    `try { Remove-LocalUser -Name '${escapeForSingleQuotedPs(target.name)}' -ErrorAction Stop; 'ok' } catch { $_.Exception.Message }`,
+    `try { Remove-LocalUser -SID '${escapeForSingleQuotedPs(target.sid)}' -ErrorAction Stop; 'ok' } catch { $_.Exception.Message }`,
     15e3
   ).catch((err) => (err instanceof Error ? err.message : String(err)))
   if (output.trim() !== 'ok') {

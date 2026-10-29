@@ -1,6 +1,6 @@
 {
   "name": "windiag-fluent",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "WinDiag — native Windows hardware diagnostics tool (Electron + React)",
   "main": "./out/main/index.js",
   "author": "JOTNAR",
@@ -13,7 +13,6 @@
     "build:unpack": "electron-vite build && electron-builder --dir"
   },
   "dependencies": {
-    "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "systeminformation": "^5.33.8"
   },
@@ -22,7 +21,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^5.2.0",
     "clsx": "^2.1.1",
-    "electron": "44.2.0",
+    "electron": "44.10.0",
     "electron-builder": "^26.0.0",
     "electron-vite": "^5.0.0",
     "react": "^19.2.0",

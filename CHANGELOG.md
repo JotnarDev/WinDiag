@@ -6,6 +6,15 @@ WinDiag Fluent follows [Semantic Versioning](https://semver.org/):
 - **Minor**: a new feature or page. Resets the patch number.
 - **Patch**: a fix to something that already existed.
 
+## 2.5.1 — 2026-10-29
+
+### Fixed
+- Electron updated to 44.10.0, which fixes several security advisories.
+- Opening WinDiag while it is already running brings the open window forward instead of starting a second copy.
+- Deleting a user now also requires Sysprep to be open on the main-process side, and the account is picked by SID instead of by name.
+- The page no longer exposes the general-purpose `window.electron` IPC bridge; only `window.api` remains.
+- The window can no longer navigate away from WinDiag's own page (for example, by dropping a file on it).
+
 ## 2.5.0 — 2026-10-29
 
 ### Added

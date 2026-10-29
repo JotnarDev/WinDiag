@@ -172,6 +172,9 @@ function createWindow() {
       systemPreferences.off('accent-color-changed', handleAccentChanged)
     }
   })
+  // The IPC handlers trust any file:// page, so the window must never leave
+  // WinDiag's own page (a dropped file or a stray link would navigate it)
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault())
   mainWindow.webContents.setWindowOpenHandler((details) => {
     if (/^https?:\/\//i.test(details.url)) void shell.openExternal(details.url)
     return { action: 'deny' }
@@ -233,7 +236,21 @@ function applySettings() {
   return getSettings()
 }
 
-app.whenReady().then(() => {
+// A second copy would start its own PowerShell session and keyboard hook and
+// fight over the edge-gesture setting, so it just brings this window forward
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    const win = BrowserWindow.getAllWindows()[0]
+    if (!win) return
+    if (win.isMinimized()) win.restore()
+    win.focus()
+  })
+  app.whenReady().then(startApp)
+}
+
+function startApp() {
   nativeTheme.themeSource = getSettings().theme
   electronApp.setAppUserModelId('com.jotnar.windiag.fluent')
   // Keep a single PowerShell process alive for systeminformation's queries
@@ -264,9 +281,7 @@ app.whenReady().then(() => {
   handle('system:generate-energy-report', () => generateEnergyReport())
   handle('system:schedule-check-disk', () => scheduleCheckDiskOnRestart())
   handle('users:get-list', () => getWindowsUsers())
-  handle('users:delete', (_event, name) =>
-    deleteWindowsUser(expect('string', name, 'users:delete'))
-  )
+  handle('users:delete', (_event, sid) => deleteWindowsUser(expect('string', sid, 'users:delete')))
   handle('system:is-sysprep-running', () => isSysprepRunning())
   handle('system:is-elevated', () => isRunningElevated())
   handle('system:relaunch-as-admin', () => relaunchAsAdmin())
@@ -352,7 +367,7 @@ app.whenReady().then(() => {
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-})
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

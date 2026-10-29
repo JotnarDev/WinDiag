@@ -2,7 +2,7 @@
 
 A diagnostics and setup tool for Windows computers, with a Fluent (Windows 11) design. A technician uses it to test a computer's hardware, install drivers and BIOS updates, and get the machine ready for delivery. It is built mainly for rugged laptops: Panasonic Toughbook, Getac and Dell Latitude Rugged.
 
-- **Current version:** 2.5.0. The changes in each version are listed in [CHANGELOG.md](CHANGELOG.md) and inside the app, under Settings → About.
+- **Current version:** 2.5.1. The changes in each version are listed in [CHANGELOG.md](CHANGELOG.md) and inside the app, under Settings → About.
 - **Author:** JOTNAR.
 - **Stack:** Electron 44 · electron-vite 5 · React 19 · Tailwind CSS 4 · Fluent UI icons · systeminformation.
 
@@ -330,6 +330,7 @@ The project follows [Semantic Versioning](https://semver.org/):
 
 | Version | Main change |
 |---|---|
+| 2.5.1 | Security fixes: Electron update, single instance, safer user deletion |
 | 2.5.0 | Release notes in Settings → About |
 | 2.4.0 | Color palettes |
 | 2.3.4 | Faster activation detection |

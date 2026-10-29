@@ -15,7 +15,7 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 
 ### Only the Fluent version is maintained
 
-This repository (branch `main` of `JotnarDev/WinDiag`, version **2.5.0**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
+This repository (branch `main` of `JotnarDev/WinDiag`, version **2.5.1**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
 
 It started as a copy of the original WinDiag (1.0.0, which is still on the development machine on the `windows-integration` branch). That project is no longer developed or copied to the USB drives, so **do not port changes to it**.
 
@@ -217,6 +217,14 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 
 - Settings → About is now an Expander that lists every version. `lib/changelog.js` imports `CHANGELOG.md?raw` and parses it.
 
+### 2.5.1 — Security fixes (patch)
+
+- **Electron 44.2.0 → 44.10.0** (pinned exactly in `package.json`); `npm audit` reported a high-severity advisory set fixed in 44.10.0.
+- **Single instance:** `app.requestSingleInstanceLock()` in `index.js`. A second launch quits and the `second-instance` handler restores and focuses the existing window. App start-up moved into `startApp()`. The `will-quit` handlers are safe in the second instance: each one only undoes what its own process did (`appliedThisSession`, `hookProcess`, etc.).
+- **Users:** `users:delete` now takes the account's **SID**, not its name, and `Remove-LocalUser -SID` deletes it. `deleteWindowsUser` checks `isSysprepRunning()` in the main process too, so the Sysprep rule no longer depends only on the page.
+- **Preload:** removed `contextBridge.exposeInMainWorld('electron', electronAPI)` and the `@electron-toolkit/preload` dependency. The renderer never used it, and it gave the page access to every IPC channel. Only `window.api` is exposed.
+- **Navigation:** `will-navigate` is blocked on the main window. `isTrustedSender()` trusts any `file://` URL, so the window must never leave its own page (dropping a file on it used to navigate).
+
 ---
 
 ## 4. Code structure (Fluent)
@@ -252,7 +260,7 @@ src/renderer/src/
 
 ## 5. How the work was done
 
-- **Development happens on Linux**, so nothing Windows-specific was tested on Windows: Mica, the keyboard hook, pnputil, the BIOS updater, BitLocker, Windows Update, deleting users, etc. The user tests on the computers and reports back.
+- **Development happens on Linux**, so Windows-specific features (Mica, the keyboard hook, pnputil, the BIOS updater, BitLocker, Windows Update, deleting users, etc.) can't be run during development. The user tests on the computers and reports back; everything up to 2.5.0 has been tested on Windows.
 - **Build:** `npm run build:win` produces the installer (`dist/windiag-fluent-X.Y.Z-setup.exe`) and the portable zip (`dist/windiag-fluent-X.Y.Z-portable.zip`). Official builds come from the GitHub Actions `Release` workflow, not from local builds. The copy on the USB drive has no `node_modules`: run `npm install` first. On the development machine, `node_modules/electron/dist` had a manually downloaded Linux Electron, used only for screenshots.
 - **Visual review:** an Electron script loads `out/renderer` with mocked IPC and takes screenshots in light mode, dark mode and at different widths. It is not in the repo; it lived in the session's scratchpad.
 - **Undefined-names check:** ESLint with only the `no-undef` rule over `src`. It is also checked that every `window.api.X` in the renderer exists in the preload and that every channel has its `handle`.
@@ -281,7 +289,7 @@ src/renderer/src/
 
 ## 7. Pending / untested
 
-- **Untested on Windows:** everything in the 2.x versions, especially pnputil installation, the BIOS updater, BitLocker, network paths, the Windows Update switch, activation and Mica with a tint.
+- **To test on Windows:** the 2.5.1 changes (opening WinDiag twice, deleting a user with and without Sysprep open, dropping a file on the window). Everything up to 2.5.0 has been tested.
 - **Catalog to review:**
   - CF-C2 has two V2 BIOS files (`V2.00L21` and `V2.50L16`); confirm whether V2.50 is for another sub-model and, if so, use `sku`.
   - `ec_33_1_m195057.exe` and `BiosUpdate_R18-0354.exe` have no version, so they are ignored.

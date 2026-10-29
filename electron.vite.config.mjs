@@ -11,9 +11,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()]
   },
   preload: {
-    // Sandboxed preloads can only require('electron'), so the toolkit is
-    // bundled in rather than loaded from node_modules.
-    plugins: [externalizeDepsPlugin({ exclude: ['@electron-toolkit/preload'] })]
+    plugins: [externalizeDepsPlugin()]
   },
   renderer: {
     define: {

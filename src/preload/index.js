@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
   getStaticSystemInfo: () => ipcRenderer.invoke('system:get-static-info'),
@@ -29,7 +28,7 @@ const api = {
   generateEnergyReport: () => ipcRenderer.invoke('system:generate-energy-report'),
   scheduleCheckDiskOnRestart: () => ipcRenderer.invoke('system:schedule-check-disk'),
   getWindowsUsers: () => ipcRenderer.invoke('users:get-list'),
-  deleteWindowsUser: (name) => ipcRenderer.invoke('users:delete', name),
+  deleteWindowsUser: (sid) => ipcRenderer.invoke('users:delete', sid),
   isSysprepRunning: () => ipcRenderer.invoke('system:is-sysprep-running'),
   isElevated: () => ipcRenderer.invoke('system:is-elevated'),
   relaunchAsAdmin: () => ipcRenderer.invoke('system:relaunch-as-admin'),
@@ -58,5 +57,4 @@ const api = {
   }
 }
 
-contextBridge.exposeInMainWorld('electron', electronAPI)
 contextBridge.exposeInMainWorld('api', api)

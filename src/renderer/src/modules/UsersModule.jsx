@@ -75,10 +75,10 @@ export function UsersModule() {
     }
   }, [])
   const handleDelete = async () => {
-    const name = pendingDelete.name
+    const sid = pendingDelete.sid
     setDeleting(true)
     setFeedback(null)
-    const result = await window.api.deleteWindowsUser(name)
+    const result = await window.api.deleteWindowsUser(sid)
     setFeedback({ text: result.message, isError: !result.success })
     setDeleting(false)
     setPendingDelete(null)
