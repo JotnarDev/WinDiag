@@ -24,7 +24,8 @@ import {
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/Button'
 import { Section, SettingsCard } from '@/components/ui/Card'
-import { Badge, ContentDialog, InfoBar, ProgressRing, ToggleSwitch } from '@/components/ui/feedback'
+import { Badge, ContentDialog, InfoBar, ProgressRing } from '@/components/ui/feedback'
+import { Select } from '@/components/ui/inputs'
 import { useSystemInfoContext } from '@/context/SystemInfoContext'
 
 const UTILITY_TOOLS = [
@@ -66,11 +67,30 @@ function BusyLabel({ busy, busyText, children }) {
 
 const WU_POLL_MS = 5e3
 
-function describeWuService({ running, startType, policy }) {
+const WU_MODES = [
+  {
+    id: 'default',
+    label: 'Windows default',
+    description: 'Windows installs every update and driver it finds, as it does out of the box.'
+  },
+  {
+    id: 'security',
+    label: 'Security updates only',
+    description:
+      'Security updates install 4 days late, feature updates wait a year, and Windows Update no longer replaces drivers.'
+  },
+  {
+    id: 'disabled',
+    label: 'Off',
+    description: 'Windows won’t download updates or drivers, even after a restart.'
+  }
+]
+
+function describeWuService({ running, startType, managed }) {
   return [
     `Service ${running ? 'running' : 'stopped'}`,
     `startup ${startType ?? 'unknown'}`,
-    policy ? 'blocked by policy' : null
+    managed ? 'managed by an update server (WSUS)' : null
   ]
     .filter(Boolean)
     .join(' · ')
@@ -81,6 +101,7 @@ export function ToolsModule() {
   const [result, setResult] = useState(null)
   const [wuState, setWuState] = useState(null)
   const [wuBusy, setWuBusy] = useState(false)
+  const [wuConfirmOff, setWuConfirmOff] = useState(false)
   const [reportBusy, setReportBusy] = useState(null)
   const [checkDiskDialogOpen, setCheckDiskDialogOpen] = useState(false)
   const [checkDiskBusy, setCheckDiskBusy] = useState(false)
@@ -111,14 +132,20 @@ export function ToolsModule() {
     if (!outcome.success || showSuccess) setResult({ source, ...outcome })
     return outcome
   }
-  const setWindowsUpdate = async (enabled) => {
+  const setWindowsUpdateMode = async (mode) => {
     setWuBusy(true)
-    await run('windows', () =>
-      enabled ? window.api.enableWindowsUpdates() : window.api.disableWindowsUpdates()
-    )
+    await run('windows', () => window.api.setWindowsUpdateMode(mode))
     setWuState(await window.api.getWindowsUpdateState())
     setWuBusy(false)
+    setWuConfirmOff(false)
   }
+  const chooseWindowsUpdateMode = (mode) => {
+    if (mode === wuState?.mode) return
+    // Turning updates off entirely is the one choice that needs a second look
+    if (mode === 'disabled') setWuConfirmOff(true)
+    else void setWindowsUpdateMode(mode)
+  }
+  const wuMode = WU_MODES.find((m) => m.id === wuState?.mode)
   const generateReport = async (kind) => {
     setReportBusy(kind)
     await run('reports', () =>
@@ -146,22 +173,28 @@ export function ToolsModule() {
           title="Windows Update"
           description={
             <>
-              {wuState?.state === 'disabled'
-                ? 'Off: Windows won’t download updates or drivers, even after a restart.'
-                : 'Turn off to stop Windows from downloading updates and drivers during setup. Needs administrator.'}
-              {wuState && wuState.state !== 'unknown' && (
+              {wuMode ? wuMode.description : 'Choose how Windows downloads updates and drivers. Needs administrator.'}
+              {wuState && wuState.mode !== 'unknown' && (
                 <span className="block">{describeWuService(wuState)}</span>
               )}
             </>
           }
         >
           {wuBusy && <ProgressRing size={16} label="Applying" />}
-          <ToggleSwitch
-            label="Windows Update"
-            checked={wuState?.state !== 'disabled'}
-            disabled={wuBusy || wuState === null}
-            onChange={(enabled) => void setWindowsUpdate(enabled)}
-          />
+          <Select
+            id="windows-update-mode"
+            aria-label="Windows Update"
+            className="w-56"
+            value={wuState?.mode ?? 'default'}
+            disabled={wuBusy || wuState === null || wuState.mode === 'unknown'}
+            onChange={chooseWindowsUpdateMode}
+          >
+            {WU_MODES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </Select>
         </SettingsCard>
         <SettingsCard
           icon={KeyRegular}
@@ -251,6 +284,18 @@ export function ToolsModule() {
         <ResultBar result={result} source="utilities" onDismiss={() => setResult(null)} />
       </Section>
 
+      <ContentDialog
+        open={wuConfirmOff}
+        title="Turn off Windows Update?"
+        primaryText={wuBusy ? 'Turning off…' : 'Turn off'}
+        onPrimary={() => void setWindowsUpdateMode('disabled')}
+        onClose={() => setWuConfirmOff(false)}
+        busy={wuBusy}
+      >
+        Windows will stop downloading every update, security updates included, until you choose
+        another option here. Use it while preparing a computer, and choose Windows default or
+        Security updates only before handing it over.
+      </ContentDialog>
       <ContentDialog
         open={checkDiskDialogOpen}
         title="Schedule a disk check?"

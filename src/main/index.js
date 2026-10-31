@@ -25,9 +25,6 @@ import {
 import {
   launchSystemTool,
   launchProductKeyDialog,
-  getWindowsUpdateState,
-  disableWindowsUpdates,
-  enableWindowsUpdates,
   generateBatteryReport,
   generateEnergyReport,
   scheduleCheckDiskOnRestart,
@@ -35,6 +32,7 @@ import {
   isRunningElevated,
   relaunchAsAdmin
 } from './system-tools'
+import { getWindowsUpdateState, setWindowsUpdateMode } from './windows-update'
 import { getWindowsUsers, deleteWindowsUser } from './users'
 import { getMainDiskHealth } from './disk-health'
 import {
@@ -275,8 +273,9 @@ function startApp() {
   )
   handle('system:launch-product-key-dialog', () => launchProductKeyDialog())
   handle('system:get-update-state', () => getWindowsUpdateState())
-  handle('system:disable-updates', () => disableWindowsUpdates())
-  handle('system:enable-updates', () => enableWindowsUpdates())
+  handle('system:set-update-mode', (_event, mode) =>
+    setWindowsUpdateMode(expect('string', mode, 'system:set-update-mode'))
+  )
   handle('system:generate-battery-report', () => generateBatteryReport())
   handle('system:generate-energy-report', () => generateEnergyReport())
   handle('system:schedule-check-disk', () => scheduleCheckDiskOnRestart())
