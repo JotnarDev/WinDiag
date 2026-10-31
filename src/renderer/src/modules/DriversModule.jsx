@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, Expander, Section, SettingsCard } from '@/components/ui/Card'
 import { Badge, ContentDialog, InfoBar, ProgressRing, ToggleSwitch } from '@/components/ui/feedback'
 import { useSettings } from '@/context/SettingsContext'
+import { supportSiteFor } from '@/lib/support-links'
 
 // Kept while the app runs, so leaving the page doesn't throw the comparison away
 let lastScan = null
@@ -74,9 +75,19 @@ function installOutcome(result, row) {
   return { severity: 'success', text: `Driver installed${from}.${restart}`, done: true }
 }
 
+// A link to the maker's driver and BIOS downloads, opened in the browser
+function SupportSiteLink({ site, children }) {
+  return (
+    <a href={site.url} target="_blank" rel="noreferrer" className="text-accent-text underline">
+      {children ?? `${site.name}’s support site`}
+    </a>
+  )
+}
+
 function BiosCard({ bios, disabled, onUpdate, outcome }) {
   const { system, candidate, status } = bios
   if (!system) return null
+  const site = supportSiteFor(system.manufacturer)
   const installed = system.date ? `${system.version} (${system.date})` : system.version
   const detail = candidate
     ? `${candidate.sourceName}: ${candidate.version}${candidate.date ? ` (${candidate.date})` : ''} · ${candidate.label}`
@@ -124,6 +135,14 @@ function BiosCard({ bios, disabled, onUpdate, outcome }) {
                 </a>
               </>
             )}
+          </p>
+        )}
+        {site && status !== 'outdated' && (
+          <p className="text-caption text-text-secondary">
+            {status === 'none'
+              ? 'Look for this model’s BIOS on '
+              : 'Drivers and BIOS for this model are also on '}
+            <SupportSiteLink site={site} />.
           </p>
         )}
         {outcome && (
@@ -285,6 +304,7 @@ export function DriversModule({ onNavigate }) {
   const missing = rows.filter((r) => r.status === 'missing')
   const current = rows.filter((r) => r.status === 'current')
   const unavailable = scan?.unavailable ?? []
+  const supportSite = supportSiteFor(scan?.bios?.system?.manufacturer)
   const pendingUpdates = outdated.filter((r) => !outcomes[r.deviceId]?.done)
 
   const updateAll = () => install(pendingUpdates)
@@ -526,9 +546,25 @@ export function DriversModule({ onNavigate }) {
       {unavailable.length > 0 && (
         <Section
           title={`No driver found (${unavailable.length})`}
-          description="Devices without a driver that no source offers one for. Search the Microsoft Update Catalog by hardware ID, or the maker's support site."
+          description={`Devices without a driver that no source offers one for. Search the Microsoft Update Catalog by hardware ID, or ${supportSite ? `${supportSite.name}’s support site` : "the maker's support site"}.`}
           className="mt-6"
         >
+          {supportSite && (
+            <Card className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+              <BuildingFactoryRegular aria-hidden className="size-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p>{supportSite.name} support</p>
+                <p className="text-caption text-text-secondary">
+                  Drivers and BIOS for{' '}
+                  {scan.bios.system.displayModel ?? scan.bios.system.model ?? 'this model'}, from
+                  the maker.
+                </p>
+              </div>
+              <Button icon={OpenRegular} onClick={() => window.open(supportSite.url, '_blank')}>
+                Open support site
+              </Button>
+            </Card>
+          )}
           {unavailable.map((device) => (
             <Card
               key={device.deviceId}

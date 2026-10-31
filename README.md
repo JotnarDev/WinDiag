@@ -136,6 +136,8 @@ Each source has its own switch under **Compare with** on the Drivers page, and t
 
 Drivers from a maker install silently with the maker's own command; the BIOS runs with its own window, after the same safety checks as any BIOS update.
 
+For other makers (Panasonic, Getac, Acer, ASUS, Microsoft Surface…), and for whatever no source finds, the BIOS card and the **No driver found** list link to the maker's support site. The list of sites is in `src/renderer/src/lib/support-links.js`.
+
 ### Compare with a folder
 
 1. The app looks for a `02 Drivers` folder at the root of every drive, or you can pick another one with **Browse…**.
@@ -312,7 +314,7 @@ src/
       ui/                       Button, Card/SettingsCard/Expander, InfoBar/Badge/
                                 ToggleSwitch/ContentDialog, Select/TextBox
     context/                    SettingsContext, SystemInfoContext
-    lib/                        palette.js, changelog.js, utils.js
+    lib/                        palette.js, changelog.js, support-links.js, utils.js
     modules/                    one page per file (Overview, Drivers, Settings…)
     assets/main.css             Fluent tokens (light/dark), palette tint
 CHANGELOG.md                    version history (read by Settings → About)
