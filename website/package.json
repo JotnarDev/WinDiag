@@ -1,0 +1,24 @@
+{
+  "name": "windiag-website",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Product website for WinDiag Fluent",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fluentui/react-icons": "^2.0.345",
+    "motion": "^12.43.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^7.3.7"
+  }
+}

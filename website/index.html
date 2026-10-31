@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WinDiag — Hardware diagnostics for Windows</title>
+    <meta
+      name="description"
+      content="Free Windows app for technicians: test a laptop's display, touch, keys, battery, disk and ports, install drivers and BIOS updates, and get it ready for delivery."
+    />
+    <meta name="theme-color" content="#f3f3f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#202020" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content="WinDiag — Hardware diagnostics for Windows" />
+    <meta
+      property="og:description"
+      content="Test every part of a Windows laptop, install drivers and BIOS, and hand it over ready. Free and open source."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <script>
+      // Apply the saved theme before the first paint, so the page never flashes
+      ;(function () {
+        var pref = 'system'
+        try {
+          pref = localStorage.getItem('windiag-site-theme') || 'system'
+        } catch (e) {}
+        var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="padding: 24px; font: 16px system-ui">
+        WinDiag is a free hardware diagnostics app for Windows.
+        <a href="https://github.com/JotnarDev/WinDiag/releases/latest">Download it from GitHub</a>.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
