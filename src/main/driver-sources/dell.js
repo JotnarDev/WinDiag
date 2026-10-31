@@ -12,108 +12,33 @@
 // Every file is checked against the catalog's SHA-256 and Dell's digital
 // signature before it runs. Only BIOS and drivers that name their devices
 // (PCI or USB IDs) are used: the others can't be matched to this hardware.
-import os from 'os'
 import path from 'path'
-import { createHash } from 'crypto'
-import { createReadStream, createWriteStream } from 'fs'
-import { mkdir, readdir, readFile, rename, rm, stat } from 'fs/promises'
-import { execFile } from 'child_process'
-import { promisify } from 'util'
-import { Readable } from 'stream'
-import { pipeline } from 'stream/promises'
+import { mkdir } from 'fs/promises'
 import { compareBiosVersions } from '../driver-catalog'
-import { runPowerShell } from '../powershell'
+import {
+  CATALOG_MAX_AGE_MS,
+  cacheDir,
+  checkSignature,
+  download,
+  errorMessage,
+  isFresh,
+  pruneOld,
+  readCab,
+  run
+} from './maker-files'
 
-const execFileAsync = promisify(execFile)
-
+const MAKER = 'Dell'
 const BASE_URL = 'https://downloads.dell.com/'
 const INDEX_PATH = 'catalog/CatalogIndexPC.cab'
-const CACHE_DIR = path.join(os.tmpdir(), 'WinDiag', 'dell')
-// Dell refreshes the index daily; a few hours old is fresh enough
-const INDEX_MAX_AGE_MS = 6 * 60 * 60e3
-// Downloaded packages are kept a week, so a second install doesn't download again
-const PACKAGE_MAX_AGE_MS = 7 * 24 * 60 * 60e3
-const DOWNLOAD_TIMEOUT_MS = 15 * 60e3
+const CACHE_DIR = cacheDir('dell')
+const PACKAGES_DIR = path.join(CACHE_DIR, 'packages')
 const INSTALL_TIMEOUT_MS = 20 * 60e3
 
 // The Windows architecture Dell names in its catalogs
 const OS_ARCH = { x64: 'x64', arm64: 'ARM64' }[process.arch] ?? 'x64'
 
-// ---------- Files ----------
-
-async function sha256Of(file) {
-  const hash = createHash('sha256')
-  await pipeline(createReadStream(file), hash)
-  return hash.digest('hex')
-}
-
-async function isFresh(file, maxAgeMs) {
-  try {
-    return Date.now() - (await stat(file)).mtimeMs < maxAgeMs
-  } catch {
-    return false
-  }
-}
-
-/** Downloads a file from Dell, checking its SHA-256 when the catalog gives one. */
-async function download(relPath, file, sha256 = null) {
-  await mkdir(path.dirname(file), { recursive: true })
-  if (sha256 && (await isFresh(file, PACKAGE_MAX_AGE_MS))) {
-    if ((await sha256Of(file).catch(() => '')) === sha256.toLowerCase()) return file
-  }
-  const response = await fetch(BASE_URL + relPath.replace(/^\/+/, ''), {
-    signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS)
-  }).catch((err) => {
-    throw new Error(
-      `Dell's server couldn't be reached (${err.message}). Check the internet connection.`
-    )
-  })
-  if (!response.ok || !response.body) {
-    throw new Error(`Dell's server answered ${response.status} for ${relPath}.`)
-  }
-  const partial = `${file}.partial`
-  await pipeline(Readable.fromWeb(response.body), createWriteStream(partial))
-  if (sha256 && (await sha256Of(partial)) !== sha256.toLowerCase()) {
-    await rm(partial, { force: true })
-    throw new Error(
-      `${path.basename(relPath)} didn't match the hash in Dell's catalog, so it was deleted.`
-    )
-  }
-  await rm(file, { force: true })
-  await rename(partial, file)
-  return file
-}
-
-/** Extracts a .cab with Windows' own expand.exe and returns its XML as text. */
-async function readCab(cab) {
-  const dir = `${cab}.extracted`
-  await rm(dir, { recursive: true, force: true })
-  await mkdir(dir, { recursive: true })
-  const systemRoot = process.env.SystemRoot || 'C:\\Windows'
-  await execFileAsync(path.join(systemRoot, 'System32', 'expand.exe'), ['-F:*', cab, dir], {
-    windowsHide: true,
-    timeout: 60e3
-  })
-  const xml = (await readdir(dir)).find((name) => name.toLowerCase().endsWith('.xml'))
-  if (!xml) throw new Error(`${path.basename(cab)} has no catalog inside.`)
-  const bytes = await readFile(path.join(dir, xml))
-  // Dell's catalogs are UTF-16 with a byte-order mark; the driver pack one is ASCII
-  return bytes[0] === 0xff && bytes[1] === 0xfe
-    ? bytes.subarray(2).toString('utf16le')
-    : bytes.toString('utf8')
-}
-
-async function pruneOldPackages() {
-  const dir = path.join(CACHE_DIR, 'packages')
-  const names = await readdir(dir).catch(() => [])
-  await Promise.all(
-    names.map(async (name) => {
-      const file = path.join(dir, name)
-      if (!(await isFresh(file, PACKAGE_MAX_AGE_MS)))
-        await rm(file, { force: true }).catch(() => {})
-    })
-  )
-}
+const downloadFromDell = (relPath, file, sha256 = null) =>
+  download(BASE_URL + relPath.replace(/^\/+/, ''), file, { maker: MAKER, sha256 })
 
 // ---------- Catalog XML ----------
 
@@ -225,12 +150,12 @@ function matchDevices(pkg, devices) {
 async function loadModelCatalog(system) {
   await mkdir(CACHE_DIR, { recursive: true })
   const indexCab = path.join(CACHE_DIR, 'CatalogIndexPC.cab')
-  if (!(await isFresh(indexCab, INDEX_MAX_AGE_MS))) await download(INDEX_PATH, indexCab)
+  if (!(await isFresh(indexCab, CATALOG_MAX_AGE_MS))) await downloadFromDell(INDEX_PATH, indexCab)
   const entry = findModelCatalog(await readCab(indexCab), system)
   if (!entry) return null
   const modelCab = path.join(CACHE_DIR, path.basename(entry.path))
-  if (!(await isFresh(modelCab, INDEX_MAX_AGE_MS)))
-    await download(entry.path, modelCab, entry.sha256)
+  if (!(await isFresh(modelCab, CATALOG_MAX_AGE_MS)))
+    await downloadFromDell(entry.path, modelCab, entry.sha256)
   return { name: entry.name, packages: parsePackages(await readCab(modelCab)) }
 }
 
@@ -239,7 +164,7 @@ const DOTTED_VERSION = /^\d+(\.\d+)+$/
 export async function find({ inventory }) {
   const { system, devices } = await inventory
   if (!system) return { error: 'The computer model couldn’t be read.' }
-  void pruneOldPackages()
+  void pruneOld(PACKAGES_DIR)
   const catalog = await loadModelCatalog(system)
   if (!catalog) {
     return {
@@ -294,22 +219,11 @@ export async function find({ inventory }) {
   }
 }
 
-// Dell signs every package; anything else is refused even if the hash matched
-async function checkSignature(file) {
-  const output = await runPowerShell(
-    `try { $s = Get-AuthenticodeSignature -LiteralPath '${file.replace(/'/g, "''")}'; "$($s.Status)|$($s.SignerCertificate.Subject)" } catch { 'Error|' }`,
-    60e3
-  ).catch(() => 'Error|')
-  const [status, subject = ''] = output.trim().split('|')
-  if (status !== 'Valid' || !/\bDell\b/i.test(subject)) {
-    throw new Error(`${path.basename(file)} isn’t signed by Dell (${status}), so it wasn’t run.`)
-  }
-}
-
 async function fetchPackage(candidate) {
-  const file = path.join(CACHE_DIR, 'packages', path.basename(candidate.relPath))
-  await download(candidate.relPath, file, candidate.sha256)
-  await checkSignature(file)
+  const file = path.join(PACKAGES_DIR, path.basename(candidate.relPath))
+  await downloadFromDell(candidate.relPath, file, candidate.sha256)
+  // Dell signs every package; anything else is refused even if the hash matched
+  await checkSignature(file, /\bDell\b/i, MAKER)
   return file
 }
 
@@ -338,24 +252,13 @@ export async function install(candidates) {
     try {
       const file = await fetchPackage(candidate)
       const log = `${file}.log`
-      let code = 0
-      try {
-        await execFileAsync(file, ['/s', `/l=${log}`], {
-          windowsHide: true,
-          timeout: INSTALL_TIMEOUT_MS
-        })
-      } catch (err) {
-        code = typeof err.code === 'number' ? err.code : -1
-      }
+      const code = await run(file, ['/s', `/l=${log}`], { timeoutMs: INSTALL_TIMEOUT_MS })
       results[candidate.key] = DUP_EXIT[code] ?? {
         success: false,
         message: `Dell’s installer failed (code ${code}). Its log is in ${log}.`
       }
     } catch (err) {
-      results[candidate.key] = {
-        success: false,
-        message: err instanceof Error ? err.message : String(err)
-      }
+      results[candidate.key] = { success: false, message: errorMessage(err) }
     }
   }
   return results

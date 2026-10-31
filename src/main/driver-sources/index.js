@@ -15,7 +15,7 @@
 //
 //   find(context) → {
 //     drivers: [{ key, hardwareIds, version, date, provider, label, ... }],
-//     bios:    [{ key, version, date, label, notes, ... }],
+//     bios:    [{ key, version, installedVersion?, date, label, notes, infoUrl?, ... }],
 //     summary: one line for the page, or null,
 //     biosNote: why there's no BIOS from this source, or null,
 //     error:   what went wrong (the other sources still count),
@@ -26,6 +26,9 @@
 //
 // `context` is { request, inventory }, where inventory is a promise of
 // { system, devices } (the computer and its devices), read once for all.
+// system is { manufacturer, model, sku, board, version (BIOS), date,
+// osBuild, osRelease }. A BIOS's installedVersion is the computer's BIOS
+// version in the same terms as `version`, when the maker writes them apart.
 // Keys must be unique across sources; the rest of each candidate is the
 // source's own data, handed back to install() and prepareBios() unchanged.
 
@@ -49,6 +52,20 @@ export const DRIVER_SOURCES = [
     manufacturer: /^dell/i,
     isEnabled: (request) => request.makers === true,
     load: () => import('./dell')
+  },
+  {
+    id: 'hp',
+    name: 'HP',
+    manufacturer: /^(hp|hewlett)/i,
+    isEnabled: (request) => request.makers === true,
+    load: () => import('./hp')
+  },
+  {
+    id: 'lenovo',
+    name: 'Lenovo',
+    manufacturer: /^lenovo/i,
+    isEnabled: (request) => request.makers === true,
+    load: () => import('./lenovo')
   }
 ]
 

@@ -336,7 +336,7 @@ export function DriversModule({ onNavigate }) {
         <SettingsCard
           icon={BuildingFactoryRegular}
           title="Manufacturer catalogs"
-          description="BIOS and drivers from the maker's own catalog, for Dell computers. Downloaded from the maker and checked against its signature. Needs internet."
+          description="BIOS and drivers from the maker's own catalog, for Dell, HP and Lenovo computers. Downloaded from the maker and checked against its signature. Needs internet."
         >
           <ToggleSwitch
             label="Manufacturer catalogs"

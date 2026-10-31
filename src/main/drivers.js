@@ -73,10 +73,15 @@ try {
         }
     $cs = Get-CimInstance Win32_ComputerSystem -Property Manufacturer, Model, SystemSKUNumber
     $bios = Get-CimInstance Win32_BIOS -Property SMBIOSBIOSVersion, ReleaseDate
+    $board = Get-CimInstance Win32_BaseBoard -Property Product
+    $nt = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue
     $system = [PSCustomObject]@{
         manufacturer = $cs.Manufacturer
         model        = $cs.Model
         sku          = $cs.SystemSKUNumber
+        board        = @($board)[0].Product
+        osBuild      = if ($nt) { [int]$nt.CurrentBuild } else { $null }
+        osRelease    = if ($nt.DisplayVersion) { $nt.DisplayVersion } elseif ($nt) { $nt.ReleaseId } else { $null }
         version      = $bios.SMBIOSBIOSVersion
         date         = if ($bios.ReleaseDate) { $bios.ReleaseDate.ToString('yyyy-MM-dd') } else { $null }
     }
@@ -210,8 +215,12 @@ export async function scanDrivers(request) {
     (best, c) => (!best || compareBiosVersions(c.version, best.version) > 0 ? c : best),
     null
   )
+  // A maker's source can give the installed version in its own terms
+  // (HP: "T76 Ver. 01.25.00" → "01.25.00"), as installedVersion
   const biosNewer =
-    biosCandidate && system && compareBiosVersions(biosCandidate.version, system.version) > 0
+    biosCandidate &&
+    system &&
+    compareBiosVersions(biosCandidate.version, biosCandidate.installedVersion ?? system.version) > 0
   if (biosNewer)
     offeredBios.set(biosCandidate.key, { sourceId: biosCandidate.source, candidate: biosCandidate })
 

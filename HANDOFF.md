@@ -239,7 +239,7 @@ src/main/
   system-tools.js   reports, elevation, sysprep, chkdsk
   windows-update.js Windows Update modes; opens it for WinDiag's own driver search
   drivers.js        driver comparison and installs, BIOS safety checks (no source code)
-  driver-sources/   index.js (the list and contract), windows-update.js, local.js, dell.js
+  driver-sources/   index.js (the list and contract), windows-update.js, local.js, dell.js, hp.js, lenovo.js, maker-files.js (shared by the makers' sources)
   inf-parser.js     .inf parser (pure)
   driver-catalog.js JSON catalog, BIOS, versions (pure)
   device-model.js   Panasonic names (pure)
@@ -256,7 +256,7 @@ src/renderer/src/
 
 **To add a driver source** (a maker's catalog, for example):
 1. A module in `src/main/driver-sources/` that exports `find`, `install` and `prepareBios` (the contract is described at the top of `driver-sources/index.js`).
-2. An entry in `DRIVER_SOURCES`. A maker's source sets `manufacturer`, so it is only loaded on that maker's computers.
+2. An entry in `DRIVER_SOURCES`. A maker's source sets `manufacturer`, so it is only loaded on that maker's computers, and uses `maker-files.js` to download and check its files (SHA-256, then the maker's signature) before running anything. If the maker writes BIOS versions differently from Windows, the source gives `installedVersion` in the maker's terms.
 3. Nothing else: `drivers.js` and the Drivers page work with any source.
 
 **To add an IPC call:**

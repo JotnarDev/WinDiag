@@ -55,15 +55,15 @@ On Panasonic machines it shows the name technicians use. For example, `FZ55-1` i
 ### Tools
 
 **Technician tools**
-- **Windows Update:** a switch that turns it off persistently (through policies and the service). It shows the real state of the service and refreshes on its own.
+- **Windows Update:** three modes: Windows' default, security updates only (no drivers or feature updates, quality updates a few days late), or off (through policies and the services). It shows the real state of the service and refreshes on its own.
 - **Activation:** activation status and a button to enter or change the product key.
 - **Reports:** battery health report (`powercfg /batteryreport`) and energy efficiency report (`powercfg /energy`).
 - **Maintenance:** memory diagnostics and a disk check (`chkdsk`) scheduled for the next restart.
 - **Windows utilities:** shortcuts to Sysprep, Device Manager, System Information, DirectX Diagnostic, Event Viewer, Resource Monitor, Disk Management, Optimize Drives, Disk Cleanup, System Configuration, System Restore, Programs and Features, Network Connections and Tablet PC calibration.
 
 **Drivers**
-- Compares the installed drivers with a driver folder or a `.json` catalog, and installs newer or missing ones.
-- Compares the BIOS with the one in the catalog and launches the manufacturer's updater.
+- Compares the installed drivers with every source that is turned on, and installs newer or missing ones: a driver folder or `.json` catalog, Windows Update, and the maker's own catalog on Dell, HP and Lenovo computers.
+- Compares the BIOS with the newest one those sources offer and launches the manufacturer's updater.
 - Explained in detail in [Drivers, catalog and BIOS](#drivers-catalog-and-bios).
 
 **Users**
@@ -122,6 +122,19 @@ Both versions save settings in a `settings.json` file inside the app's data fold
 ## Drivers, catalog and BIOS
 
 > **Setting up a driver folder or a server share?** Follow the step-by-step guide in [docs/DRIVERS.md](docs/DRIVERS.md): folder structure, network share and credentials, creating and updating the catalog, BIOS entries and a checklist. This section is the short version.
+
+### Where drivers come from
+
+Each source has its own switch under **Compare with** on the Drivers page, and the comparison offers the newest driver any of them has:
+
+- **Driver folder or catalog:** your own drivers (below). Nothing leaves the network.
+- **Windows Update:** the drivers Microsoft publishes for this hardware, for any brand. It works even with Windows Update off: the app opens it only while it searches and installs.
+- **Manufacturer catalogs:** the catalog the maker's own update tool reads, downloaded only on that maker's computers. Every file is checked against the catalog's SHA-256 hash and the maker's digital signature before it runs.
+  - **Dell:** Dell Command | Update's catalog, by the model's system ID.
+  - **HP:** HP Image Assistant's reference files, by the motherboard ID and the closest Windows version HP supports.
+  - **Lenovo:** System Update's catalog, by the machine type (the first four characters of the model, such as 20XW).
+
+Drivers from a maker install silently with the maker's own command; the BIOS runs with its own window, after the same safety checks as any BIOS update.
 
 ### Compare with a folder
 
@@ -276,7 +289,10 @@ src/
       index.js                  the list of sources and the contract they follow
       windows-update.js         drivers from Windows Update
       local.js                  driver folder or catalog JSON, pnputil, catalog creation
+      maker-files.js            downloads, hash and signature checks for makers' catalogs
       dell.js                   Dell's public catalog: BIOS and drivers (Dell computers only)
+      hp.js                     HP's public reference files: BIOS and drivers (HP only)
+      lenovo.js                 Lenovo's public catalog: BIOS and drivers (Lenovo only)
     inf-parser.js               .inf reader (pure functions)
     driver-catalog.js           JSON catalog, BIOS, versions (pure functions)
     device-model.js             Panasonic model names (pure functions)
