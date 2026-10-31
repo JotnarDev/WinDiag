@@ -136,7 +136,7 @@ export default {
       {
         id: 'update',
         line: 'Keep Windows Update off while you work.',
-        result: 'The service and its policy stay off, so no driver is replaced halfway through a test.',
+        result: 'Nothing updates halfway through a test. WinDiag still searches it for drivers when you ask.',
         on: true
       },
       {
@@ -167,26 +167,49 @@ export default {
   },
 
   flow: {
-    title: 'Drivers from your own folder',
-    sentence: 'No accounts and no cloud. WinDiag reads a folder or a server share you already have.',
+    title: 'Every driver source, one list',
+    sentence:
+      'Your own folder or server share, Windows Update, and the catalogs of Dell, HP and Lenovo. WinDiag offers the newest driver any of them has.',
     steps: [
-      { lead: 'First, point it at your drivers.' },
-      { lead: 'Then compare the PC with them.' },
+      { lead: 'First, choose where drivers come from.' },
+      { lead: 'Then compare the PC with all of them.' },
       { lead: 'Last, update the BIOS safely.' }
     ],
+    sourcesLabel: 'Compare with',
+    sources: {
+      folder: {
+        name: 'Driver folder or catalog',
+        detail: 'Your own drivers. Nothing leaves the network.'
+      },
+      windowsUpdate: {
+        name: 'Windows Update',
+        detail: 'Drivers Microsoft publishes for this hardware. Works even with updates off.'
+      },
+      makers: {
+        name: 'Manufacturer catalogs',
+        detail: 'Dell, HP and Lenovo, checked against the maker’s signature. Skipped on this Panasonic.'
+      }
+    },
     catalogLabel: 'Driver catalog',
     browse: 'Browse…',
     catalogLoaded: 'Catalog loaded',
     catalogFacts: '1,284 drivers · 46 BIOS entries · read in 0.4 s',
     compare: 'Compare drivers',
-    comparing: 'Comparing 1,284 drivers…',
+    comparing: 'Comparing with every source…',
+    noSources: 'Turn on at least one source to compare.',
     updates: 'Updates available',
     missing: 'Missing drivers',
+    notFound: 'No driver found',
     upToDate: 'Up to date',
     update: 'Update',
     updateAll: 'Update all',
     install: 'Install',
-    upToDateCount: '42 devices',
+    support: 'Panasonic support',
+    supportDetail: 'Drivers and BIOS for the FZ-55, from the maker.',
+    openSupport: 'Open support site',
+    searchCatalog: 'Search the catalog',
+    from: 'from',
+    sourceNames: { folder: 'your folder', windowsUpdate: 'Windows Update' },
     copy: 'Copy',
     copied: 'Copied',
     biosEntry: 'The BIOS entry in the catalog',
@@ -242,7 +265,7 @@ export default {
       },
       {
         q: 'Does it need the internet?',
-        a: 'No. Tests run offline, and drivers come from a folder, a USB drive or a server share on your network.'
+        a: 'Not for the tests: they run offline. Drivers can come from a folder, a USB drive or a server share on your network, with no internet at all. Windows Update and the Dell, HP and Lenovo catalogs need a connection.'
       },
       {
         q: 'Can I run it from a USB drive?',
