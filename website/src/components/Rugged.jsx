@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useI18n } from '../i18n'
-import { SITE } from '../lib/site'
 import { cn } from '../lib/cn'
 import { EASE, Reveal, RevealItem } from '../lib/motion'
-import { Button } from './Button'
+import { BrandMarquee } from './BrandMarquee'
 
 // Latest BIOS/EC on each maker's support site, checked 2026-10-29.
 // "raw" is the model string Windows reports; Panasonic adds the generation.
@@ -72,7 +71,7 @@ export function Rugged() {
 
   return (
     <section id="rugged" className="scroll-mt-16 py-[clamp(96px,13vw,200px)]">
-      <Reveal className="frame flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+      <Reveal className="frame">
         <div>
           <RevealItem as="h2" className="text-h2">
             <span className="block">{first}</span>
@@ -82,12 +81,9 @@ export function Rugged() {
             {t('rugged.sentence')}
           </RevealItem>
         </div>
-        <RevealItem>
-          <Button href={SITE.driverGuide} variant="inverse">
-            {t('rugged.guide')}
-          </Button>
-        </RevealItem>
       </Reveal>
+
+      <BrandMarquee label={t('rugged.brandsLabel')} className="mt-16" />
 
       <div className="frame mt-14 grid gap-6 lg:grid-cols-[240px_1fr] lg:gap-10">
         <div className="flex flex-col gap-6">

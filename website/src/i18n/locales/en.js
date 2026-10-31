@@ -169,7 +169,7 @@ export default {
   flow: {
     title: 'Every driver source, one list',
     sentence:
-      'Your own folder or server share, Windows Update, and the catalogs of Dell, HP and Lenovo. WinDiag offers the newest driver any of them has.',
+      'Windows Update and the catalogs of Dell, HP and Lenovo, plus your own driver folder if you keep one. WinDiag offers the newest driver any of them has.',
     steps: [
       { lead: 'First, choose where drivers come from.' },
       { lead: 'Then compare the PC with all of them.' },
@@ -229,7 +229,7 @@ export default {
     titleLines: ['Any Windows PC.', 'Rugged ones too.'],
     sentence:
       "WinDiag works on laptops and desktops of every brand. Rugged laptops get extra care: the model names technicians use and the right BIOS for each generation. Below, the latest BIOS for each, checked on 29 October 2026.",
-    guide: 'Set up a driver folder',
+    brandsLabel: 'Some of the makers whose laptops and desktops WinDiag runs on',
     windows: 'Windows reports',
     shown: 'WinDiag shows',
     latestBios: 'Latest BIOS',
@@ -297,7 +297,8 @@ export default {
 
   footer: {
     statement: 'WinDiag is free and open source, built for the technician’s bench.',
-    legal: 'MIT licence · Not affiliated with Microsoft, Panasonic, Getac or Dell.',
+    legal:
+      'MIT licence · Not affiliated with Microsoft or any PC maker. Brand names and logos belong to their owners.',
     links: 'Links',
     linkItems: {
       releases: 'All releases',

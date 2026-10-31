@@ -222,3 +222,27 @@
     transform: translateX(300%);
   }
 }
+
+/* Brand strip: two copies of the row slide left by one copy's width, forever.
+   Hovering or focusing pauses it; with reduced motion it stands still and
+   wraps instead (see BrandMarquee). */
+.marquee {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+}
+.marquee-track {
+  animation: marquee var(--marquee-duration, 60s) linear infinite;
+  will-change: transform;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}

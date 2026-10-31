@@ -272,6 +272,8 @@ export function DriversFlow() {
             <RevealItem>
               <div data-ui className="flex flex-col gap-2 rounded-[8px] bg-bg p-4 sm:p-5">
                 <div className="mb-1 text-[14px] font-semibold">{t('flow.sourcesLabel')}</div>
+                <SourceRow id="windowsUpdate" on={sources.windowsUpdate} onChange={toggle('windowsUpdate')} />
+                <SourceRow id="makers" on={sources.makers} onChange={toggle('makers')} />
                 <SourceRow id="folder" on={sources.folder} onChange={toggle('folder')}>
                   <div className="pb-2 pt-3">
                     <label className="mb-2 block text-[14px]" htmlFor="catalog-path">
@@ -298,8 +300,6 @@ export function DriversFlow() {
                     </div>
                   </div>
                 </SourceRow>
-                <SourceRow id="windowsUpdate" on={sources.windowsUpdate} onChange={toggle('windowsUpdate')} />
-                <SourceRow id="makers" on={sources.makers} onChange={toggle('makers')} />
               </div>
             </RevealItem>
           </Reveal>
