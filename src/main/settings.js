@@ -37,7 +37,8 @@ const SCHEMA = {
   driverCatalog: { default: '', valid: (v) => typeof v === 'string' && v.length < 1024 },
   // Driver sources compared on the Drivers page
   driversWindowsUpdate: { default: true, valid: (v) => typeof v === 'boolean' },
-  driversUseFolder: { default: true, valid: (v) => typeof v === 'boolean' }
+  driversUseFolder: { default: true, valid: (v) => typeof v === 'boolean' },
+  driversMakers: { default: true, valid: (v) => typeof v === 'boolean' }
 }
 
 const DEFAULTS = Object.fromEntries(Object.entries(SCHEMA).map(([key, s]) => [key, s.default]))

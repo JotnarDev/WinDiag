@@ -41,9 +41,15 @@ export const DRIVER_SOURCES = [
     name: 'folder',
     isEnabled: (request) => request.local != null,
     load: () => import('./local')
+  },
+  // Makers' catalogs: each one loads only on that maker's computers
+  {
+    id: 'dell',
+    name: 'Dell',
+    manufacturer: /^dell/i,
+    isEnabled: (request) => request.makers === true,
+    load: () => import('./dell')
   }
-  // Makers' catalogs go here, e.g.
-  // { id: 'dell', name: 'Dell', manufacturer: /^dell/i, isEnabled: …, load: () => import('./dell') }
 ]
 
 const byId = new Map(DRIVER_SOURCES.map((source) => [source.id, source]))

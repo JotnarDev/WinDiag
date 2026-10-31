@@ -239,7 +239,7 @@ src/main/
   system-tools.js   reports, elevation, sysprep, chkdsk
   windows-update.js Windows Update modes; opens it for WinDiag's own driver search
   drivers.js        driver comparison and installs, BIOS safety checks (no source code)
-  driver-sources/   index.js (the list and contract), windows-update.js, local.js
+  driver-sources/   index.js (the list and contract), windows-update.js, local.js, dell.js
   inf-parser.js     .inf parser (pure)
   driver-catalog.js JSON catalog, BIOS, versions (pure)
   device-model.js   Panasonic names (pure)

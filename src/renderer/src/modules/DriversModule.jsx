@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   ArrowDownloadRegular,
   ArrowSyncRegular,
+  BuildingFactoryRegular,
   CheckmarkCircleRegular,
   CloudArrowDownRegular,
   DeveloperBoardRegular,
@@ -107,8 +108,23 @@ function BiosCard({ bios, disabled, onUpdate, outcome }) {
             </>
           )}
         </div>
-        {candidate?.notes && status === 'outdated' && (
-          <p className="text-caption text-text-secondary">{candidate.notes}</p>
+        {status === 'outdated' && (candidate?.notes || candidate?.infoUrl) && (
+          <p className="text-caption text-text-secondary">
+            {candidate.notes}
+            {candidate.infoUrl && (
+              <>
+                {candidate.notes && ' '}
+                <a
+                  href={candidate.infoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent-text underline"
+                >
+                  What’s in this update
+                </a>
+              </>
+            )}
+          </p>
         )}
         {outcome && (
           <InfoBar severity={outcome.success ? 'success' : 'error'}>
@@ -179,6 +195,7 @@ export function DriversModule({ onNavigate }) {
   const catalog = settings.driverCatalog
   const useWindowsUpdate = settings.driversWindowsUpdate
   const useFolder = settings.driversUseFolder
+  const useMakers = settings.driversMakers
   const local = !useFolder
     ? null
     : catalog
@@ -206,7 +223,11 @@ export function DriversModule({ onNavigate }) {
     setOutcomes({})
     setBiosOutcome(null)
     try {
-      const result = await window.api.scanDrivers({ local, windowsUpdate: useWindowsUpdate })
+      const result = await window.api.scanDrivers({
+        local,
+        windowsUpdate: useWindowsUpdate,
+        makers: useMakers
+      })
       lastScan = result
       setScan(result)
     } catch (err) {
@@ -312,6 +333,18 @@ export function DriversModule({ onNavigate }) {
             onChange={(on) => void updateSetting('driversWindowsUpdate', on)}
           />
         </SettingsCard>
+        <SettingsCard
+          icon={BuildingFactoryRegular}
+          title="Manufacturer catalogs"
+          description="BIOS and drivers from the maker's own catalog, for Dell computers. Downloaded from the maker and checked against its signature. Needs internet."
+        >
+          <ToggleSwitch
+            label="Manufacturer catalogs"
+            checked={useMakers}
+            disabled={busy}
+            onChange={(on) => void updateSetting('driversMakers', on)}
+          />
+        </SettingsCard>
         {useFolder && catalog && (
           <SettingsCard
             icon={DocumentBulletListRegular}
@@ -363,7 +396,7 @@ export function DriversModule({ onNavigate }) {
         <Button
           variant="accent"
           icon={scanning ? undefined : ArrowSyncRegular}
-          disabled={!(useWindowsUpdate || local) || busy}
+          disabled={!(useWindowsUpdate || useMakers || local) || busy}
           onClick={() => void compare()}
         >
           {scanning ? 'Comparing…' : 'Compare drivers'}
@@ -398,6 +431,7 @@ export function DriversModule({ onNavigate }) {
             <ProgressRing size={16} label="Comparing" />
             {[
               useWindowsUpdate && 'Searching Windows Update',
+              useMakers && 'checking the maker’s catalog',
               local?.kind === 'catalog' && 'reading the catalog',
               local?.kind === 'folder' && 'reading the folder',
               'reading the installed drivers'
@@ -550,8 +584,11 @@ export function DriversModule({ onNavigate }) {
         busy={startingBios}
       >
         <p>
-          WinDiag starts {scan?.bios?.candidate?.label ?? 'the updater'} (version{' '}
-          {scan?.bios?.candidate?.version}). Before you continue:
+          {scan?.bios?.candidate?.source === 'folder'
+            ? 'WinDiag starts '
+            : `WinDiag downloads from ${scan?.bios?.candidate?.sourceName}, checks its signature and starts `}
+          {scan?.bios?.candidate?.label ?? 'the updater'} (version {scan?.bios?.candidate?.version}
+          ). Before you continue:
         </p>
         <ul className="mt-2 list-disc pl-5">
           <li>Keep the AC adapter connected the whole time.</li>

@@ -313,7 +313,8 @@ function startApp() {
       throw new TypeError('drivers:scan')
     return scanDrivers({
       local: local && { kind: local.kind, path: expect('string', local.path, 'drivers:scan') },
-      windowsUpdate: request?.windowsUpdate === true
+      windowsUpdate: request?.windowsUpdate === true,
+      makers: request?.makers === true
     })
   })
   handle('drivers:install', (_event, items) => {

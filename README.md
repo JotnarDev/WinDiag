@@ -276,6 +276,7 @@ src/
       index.js                  the list of sources and the contract they follow
       windows-update.js         drivers from Windows Update
       local.js                  driver folder or catalog JSON, pnputil, catalog creation
+      dell.js                   Dell's public catalog: BIOS and drivers (Dell computers only)
     inf-parser.js               .inf reader (pure functions)
     driver-catalog.js           JSON catalog, BIOS, versions (pure functions)
     device-model.js             Panasonic model names (pure functions)
