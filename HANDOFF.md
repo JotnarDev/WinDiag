@@ -16,7 +16,7 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 
 ### Only the Fluent version is maintained
 
-This repository (branch `main` of `JotnarDev/WinDiag`, version **2.5.1**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
+This repository (branch `main` of `JotnarDev/WinDiag`, version **2.6.0**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
 
 It started as a copy of the original WinDiag (1.0.0, which is still on the development machine on the `windows-integration` branch). That project is no longer developed or copied to the USB drives, so **do not port changes to it**.
 
@@ -227,6 +227,17 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 - **Preload:** removed `contextBridge.exposeInMainWorld('electron', electronAPI)` and the `@electron-toolkit/preload` dependency. The renderer never used it, and it gave the page access to every IPC channel. Only `window.api` is exposed.
 - **Navigation:** `will-navigate` is blocked on the main window. `isTrustedSender()` trusts any `file://` URL, so the window must never leave its own page (dropping a file on it used to navigate).
 
+### 2.6.0 — Driver sources, Windows Update modes, new icon (minor)
+
+- **Windows Update modes** (`src/main/windows-update.js`, based on Chris Titus' WinUtil, MIT): default, security (no drivers, feature updates deferred 365 days, quality updates 4 days) and disabled (policies, blocked update server, UsoSvc/wuauserv/BITS stopped and disabled, scheduled tasks off). `withWindowsUpdateAccess()` opens it for WinDiag's own driver search and puts the mode back afterwards.
+- **Driver sources:** `drivers.js` is the core (inventory, comparison, installs, BIOS checks) and knows no source. Each source is a module in `driver-sources/` with `find`, `install` and `prepareBios` (contract in `driver-sources/index.js`): `local` (folder or catalog), `windows-update` (Windows Update API in an isolated PowerShell), `dell`, `hp`, `lenovo`. Makers' sources only load on that maker's computers and share `maker-files.js` (downloads, SHA-256, Authenticode signature, cab reading, installers); their packages live in `%ProgramData%\WinDiag\drivers\<maker>`.
+- **Dell:** CatalogIndexPC.cab → the model's cab by SystemSKUNumber. Drivers need PCI/USB IDs. Silent install `/s`; DUP exit codes mapped.
+- **HP:** platformList.cab → the reference cab for the baseboard ID and the closest Windows version. Exact hardware IDs; BIOS by ROM family ("T76 Ver. 01.25.00"). SoftPaqs extracted with `-e -s -f`, then HP's SilentInstall command.
+- **Lenovo:** catalog/<MT>_Win11.xml (or Win10) → each package's descriptor. Driver versions from DetectInstall (ranges "x^y" use x); packages that restart the computer themselves are skipped. BIOS by build family ("N32ET88W (1.64 )" → 1.64).
+- The inventory also reads the baseboard and the Windows build and release. A BIOS candidate can carry `installedVersion` in the maker's own terms.
+- **Support links:** `src/renderer/src/lib/support-links.js`, by manufacturer, in the BIOS card and "No driver found".
+- **Icon:** see "App icon" in section 1.
+
 ---
 
 ## 4. Code structure (Fluent)
@@ -299,6 +310,7 @@ src/renderer/src/
 ## 7. Pending / untested
 
 - **To test on Windows:** the 2.5.1 changes (opening WinDiag twice, deleting a user with and without Sysprep open, dropping a file on the window). Everything up to 2.5.0 has been tested.
+- **2.6.0, to test on Windows:** the three Windows Update modes; drivers from Windows Update (also in Off mode); the Dell, HP and Lenovo catalogs on each maker's computer (reading the model and BIOS version, silent installs and their exit codes, the BIOS updater); the support links; the new icon in the taskbar and the .exe.
 - **Catalog to review:**
   - CF-C2 has two V2 BIOS files (`V2.00L21` and `V2.50L16`); confirm whether V2.50 is for another sub-model and, if so, use `sku`.
   - `ec_33_1_m195057.exe` and `BiosUpdate_R18-0354.exe` have no version, so they are ignored.

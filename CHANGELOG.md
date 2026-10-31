@@ -6,6 +6,19 @@ WinDiag Fluent follows [Semantic Versioning](https://semver.org/):
 - **Minor**: a new feature or page. Resets the patch number.
 - **Patch**: a fix to something that already existed.
 
+## 2.6.0 — 2026-10-31
+
+### Added
+- Drivers can come from several sources at once, each with its own switch under Compare with: your driver folder or catalog, Windows Update, and manufacturer catalogs. The comparison offers the newest driver any of them has and says where it comes from.
+- Windows Update as a driver source, for any brand. It works even with Windows Update off: WinDiag opens it only while it searches and installs.
+- Dell, HP and Lenovo catalogs (the ones Dell Command | Update, HP Image Assistant and Lenovo System Update read): BIOS and drivers for that maker's computers, checked against the catalog's hash and the maker's digital signature before anything runs.
+- Devices with no driver found link to the maker's support site (Panasonic, Getac, Acer, ASUS, Surface and others) and to a Microsoft Update Catalog search.
+- Windows Update has three modes in Tools: Windows' default, security updates only, or off.
+
+### Changed
+- New app icon: a pulse line whose peaks draw a W.
+- WinDiag presents itself for any Windows laptop or desktop; rugged laptops keep their extra care.
+
 ## 2.5.1 — 2026-10-29
 
 ### Fixed

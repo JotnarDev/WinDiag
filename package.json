@@ -1,6 +1,6 @@
 {
   "name": "windiag-fluent",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "description": "WinDiag — native Windows hardware diagnostics tool (Electron + React)",
   "main": "./out/main/index.js",
   "author": "JOTNAR",
