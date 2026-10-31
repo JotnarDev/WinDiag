@@ -48,8 +48,8 @@ export default {
   },
 
   field: {
-    caption: 'Every screw in its box, the heat sink going back on. WinDiag is for the bench where PCs get tested and fixed.',
-    credit: 'Photo: Vintechcomputerservices, CC BY-SA 4.0'
+    caption: 'Halfway through an update, waiting for a yes. WinDiag is for the bench where PCs get tested, updated and handed back.',
+    credit: 'Photo: Solijon Solayev, CC BY-SA 4.0'
   },
 
   board: {

@@ -22,27 +22,27 @@
     "saved": "2026-10-31T19:38:14.686Z"
   },
   {
-    "file": "public/photos/computer-repair.jpg",
+    "file": "public/photos/laptop-update.jpg",
     "media": "image",
-    "ref": "commons:79707048",
-    "title": "Computer repair in progress",
-    "creator": "Vintechcomputerservices",
+    "ref": "commons:186098242",
+    "title": "Arch Linux system update via pacman on an Acer laptop",
+    "creator": "Solijon Solayev",
     "creatorUrl": null,
-    "date": "2019-06-15",
+    "date": "7 March 2026 (according to Exif data)",
     "license": "CC BY-SA 4.0",
     "licenseCode": "by-sa",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "creditRequired": true,
-    "page": "https://commons.wikimedia.org/wiki/File:Computer_repair_in_progress.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Arch_Linux_system_update_via_pacman_on_an_Acer_laptop.jpg",
     "via": "Wikimedia Commons",
-    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Computer_repair_in_progress.jpg/1920px-Computer_repair_in_progress.jpg",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Arch_Linux_system_update_via_pacman_on_an_Acer_laptop.jpg/1920px-Arch_Linux_system_update_via_pacman_on_an_Acer_laptop.jpg",
     "width": 1920,
-    "height": 1272,
-    "bytes": 345369,
-    "credit": "\"Computer repair in progress\" by Vintechcomputerservices, CC BY-SA 4.0, via Wikimedia Commons",
+    "height": 1440,
+    "bytes": 595481,
+    "credit": "\"Arch Linux system update via pacman on an Acer laptop\" by Solijon Solayev, CC BY-SA 4.0, via Wikimedia Commons",
     "notes": [
       "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
     ],
-    "saved": "2026-10-31T22:36:55.634Z"
+    "saved": "2026-10-31T22:46:17.229Z"
   }
 ]
