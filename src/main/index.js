@@ -48,6 +48,7 @@ import {
   createCatalog,
   findDefaultDriverFolder,
   installDriver,
+  installFromWindowsUpdate,
   launchBiosUpdate,
   scanDrivers
 } from './drivers'
@@ -307,9 +308,20 @@ function startApp() {
   handle('drivers:update-bios', (_event, updaterPath) =>
     launchBiosUpdate(expect('string', updaterPath, 'drivers:update-bios'))
   )
-  handle('drivers:scan', (_event, source) => {
-    if (!['folder', 'catalog'].includes(source?.kind)) throw new TypeError('drivers:scan')
-    return scanDrivers({ kind: source.kind, path: expect('string', source.path, 'drivers:scan') })
+  handle('drivers:scan', (_event, request) => {
+    const local = request?.local ?? null
+    if (local !== null && !['folder', 'catalog'].includes(local?.kind))
+      throw new TypeError('drivers:scan')
+    return scanDrivers({
+      local: local && { kind: local.kind, path: expect('string', local.path, 'drivers:scan') },
+      windowsUpdate: request?.windowsUpdate === true
+    })
+  })
+  handle('drivers:install-windows-update', (_event, devices) => {
+    if (typeof devices !== 'object' || devices === null || Array.isArray(devices)) {
+      throw new TypeError('drivers:install-windows-update')
+    }
+    return installFromWindowsUpdate(devices)
   })
   handle('drivers:install', (_event, infPath, deviceId) =>
     installDriver(

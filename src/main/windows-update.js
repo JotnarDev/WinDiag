@@ -71,10 +71,26 @@ Set-ItemProperty -Path '${path}' -Name '${name}' -Type ${type} -Value ${typeof v
 `
 
 const SECURITY_SCRIPT = [
-  setValue('HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Device Metadata', 'PreventDeviceMetadataFromNetwork', 1),
-  setValue('HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching', 'DontPromptForWindowsUpdate', 1),
-  setValue('HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching', 'DontSearchWindowsUpdate', 1),
-  setValue('HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching', 'DriverUpdateWizardWuSearchEnabled', 0),
+  setValue(
+    'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Device Metadata',
+    'PreventDeviceMetadataFromNetwork',
+    1
+  ),
+  setValue(
+    'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching',
+    'DontPromptForWindowsUpdate',
+    1
+  ),
+  setValue(
+    'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching',
+    'DontSearchWindowsUpdate',
+    1
+  ),
+  setValue(
+    'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DriverSearching',
+    'DriverUpdateWizardWuSearchEnabled',
+    0
+  ),
   setValue(POLICY_KEY, 'ExcludeWUDriversInQualityUpdate', 1),
   setValue(POLICY_KEY, 'DeferFeatureUpdates', 1),
   setValue(POLICY_KEY, 'DeferFeatureUpdatesPeriodInDays', 365),
@@ -92,7 +108,11 @@ const DISABLED_SCRIPT = [
   setValue(POLICY_KEY, 'WUServer', BLOCKED_UPDATE_SERVER, 'String'),
   setValue(POLICY_KEY, 'WUStatusServer', BLOCKED_UPDATE_SERVER, 'String'),
   setValue(POLICY_KEY, 'DoNotConnectToWindowsUpdateInternetLocations', 1),
-  setValue('HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config', 'DODownloadMode', 0),
+  setValue(
+    'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config',
+    'DODownloadMode',
+    0
+  ),
   `
 foreach ($name in @('UsoSvc', 'wuauserv', 'BITS')) {
     Stop-Service -Name $name -Force -ErrorAction SilentlyContinue
@@ -107,7 +127,11 @@ const MODE_SCRIPTS = {
   disabled: RESET_SCRIPT + DISABLED_SCRIPT + setTasks(false)
 }
 
-const MODE_NAMES = { default: 'Windows default', security: 'Security updates only', disabled: 'Off' }
+const MODE_NAMES = {
+  default: 'Windows default',
+  security: 'Security updates only',
+  disabled: 'Off'
+}
 
 // Status and StartType are enums, so their names are always English
 const STATE_SCRIPT = `
@@ -152,12 +176,16 @@ export async function getWindowsUpdateState() {
 }
 
 export async function setWindowsUpdateMode(mode) {
-  if (!UPDATE_MODES.includes(mode)) return { success: false, message: `Unknown Windows Update mode: ${mode}` }
+  if (!UPDATE_MODES.includes(mode))
+    return { success: false, message: `Unknown Windows Update mode: ${mode}` }
   if (!(await isRunningElevated())) return notElevatedResult('change Windows Update')
   try {
     await runPowerShell(MODE_SCRIPTS[mode], 120e3)
   } catch (err) {
-    return { success: false, message: `Couldn't change Windows Update: ${err instanceof Error ? err.message : err}` }
+    return {
+      success: false,
+      message: `Couldn't change Windows Update: ${err instanceof Error ? err.message : err}`
+    }
   }
   const after = await getWindowsUpdateState()
   if (after.mode !== mode) {
@@ -170,4 +198,51 @@ export async function setWindowsUpdateMode(mode) {
     }
   }
   return { success: true, message: `Windows Update: ${MODE_NAMES[mode]}.` }
+}
+
+// Lets WinDiag itself reach Windows Update for drivers while the security or
+// off mode is in force: the driver exclusion and WinDiag's blocking server are
+// lifted and the services started. Automatic updates stay off (NoAutoUpdate
+// doesn't stop a search WinDiag asks for), so Windows doesn't start
+// installing things on its own in the meantime.
+const OPEN_FOR_DRIVERS_SCRIPT = `
+$wu = '${POLICY_KEY}'
+Remove-ItemProperty -Path $wu -Name ExcludeWUDriversInQualityUpdate, DoNotConnectToWindowsUpdateInternetLocations -ErrorAction SilentlyContinue
+if ((Get-ItemProperty -Path $wu -Name WUServer -ErrorAction SilentlyContinue).WUServer -eq '${BLOCKED_UPDATE_SERVER}') {
+    Remove-ItemProperty -Path $wu -Name WUServer, WUStatusServer -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path "$wu\\AU" -Name UseWUServer -ErrorAction SilentlyContinue
+}
+foreach ($name in @('BITS', 'wuauserv')) {
+    Set-Service -Name $name -StartupType Manual -ErrorAction SilentlyContinue
+    Start-Service -Name $name -ErrorAction SilentlyContinue
+}
+`
+
+let accessQueue = Promise.resolve()
+
+/**
+ * Runs `task` with Windows Update reachable for driver searches and installs,
+ * then puts the chosen mode back. One at a time: a second call waits.
+ */
+export function withWindowsUpdateAccess(task) {
+  const run = async () => {
+    const { mode } = await getWindowsUpdateState()
+    const restricted = mode === 'security' || mode === 'disabled'
+    if (restricted) {
+      if (!(await isRunningElevated())) {
+        throw new Error(
+          'Windows Update is limited on this computer (Tools → Windows Update). Run WinDiag as administrator so it can search for drivers anyway.'
+        )
+      }
+      await runPowerShell(OPEN_FOR_DRIVERS_SCRIPT, 60e3)
+    }
+    try {
+      return await task()
+    } finally {
+      if (restricted) await runPowerShell(MODE_SCRIPTS[mode], 120e3).catch(() => '')
+    }
+  }
+  const result = accessQueue.then(run, run)
+  accessQueue = result.catch(() => undefined)
+  return result
 }

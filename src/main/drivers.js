@@ -17,6 +17,7 @@ import {
 } from './driver-catalog'
 import { friendlyModel } from './device-model'
 import { runPowerShell } from './powershell'
+import { installWindowsUpdateDrivers, searchWindowsUpdateDrivers } from './windows-update-drivers'
 import { isRunningElevated, notElevatedResult } from './system-tools'
 
 const execFileAsync = promisify(execFile)
@@ -36,6 +37,8 @@ const infCache = new Map()
 let scannedInfPaths = new Set()
 // …and only the BIOS updater the last scan offered for this device
 let offeredBiosUpdate = null
+// Windows Update drivers offered by the last comparison: the only ones it installs
+let offeredUpdateIds = new Set()
 
 /** Looks for a "02 Drivers" folder at the root of every drive. */
 export function findDefaultDriverFolder() {
@@ -173,6 +176,17 @@ function pickNewest(candidates) {
   return candidates.reduce((best, c) => (!best || isNewer(c, best) ? c : best), null)
 }
 
+// Windows Update only offers a driver it ranks above the installed one, so
+// when neither version nor date can be compared its word is taken for it
+function offersUpdate(candidate, installed) {
+  if (isNewer(candidate, installed)) return true
+  return (
+    candidate.source === 'windowsUpdate' &&
+    compareVersions(candidate.version, installed.version) === null &&
+    !(candidate.date && installed.date)
+  )
+}
+
 // Every usable INF under `folder`, parsed
 async function readFolderEntries(folder) {
   const { infPaths } = await findDriverFiles(folder)
@@ -214,39 +228,50 @@ async function canOpen(target, isFile) {
 }
 
 /**
- * Compares the installed drivers with a driver folder ({ kind: 'folder' })
- * or a catalog JSON ({ kind: 'catalog' }). Returns one row per device that
- * has a matching driver.
+ * Compares the installed drivers with the chosen sources: a driver folder
+ * ({ kind: 'folder' }) or catalog JSON ({ kind: 'catalog' }) as `local`, and
+ * Windows Update. Returns one row per device that has a driver in either
+ * (the newer one wins), plus the devices with no driver and none on offer.
  */
-export async function scanDrivers(source) {
+export async function scanDrivers({ local = null, windowsUpdate = false } = {}) {
   if (process.platform !== 'win32') return { supported: false }
-  const isCatalog = source.kind === 'catalog'
-  if (!(await canOpen(source.path, isCatalog))) {
+  const isCatalog = local?.kind === 'catalog'
+  if (local && !(await canOpen(local.path, isCatalog))) {
     return {
       supported: true,
-      error: `"${source.path}" can't be opened. If it's on a server, check the network and use its \\\\server\\share path: drives mapped to a letter aren't visible to apps running as administrator.`
+      error: `"${local.path}" can't be opened. If it's on a server, check the network and use its \\\\server\\share path: drives mapped to a letter aren't visible to apps running as administrator.`
     }
   }
   let read
   let devicesOutput
+  let wu
   try {
-    ;[read, devicesOutput] = await Promise.all([
-      isCatalog ? readCatalogEntries(source.path) : readFolderEntries(source.path),
-      runPowerShell(DEVICES_SCRIPT, 90e3).catch(() => '')
+    ;[read, devicesOutput, wu] = await Promise.all([
+      !local
+        ? { entries: [], bios: [], infCount: 0 }
+        : isCatalog
+          ? readCatalogEntries(local.path)
+          : readFolderEntries(local.path),
+      runPowerShell(DEVICES_SCRIPT, 90e3).catch(() => ''),
+      windowsUpdate ? searchWindowsUpdateDrivers() : null
     ])
   } catch (err) {
     return { supported: true, error: err instanceof Error ? err.message : String(err) }
   }
 
-  // Hardware ID → the drivers for it
+  // Hardware ID → the drivers for it, from both sources
   const byId = new Map()
-  for (const { inf: _inf, ids, ...entry } of read.entries) {
-    for (const id of ids) {
-      if (!byId.has(id)) byId.set(id, [])
-      byId.get(id).push(entry)
-    }
+  const add = (id, entry) => {
+    if (!byId.has(id)) byId.set(id, [])
+    byId.get(id).push(entry)
   }
+  for (const { inf: _inf, ids, ...entry } of read.entries) {
+    for (const id of ids) add(id, { ...entry, source: 'folder' })
+  }
+  const wuUpdates = wu?.ok ? wu.updates : []
+  for (const update of wuUpdates) add(update.hardwareId, { ...update, source: 'windowsUpdate' })
   scannedInfPaths = new Set(read.entries.map((entry) => entry.infPath))
+  offeredUpdateIds = new Set(wuUpdates.map((u) => u.updateId))
 
   let devices = []
   let system = null
@@ -258,6 +283,7 @@ export async function scanDrivers(source) {
     // reported below as devicesRead: false
   }
   const rows = []
+  const unavailable = []
   for (const device of devices) {
     const hardwareIds = (device.hw ?? []).map((id) => String(id).toUpperCase())
     const compatibleIds = (device.compat ?? []).map((id) => String(id).toUpperCase())
@@ -266,7 +292,17 @@ export async function scanDrivers(source) {
     // devices that have no driver at all
     const idsToMatch = hasDriver ? hardwareIds : [...hardwareIds, ...compatibleIds]
     const candidates = idsToMatch.flatMap((id) => byId.get(id) ?? [])
-    if (candidates.length === 0) continue
+    if (candidates.length === 0) {
+      if (!hasDriver) {
+        unavailable.push({
+          deviceId: device.id,
+          name: device.name ?? device.id,
+          deviceClass: device.cls ?? null,
+          hardwareId: hardwareIds[0] ?? null
+        })
+      }
+      continue
+    }
     const candidate = pickNewest(candidates)
     const installed = { version: device.ver ?? null, date: device.date ?? null }
     rows.push({
@@ -275,22 +311,25 @@ export async function scanDrivers(source) {
       deviceClass: device.cls ?? null,
       installed: { ...installed, provider: device.prov ?? null, inf: device.inf ?? null },
       candidate,
-      status: !hasDriver ? 'missing' : isNewer(candidate, installed) ? 'outdated' : 'current'
+      status: !hasDriver ? 'missing' : offersUpdate(candidate, installed) ? 'outdated' : 'current'
     })
   }
   rows.sort((a, b) => a.name.localeCompare(b.name))
+  unavailable.sort((a, b) => a.name.localeCompare(b.name))
 
   const biosCandidate = system && read.bios.length > 0 ? matchBios(read.bios, system) : null
   const biosNewer = biosCandidate && compareBiosVersions(biosCandidate.version, system.version) > 0
   offeredBiosUpdate = biosNewer ? biosCandidate : null
   return {
     supported: true,
-    source,
+    local,
     infCount: read.infCount,
     usableInfCount: read.entries.length,
+    windowsUpdate: wu && { ok: wu.ok, error: wu.error ?? null, count: wuUpdates.length },
     deviceCount: devices.length,
     devicesRead: devices.length > 0,
     rows,
+    unavailable,
     bios: {
       // BIOS updates come only from a catalog
       catalogHasBios: read.bios.length > 0,
@@ -354,6 +393,33 @@ export async function installDriver(infPath, deviceId) {
   }
   const newVersion = deviceId ? await readInstalledVersion(deviceId) : null
   return { success: true, rebootRequired, notApplied: exitCode === 259, newVersion }
+}
+
+/**
+ * Installs drivers the last comparison found on Windows Update, all in one
+ * download and install. `devices` maps each update ID to the device IDs it
+ * covers, so the result can say which version each device ended up with.
+ */
+export async function installFromWindowsUpdate(devices) {
+  const updateIds = Object.keys(devices ?? {}).filter((id) => offeredUpdateIds.has(id))
+  if (updateIds.length === 0) {
+    return {
+      success: false,
+      message: 'Those drivers aren’t part of the last comparison. Compare again.',
+      results: {}
+    }
+  }
+  if (!(await isRunningElevated())) return { ...notElevatedResult('install drivers'), results: {} }
+  const outcome = await installWindowsUpdateDrivers(updateIds)
+  for (const [updateId, result] of Object.entries(outcome.results)) {
+    const ids = Array.isArray(devices[updateId])
+      ? devices[updateId].filter((d) => typeof d === 'string')
+      : []
+    result.newVersions = {}
+    if (!result.success) continue
+    for (const deviceId of ids) result.newVersions[deviceId] = await readInstalledVersion(deviceId)
+  }
+  return outcome
 }
 
 // Suspends BitLocker on the system drive for one restart, if it's on

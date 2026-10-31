@@ -34,7 +34,10 @@ const SCHEMA = {
   customAccent: { default: '#0078d4', valid: (v) => /^#[0-9a-f]{6}$/i.test(v) },
   // '' = no background tint
   customTint: { default: '', valid: (v) => v === '' || /^#[0-9a-f]{6}$/i.test(v) },
-  driverCatalog: { default: '', valid: (v) => typeof v === 'string' && v.length < 1024 }
+  driverCatalog: { default: '', valid: (v) => typeof v === 'string' && v.length < 1024 },
+  // Driver sources compared on the Drivers page
+  driversWindowsUpdate: { default: true, valid: (v) => typeof v === 'boolean' },
+  driversUseFolder: { default: true, valid: (v) => typeof v === 'boolean' }
 }
 
 const DEFAULTS = Object.fromEntries(Object.entries(SCHEMA).map(([key, s]) => [key, s.default]))

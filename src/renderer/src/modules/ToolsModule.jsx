@@ -77,12 +77,13 @@ const WU_MODES = [
     id: 'security',
     label: 'Security updates only',
     description:
-      'Security updates install 4 days late, feature updates wait a year, and Windows Update no longer replaces drivers.'
+      'Security updates install 4 days late, feature updates wait a year, and Windows Update no longer replaces drivers on its own. The Drivers page can still search it.'
   },
   {
     id: 'disabled',
     label: 'Off',
-    description: 'Windows won’t download updates or drivers, even after a restart.'
+    description:
+      'Windows won’t download updates or drivers, even after a restart. The Drivers page can still search Windows Update when you ask it to.'
   }
 ]
 
@@ -173,7 +174,9 @@ export function ToolsModule() {
           title="Windows Update"
           description={
             <>
-              {wuMode ? wuMode.description : 'Choose how Windows downloads updates and drivers. Needs administrator.'}
+              {wuMode
+                ? wuMode.description
+                : 'Choose how Windows downloads updates and drivers. Needs administrator.'}
               {wuState && wuState.mode !== 'unknown' && (
                 <span className="block">{describeWuService(wuState)}</span>
               )}
