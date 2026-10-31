@@ -47,8 +47,7 @@ import {
   chooseDriverFolder,
   createCatalog,
   findDefaultDriverFolder,
-  installDriver,
-  installFromWindowsUpdate,
+  installDrivers,
   launchBiosUpdate,
   scanDrivers
 } from './drivers'
@@ -305,8 +304,8 @@ function startApp() {
       expect('string', folder, 'drivers:create-catalog')
     )
   )
-  handle('drivers:update-bios', (_event, updaterPath) =>
-    launchBiosUpdate(expect('string', updaterPath, 'drivers:update-bios'))
+  handle('drivers:update-bios', (_event, key) =>
+    launchBiosUpdate(expect('string', key, 'drivers:update-bios'))
   )
   handle('drivers:scan', (_event, request) => {
     const local = request?.local ?? null
@@ -317,18 +316,10 @@ function startApp() {
       windowsUpdate: request?.windowsUpdate === true
     })
   })
-  handle('drivers:install-windows-update', (_event, devices) => {
-    if (typeof devices !== 'object' || devices === null || Array.isArray(devices)) {
-      throw new TypeError('drivers:install-windows-update')
-    }
-    return installFromWindowsUpdate(devices)
+  handle('drivers:install', (_event, items) => {
+    if (!Array.isArray(items)) throw new TypeError('drivers:install: expected a list')
+    return installDrivers(items)
   })
-  handle('drivers:install', (_event, infPath, deviceId) =>
-    installDriver(
-      expect('string', infPath, 'drivers:install'),
-      typeof deviceId === 'string' ? deviceId : null
-    )
-  )
   handle('window:get-appearance', () => getAppearance())
   handle('settings:get', () => getSettings())
   handle('settings:update', (_event, patch) => {

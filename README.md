@@ -269,8 +269,13 @@ src/
     powershell.js               shared PowerShell session and isolated runs
     settings.js                 settings.json with schema validation
     system-info.js              spec sheet, live data, activation
-    system-tools.js             Windows Update, reports, elevation, Sysprep, chkdsk
-    drivers.js                  scanning, pnputil, BIOS, catalog creation
+    system-tools.js             reports, elevation, Sysprep, chkdsk
+    windows-update.js           Windows Update modes (default, security only, off)
+    drivers.js                  driver comparison and installs, BIOS safety checks
+    driver-sources/             where drivers come from, one module per source
+      index.js                  the list of sources and the contract they follow
+      windows-update.js         drivers from Windows Update
+      local.js                  driver folder or catalog JSON, pnputil, catalog creation
     inf-parser.js               .inf reader (pure functions)
     driver-catalog.js           JSON catalog, BIOS, versions (pure functions)
     device-model.js             Panasonic model names (pure functions)

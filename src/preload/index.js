@@ -36,11 +36,9 @@ const api = {
   chooseDriverFolder: (defaultPath) => ipcRenderer.invoke('drivers:choose-folder', defaultPath),
   chooseDriverCatalog: (defaultPath) => ipcRenderer.invoke('drivers:choose-catalog', defaultPath),
   createDriverCatalog: (folder) => ipcRenderer.invoke('drivers:create-catalog', folder),
-  updateBios: (updaterPath) => ipcRenderer.invoke('drivers:update-bios', updaterPath),
+  updateBios: (key) => ipcRenderer.invoke('drivers:update-bios', key),
   scanDrivers: (request) => ipcRenderer.invoke('drivers:scan', request),
-  installWindowsUpdateDrivers: (devices) =>
-    ipcRenderer.invoke('drivers:install-windows-update', devices),
-  installDriver: (infPath, deviceId) => ipcRenderer.invoke('drivers:install', infPath, deviceId),
+  installDrivers: (items) => ipcRenderer.invoke('drivers:install', items),
   setPrintScreenBlocked: (blocked) =>
     ipcRenderer.invoke('keyboard:set-printscreen-blocked', blocked),
   onPrintScreenPressed: (callback) => {

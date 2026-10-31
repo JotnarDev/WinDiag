@@ -6,8 +6,8 @@
 // that Windows ranks above the installed ones. Each runs in its own
 // PowerShell process: a search takes a minute or two, an install longer, and
 // the shared session must stay free for the pages' quick queries.
-import { runPowerShellIsolated } from './powershell'
-import { withWindowsUpdateAccess } from './windows-update'
+import { runPowerShellIsolated } from '../powershell'
+import { withWindowsUpdateAccess } from '../windows-update'
 
 const SEARCH_TIMEOUT_MS = 6 * 60e3
 const INSTALL_TIMEOUT_MS = 30 * 60e3
@@ -111,34 +111,38 @@ function parseOutput(output) {
   }
 }
 
-/**
- * The drivers Windows Update offers for this computer:
- * { ok: true, updates: [{ updateId, title, hardwareId, version, date, provider, ... }] }
- * or { ok: false, error }.
- */
-export async function searchWindowsUpdateDrivers() {
-  if (process.platform !== 'win32')
-    return { ok: false, error: 'Windows Update only works on Windows.' }
+/** The drivers Windows Update offers for this computer, as driver candidates. */
+export async function find() {
+  if (process.platform !== 'win32') return { error: 'Windows Update only works on Windows.' }
+  let parsed
   try {
-    const parsed = parseOutput(
+    parsed = parseOutput(
       await withWindowsUpdateAccess(() => runPowerShellIsolated(SEARCH_SCRIPT, SEARCH_TIMEOUT_MS))
     )
-    if (!parsed.ok) return { ok: false, error: explain(parsed) }
-    const updates = (Array.isArray(parsed.updates) ? parsed.updates : [])
-      .filter((u) => u?.id && u.hw)
-      .map((u) => ({
-        updateId: String(u.id),
-        title: String(u.title ?? ''),
-        hardwareId: String(u.hw).toUpperCase(),
-        version: VERSION_AT_END.exec(String(u.title ?? ''))?.[1] ?? null,
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : String(err) }
+  }
+  if (!parsed.ok) return { error: explain(parsed) }
+  const drivers = (Array.isArray(parsed.updates) ? parsed.updates : [])
+    .filter((u) => u?.id && u.hw)
+    .map((u) => {
+      const title = String(u.title ?? '')
+      return {
+        key: `wu:${u.id}`,
+        hardwareIds: [String(u.hw).toUpperCase()],
+        version: VERSION_AT_END.exec(title)?.[1] ?? null,
         date: u.date ?? null,
         provider: u.provider || u.manufacturer || null,
-        driverClass: u.cls ?? null,
-        size: Number(u.size) || 0
-      }))
-    return { ok: true, updates }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+        label: title,
+        // Windows Update only offers what it ranks above the installed driver
+        trusted: true,
+        updateId: String(u.id)
+      }
+    })
+  return {
+    drivers,
+    bios: [],
+    summary: `Windows Update offers ${drivers.length} driver${drivers.length === 1 ? '' : 's'}`
   }
 }
 
@@ -148,52 +152,39 @@ const UPDATE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 const SUCCEEDED = 2
 const SUCCEEDED_WITH_ERRORS = 3
 
-/**
- * Downloads and installs the given Windows Update drivers in one go.
- * Returns { success, message, rebootRequired, results: { [updateId]: { success, code } } }.
- */
-export async function installWindowsUpdateDrivers(updateIds) {
-  const ids = [
-    ...new Set((Array.isArray(updateIds) ? updateIds : []).filter((id) => UPDATE_ID.test(id)))
-  ]
-  if (ids.length === 0)
-    return { success: false, message: 'No Windows Update driver to install.', results: {} }
+/** Downloads and installs the given Windows Update drivers in one go. */
+export async function install(candidates) {
+  const keyById = new Map(
+    candidates.filter((c) => UPDATE_ID.test(c.updateId)).map((c) => [c.updateId, c.key])
+  )
+  const everyone = (outcome) =>
+    Object.fromEntries(candidates.map((c) => [c.key, { success: false, ...outcome }]))
+  if (keyById.size === 0) return everyone({ message: 'No Windows Update driver to install.' })
   let parsed
   try {
     parsed = parseOutput(
       await withWindowsUpdateAccess(() =>
-        runPowerShellIsolated(installScript(ids), INSTALL_TIMEOUT_MS)
+        runPowerShellIsolated(installScript([...keyById.keys()]), INSTALL_TIMEOUT_MS)
       )
     )
   } catch (err) {
-    return {
-      success: false,
-      message: err instanceof Error ? err.message : String(err),
-      results: {}
-    }
+    return everyone({ message: err instanceof Error ? err.message : String(err) })
   }
-  if (!parsed.ok) return { success: false, message: explain(parsed), results: {} }
-  if (!parsed.found) {
-    return {
-      success: false,
-      message: 'Windows Update no longer offers this driver. Compare again.',
-      results: {}
-    }
+  if (!parsed.ok) return everyone({ message: explain(parsed) })
+  const results = everyone({
+    message: 'Windows Update no longer offers this driver. Compare again.'
+  })
+  for (const u of parsed.updates ?? []) {
+    const key = keyById.get(String(u.id))
+    if (!key) continue
+    const success = u.result === SUCCEEDED || u.result === SUCCEEDED_WITH_ERRORS
+    results[key] = success
+      ? { success, rebootRequired: Boolean(parsed.reboot) }
+      : { success, message: explain({ code: u.code, error: 'the driver could not be installed.' }) }
   }
-  const results = Object.fromEntries(
-    (parsed.updates ?? []).map((u) => [
-      String(u.id),
-      { success: u.result === SUCCEEDED || u.result === SUCCEEDED_WITH_ERRORS, code: u.code }
-    ])
-  )
-  const failed = Object.values(results).filter((r) => !r.success)
-  return {
-    success: failed.length === 0,
-    rebootRequired: Boolean(parsed.reboot),
-    message:
-      failed.length === 0
-        ? 'Installed from Windows Update.'
-        : explain({ code: failed[0].code, error: 'the driver could not be installed.' }),
-    results
-  }
+  return results
+}
+
+export async function prepareBios() {
+  throw new Error('Windows Update doesn’t offer BIOS updates here.')
 }

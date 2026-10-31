@@ -236,8 +236,10 @@ src/main/
   powershell.js     shared PowerShell session (runPowerShell) and isolated runs
   settings.js       settings.json with SCHEMA
   system-info.js    static/dynamic specs, activation
-  system-tools.js   Windows Update, reports, elevation, sysprep, chkdsk
-  drivers.js        scanning, pnputil, BIOS, catalog creation
+  system-tools.js   reports, elevation, sysprep, chkdsk
+  windows-update.js Windows Update modes; opens it for WinDiag's own driver search
+  drivers.js        driver comparison and installs, BIOS safety checks (no source code)
+  driver-sources/   index.js (the list and contract), windows-update.js, local.js
   inf-parser.js     .inf parser (pure)
   driver-catalog.js JSON catalog, BIOS, versions (pure)
   device-model.js   Panasonic names (pure)
@@ -251,6 +253,11 @@ src/renderer/src/
 1. A module in `modules/`.
 2. An entry in `MODULES` (`App.jsx`) and in `NAV_GROUPS` (`AppShell.jsx`).
 3. Its id in `PAGE_IDS` in `settings.js`.
+
+**To add a driver source** (a maker's catalog, for example):
+1. A module in `src/main/driver-sources/` that exports `find`, `install` and `prepareBios` (the contract is described at the top of `driver-sources/index.js`).
+2. An entry in `DRIVER_SOURCES`. A maker's source sets `manufacturer`, so it is only loaded on that maker's computers.
+3. Nothing else: `drivers.js` and the Drivers page work with any source.
 
 **To add an IPC call:**
 1. `handle('channel', …)` in `index.js`.

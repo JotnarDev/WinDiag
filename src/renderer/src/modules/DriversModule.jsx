@@ -30,72 +30,56 @@ function describeDriver(driver) {
 const sameVersion = (a, b) =>
   String(a).split('.').map(Number).join('.') === String(b).split('.').map(Number).join('.')
 
-// What identifies one install: an INF from the folder or a Windows Update update
-const candidateKey = (candidate) =>
-  candidate.source === 'windowsUpdate' ? `wu:${candidate.updateId}` : candidate.infPath
-
-const SOURCE_NAMES = { folder: 'folder', windowsUpdate: 'Windows Update' }
-
 // The Microsoft Update Catalog finds drivers by the vendor and device part of the ID
 const catalogSearchUrl = (hardwareId) =>
   `https://www.catalog.update.microsoft.com/Search.aspx?q=${encodeURIComponent(
     hardwareId.replace(/&(SUBSYS|REV|CC)_.*$/i, '')
   )}`
 
-// Windows Update's outcome for one device, in the same shape as installOutcome
-function windowsUpdateOutcome(result, row) {
-  const own = result.results?.[row.candidate.updateId]
-  if (!own) return { severity: 'error', text: result.message, done: false }
-  if (!own.success) return { severity: 'error', text: result.message, done: false }
-  const restart = result.rebootRequired ? ' Restart the device to finish.' : ''
-  const version = own.newVersions?.[row.deviceId]
-  return {
-    severity: 'success',
-    text: version
-      ? `Installed version ${version} from Windows Update.${restart}`
-      : `Installed from Windows Update.${restart}`,
-    done: true
-  }
+// What the candidate offers, for the row: its version, else its date
+function describeOffer(candidate) {
+  if (candidate.version) return describeDriver(candidate)
+  return candidate.date ? `dated ${candidate.date}` : 'newer driver'
 }
 
-// Turns pnputil's outcome into the message shown under the device
-function installOutcome(result, candidate) {
-  if (!result.success) return { severity: 'error', text: result.message, done: false }
+// Turns one install's result into the message shown under a device
+function installOutcome(result, row) {
+  if (!result?.success) {
+    return {
+      severity: 'error',
+      text: result?.message ?? 'The driver wasn’t installed.',
+      done: false
+    }
+  }
   const restart = result.rebootRequired ? ' Restart the device to finish.' : ''
-  if (result.newVersion && sameVersion(result.newVersion, candidate.version)) {
+  const from = ` from ${row.candidate.sourceName}`
+  const newVersion = result.newVersions?.[row.deviceId] ?? null
+  if (newVersion && (!row.candidate.version || sameVersion(newVersion, row.candidate.version))) {
     return {
       severity: 'success',
-      text: `Installed version ${result.newVersion}.${restart}`,
+      text: `Installed version ${newVersion}${from}.${restart}`,
       done: true
     }
   }
-  if (result.notApplied || result.newVersion) {
+  if (result.notApplied || newVersion) {
     return {
       severity: 'warning',
       text: `The driver was added, but Windows kept ${
-        result.newVersion ? `version ${result.newVersion}` : 'the current driver'
+        newVersion ? `version ${newVersion}` : 'the current driver'
       } because it ranks it higher (e.g. a better hardware match or a signed OEM driver).${restart}`,
       done: false
     }
   }
-  return { severity: 'success', text: `Driver installed.${restart}`, done: true }
+  return { severity: 'success', text: `Driver installed${from}.${restart}`, done: true }
 }
 
-function BiosCard({ bios, local, disabled, onUpdate, outcome }) {
+function BiosCard({ bios, disabled, onUpdate, outcome }) {
   const { system, candidate, status } = bios
   if (!system) return null
   const installed = system.date ? `${system.version} (${system.date})` : system.version
-  let detail
-  if (status === 'outdated' || status === 'current') {
-    detail = `Catalog: ${candidate.version}${candidate.date ? ` (${candidate.date})` : ''} · ${candidate.relPath}`
-  } else if (!bios.catalogHasBios) {
-    detail =
-      local?.kind === 'catalog'
-        ? 'The catalog lists no BIOS updates.'
-        : 'BIOS updates are only compared with a driver catalog (add them to its "bios" list).'
-  } else {
-    detail = 'The catalog has no BIOS update for this model.'
-  }
+  const detail = candidate
+    ? `${candidate.sourceName}: ${candidate.version}${candidate.date ? ` (${candidate.date})` : ''} · ${candidate.label}`
+    : (bios.notes?.[0] ?? 'No source offers BIOS updates for this model.')
   return (
     <Section title="BIOS" className="mt-6">
       <Card className="flex flex-col gap-2 px-4 py-3">
@@ -149,18 +133,14 @@ function DriverRow({ row, outcome, busy, disabled, actionLabel, onInstall }) {
         <div className="min-w-0 flex-1">
           <p className="selectable truncate">{row.name}</p>
           <p className="text-caption text-text-secondary">
-            Installed {describeDriver(row.installed)} → {SOURCE_NAMES[row.candidate.source]}{' '}
-            {row.candidate.version
-              ? describeDriver(row.candidate)
-              : row.candidate.date
-                ? `dated ${row.candidate.date}`
-                : 'newer driver'}
+            Installed {describeDriver(row.installed)} → {row.candidate.sourceName}{' '}
+            {describeOffer(row.candidate)}
           </p>
           <p
             className="selectable truncate text-caption text-text-tertiary"
-            title={row.candidate.relPath ?? row.candidate.title}
+            title={row.candidate.label}
           >
-            {row.candidate.relPath ?? row.candidate.title}
+            {row.candidate.label}
           </p>
         </div>
         {outcome?.done ? (
@@ -258,52 +238,26 @@ export function DriversModule({ onNavigate }) {
   const recordOutcomes = (entries) =>
     setOutcomes((prev) => ({ ...prev, ...Object.fromEntries(entries) }))
 
-  // Installs one INF; every device it covers gets the outcome
-  const installFromFolder = async (row) => {
-    const { infPath } = row.candidate
-    setInstalling(new Set([infPath]))
-    let outcome
+  // Installs the drivers of the given rows in one request; every device a
+  // driver covers gets its outcome (one driver can serve several devices)
+  const install = async (chosen) => {
+    const keys = new Set(chosen.map((r) => r.candidate.key))
+    const covered = scan.rows.filter((r) => keys.has(r.candidate.key))
+    const deviceIds = {}
+    for (const r of covered) (deviceIds[r.candidate.key] ??= []).push(r.deviceId)
+    setInstalling(keys)
+    let results
     try {
-      outcome = installOutcome(await window.api.installDriver(infPath, row.deviceId), row.candidate)
+      ;({ results } = await window.api.installDrivers(
+        [...keys].map((key) => ({ key, deviceIds: deviceIds[key] ?? [] }))
+      ))
     } catch (err) {
-      outcome = { severity: 'error', text: err instanceof Error ? err.message : String(err) }
+      const message = err instanceof Error ? err.message : String(err)
+      results = Object.fromEntries([...keys].map((key) => [key, { success: false, message }]))
     }
-    const covered = scan.rows.filter((r) => r.candidate.infPath === infPath)
-    recordOutcomes(covered.map((r) => [r.deviceId, outcome]))
+    recordOutcomes(covered.map((r) => [r.deviceId, installOutcome(results[r.candidate.key], r)]))
     setInstalling(null)
-    return outcome
   }
-
-  // Installs Windows Update drivers in one download and install; every
-  // device each one covers gets its outcome
-  const installFromWindowsUpdate = async (chosen) => {
-    const updateIds = new Set(chosen.map((r) => r.candidate.updateId))
-    const covered = scan.rows.filter(
-      (r) => r.candidate.source === 'windowsUpdate' && updateIds.has(r.candidate.updateId)
-    )
-    const devices = {}
-    for (const r of covered) (devices[r.candidate.updateId] ??= []).push(r.deviceId)
-    setInstalling(new Set([...updateIds].map((id) => `wu:${id}`)))
-    let result
-    try {
-      result = await window.api.installWindowsUpdateDrivers(devices)
-    } catch (err) {
-      result = {
-        success: false,
-        message: err instanceof Error ? err.message : String(err),
-        results: {}
-      }
-    }
-    const entries = covered.map((r) => [r.deviceId, windowsUpdateOutcome(result, r)])
-    recordOutcomes(entries)
-    setInstalling(null)
-    return entries[0]?.[1] ?? { severity: 'error', text: result.message }
-  }
-
-  const install = (row) =>
-    row.candidate.source === 'windowsUpdate'
-      ? installFromWindowsUpdate([row])
-      : installFromFolder(row)
 
   const rows = scan?.rows ?? []
   const outdated = rows.filter((r) => r.status === 'outdated')
@@ -312,23 +266,12 @@ export function DriversModule({ onNavigate }) {
   const unavailable = scan?.unavailable ?? []
   const pendingUpdates = outdated.filter((r) => !outcomes[r.deviceId]?.done)
 
-  const updateAll = async () => {
-    const fromWindowsUpdate = pendingUpdates.filter((r) => r.candidate.source === 'windowsUpdate')
-    const seen = new Set()
-    for (const row of pendingUpdates) {
-      if (row.candidate.source === 'windowsUpdate' || seen.has(row.candidate.infPath)) continue
-      seen.add(row.candidate.infPath)
-      const outcome = await installFromFolder(row)
-      // Missing permission fails every install the same way
-      if (outcome.severity === 'error' && /Administrator/.test(outcome.text)) return
-    }
-    if (fromWindowsUpdate.length > 0) await installFromWindowsUpdate(fromWindowsUpdate)
-  }
+  const updateAll = () => install(pendingUpdates)
 
   const startBiosUpdate = async () => {
     setStartingBios(true)
     try {
-      setBiosOutcome(await window.api.updateBios(scan.bios.candidate.path))
+      setBiosOutcome(await window.api.updateBios(scan.bios.candidate.key))
     } catch (err) {
       setBiosOutcome({ success: false, message: err instanceof Error ? err.message : String(err) })
     } finally {
@@ -344,10 +287,10 @@ export function DriversModule({ onNavigate }) {
         key={row.deviceId}
         row={row}
         outcome={outcomes[row.deviceId]}
-        busy={installing?.has(candidateKey(row.candidate)) ?? false}
+        busy={installing?.has(row.candidate.key) ?? false}
         disabled={busy}
         actionLabel={actionLabel}
-        onInstall={() => void install(row)}
+        onInstall={() => void install([row])}
       />
     ))
 
@@ -474,19 +417,22 @@ export function DriversModule({ onNavigate }) {
             Try again, or run WinDiag as administrator.
           </InfoBar>
         )}
-        {scan?.windowsUpdate && !scan.windowsUpdate.ok && !scanning && (
-          <InfoBar severity="warning" title="Windows Update couldn't be searched.">
-            {scan.windowsUpdate.error}
-          </InfoBar>
-        )}
+        {!scanning &&
+          scan?.sources
+            ?.filter((source) => !source.ok)
+            .map((source) => (
+              <InfoBar
+                key={source.id}
+                severity="warning"
+                title={`${source.name.replace(/^./, (c) => c.toUpperCase())} couldn't be searched.`}
+              >
+                {source.error}
+              </InfoBar>
+            ))}
         {scan?.supported && !scan.error && !scanning && (
           <p className="text-caption text-text-secondary">
             {[
-              scan.windowsUpdate?.ok && `Windows Update offers ${scan.windowsUpdate.count} drivers`,
-              scan.local?.kind === 'catalog' &&
-                `${scan.usableInfCount} of ${scan.infCount} catalog entries are usable`,
-              scan.local?.kind === 'folder' &&
-                `${scan.usableInfCount} of ${scan.infCount} INF files apply to this system`,
+              ...(scan.sources ?? []).filter((source) => source.ok).map((source) => source.summary),
               `${rows.length} of ${scan.deviceCount} devices have a matching driver`
             ]
               .filter(Boolean)
@@ -497,8 +443,8 @@ export function DriversModule({ onNavigate }) {
 
       {scan?.supported && !scan.error && scan.devicesRead && rows.length === 0 && !scanning && (
         <InfoBar severity="info" className="mt-3">
-          {scan.windowsUpdate?.ok
-            ? 'Every driver is up to date: Windows Update offers nothing newer.'
+          {scan.sources?.some((source) => source.id === 'windowsUpdate' && source.ok)
+            ? 'Every driver is up to date: no source offers anything newer.'
             : "None of the drivers match this device's hardware."}
         </InfoBar>
       )}
@@ -506,7 +452,6 @@ export function DriversModule({ onNavigate }) {
       {scan?.bios && !scanning && (
         <BiosCard
           bios={scan.bios}
-          local={scan.local}
           disabled={busy}
           outcome={biosOutcome}
           onUpdate={() => setConfirmBios(true)}
@@ -605,7 +550,7 @@ export function DriversModule({ onNavigate }) {
         busy={startingBios}
       >
         <p>
-          WinDiag starts {scan?.bios?.candidate?.relPath ?? 'the updater'} (version{' '}
+          WinDiag starts {scan?.bios?.candidate?.label ?? 'the updater'} (version{' '}
           {scan?.bios?.candidate?.version}). Before you continue:
         </p>
         <ul className="mt-2 list-disc pl-5">
