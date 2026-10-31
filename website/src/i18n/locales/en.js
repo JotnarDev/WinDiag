@@ -225,28 +225,13 @@ export default {
     guide: 'Read the driver guide'
   },
 
-  rugged: {
+  brands: {
     titleLines: ['Any Windows PC.', 'Rugged ones too.'],
     sentence:
-      "WinDiag works on laptops and desktops of every brand. Rugged laptops get extra care: the model names technicians use and the right BIOS for each generation. Below, the latest BIOS for each, checked on 29 October 2026.",
-    brandsLabel: 'Some of the makers whose laptops and desktops WinDiag runs on',
-    windows: 'Windows reports',
-    shown: 'WinDiag shows',
-    latestBios: 'Latest BIOS',
-    ec: 'EC {version}',
-    inBios: 'EC inside the BIOS',
-    brands: [
-      { id: 'panasonic', name: 'Panasonic', line: 'Toughbook' },
-      { id: 'getac', name: 'Getac', line: 'Rugged notebooks' },
-      { id: 'dell', name: 'Dell', line: 'Latitude Rugged' }
-    ],
-    photos: {
-      panasonic: 'Panasonic Toughbook CF-19, the convertible rugged laptop.',
-      getac: 'Getac B360 on show in Bangalore, 2026.',
-      dell: 'Dell Latitude Rugged tablet and laptop at Dell EMC World.'
-    },
-    panasonicNote: 'Windows stores the generation as a suffix; WinDiag shows the name technicians use.'
+      'WinDiag runs on laptops and desktops of every brand, from a family desktop to a Toughbook that lives in a truck.',
+    label: 'Some of the makers whose laptops and desktops WinDiag runs on'
   },
+
 
   faq: {
     title: 'Questions',

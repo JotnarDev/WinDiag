@@ -5,7 +5,7 @@ import { FieldPhoto } from './components/FieldPhoto'
 import { TestBoard } from './components/TestBoard'
 import { ToolSwitches } from './components/ToolSwitches'
 import { DriversFlow } from './components/DriversFlow'
-import { Rugged } from './components/Rugged'
+import { Brands } from './components/Brands'
 import { Faq } from './components/Faq'
 import { Cta, Footer } from './components/Closing'
 
@@ -20,7 +20,7 @@ export default function App() {
         <TestBoard />
         <ToolSwitches />
         <DriversFlow />
-        <Rugged />
+        <Brands />
         <Faq />
         <Cta />
       </main>

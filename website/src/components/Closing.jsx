@@ -133,14 +133,8 @@ export function Footer() {
         {t('footer.credits')}:{' '}
         <a className="underline" href="https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-19_fully-rugged_laptop.jpg">“Panasonic Toughbook CF-19 fully-rugged laptop”</a> by Ali from Riyadh,{' '}
         <a className="underline" href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a>;{' '}
-        <a className="underline" href="https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-19.jpg">“Panasonic Toughbook CF-19”</a> by Bill Haofei Gong,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;{' '}
         <a className="underline" href="https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-30_(5).jpg">“Panasonic Toughbook CF-30 (5)”</a> by Museum of Transport and Technology,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>;{' '}
-        <a className="underline" href="https://commons.wikimedia.org/wiki/File:DEF-TECH_Bharat_2026,_KTPO_Exhibition_and_Convention_Centre,_Bangalore_175.jpg">“DEF-TECH Bharat 2026 … 175”</a> by Gpkp,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;{' '}
-        <a className="underline" href="https://commons.wikimedia.org/wiki/File:Dell_Latitude_rugged_on_a_Dell_EMC_World_(1).jpg">“Dell Latitude rugged on a Dell EMC World (1)”</a> by MarkScottAustinTX,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by-sa/2.0">CC BY-SA 2.0</a>. All via Wikimedia Commons.
+        <a className="underline" href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. All via Wikimedia Commons.
       </p>
     </footer>
   )

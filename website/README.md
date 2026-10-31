@@ -24,8 +24,7 @@ a language with `?lang=es`; otherwise the site uses the last choice or the brows
 
 ## Data shown on the page
 
-- The BIOS and EC versions in the rugged laptops section are the latest on each maker's support site,
-  checked on 29 October 2026 (`src/components/Rugged.jsx`).
+- The makers' logos in the brands section come from Simple Icons (CC0, `src/lib/brand-logos.js`); the brands belong to their owners.
 - The test results (Toughbook FZ-55 MK2) and the driver versions in the comparison are examples.
 
 ## Photographs
