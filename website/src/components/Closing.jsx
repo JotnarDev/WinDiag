@@ -110,7 +110,11 @@ export function Footer() {
         </Tile>
 
         <div className="order-1 col-span-2 flex min-h-[160px] items-center justify-center overflow-hidden rounded-[4px] bg-inverse text-on-inverse transition-colors duration-500 lg:order-none lg:col-span-8 lg:min-h-[320px]">
-          <span className="select-none text-[clamp(64px,13vw,200px)] font-semibold leading-none tracking-[-0.05em]" aria-hidden="true">
+          <span
+            className="flex select-none items-center gap-[0.22em] text-[clamp(48px,10vw,160px)] font-semibold leading-none tracking-[-0.05em]"
+            aria-hidden="true"
+          >
+            <img src="./app-icon.svg" alt="" width="1024" height="1024" className="size-[0.92em] shrink-0" />
             WinDiag
           </span>
         </div>
@@ -131,8 +135,8 @@ export function Footer() {
       </div>
       <p className="max-w-[96ch] px-2 pt-5 text-[14px] leading-[1.6] text-muted sm:px-3">
         {t('footer.credits')}:{' '}
-        <a className="underline" href="https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-19_fully-rugged_laptop.jpg">“Panasonic Toughbook CF-19 fully-rugged laptop”</a> by Ali from Riyadh,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a>;{' '}
+        <a className="underline" href="https://commons.wikimedia.org/wiki/File:Computer_repair_in_progress.jpg">“Computer repair in progress”</a> by Vintechcomputerservices,{' '}
+        <a className="underline" href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;{' '}
         <a className="underline" href="https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-30_(5).jpg">“Panasonic Toughbook CF-30 (5)”</a> by Museum of Transport and Technology,{' '}
         <a className="underline" href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. All via Wikimedia Commons.
       </p>

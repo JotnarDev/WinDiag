@@ -48,8 +48,8 @@ export default {
   },
 
   field: {
-    caption: 'A Toughbook CF-19 at a solar test site. WinDiag runs on any Windows PC, from an office desktop to a laptop like this one.',
-    credit: 'Photo: Bill Haofei Gong, CC BY-SA 4.0'
+    caption: 'Every screw in its box, the heat sink going back on. WinDiag is for the bench where PCs get tested and fixed.',
+    credit: 'Photo: Vintechcomputerservices, CC BY-SA 4.0'
   },
 
   board: {

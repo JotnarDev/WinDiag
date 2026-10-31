@@ -22,25 +22,27 @@
     "saved": "2026-10-31T19:38:14.686Z"
   },
   {
-    "file": "public/photos/toughbook-cf19-open.jpg",
+    "file": "public/photos/computer-repair.jpg",
     "media": "image",
-    "ref": "commons:45651873",
-    "title": "Panasonic Toughbook CF-19 fully-rugged laptop",
-    "creator": "Ali from Riyadh : ) from Riyadh, Saudi Arabia",
+    "ref": "commons:79707048",
+    "title": "Computer repair in progress",
+    "creator": "Vintechcomputerservices",
     "creatorUrl": null,
-    "date": "2015-12-14",
-    "license": "CC BY 2.0",
-    "licenseCode": "by",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2019-06-15",
+    "license": "CC BY-SA 4.0",
+    "licenseCode": "by-sa",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "creditRequired": true,
-    "page": "https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-19_fully-rugged_laptop.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Computer_repair_in_progress.jpg",
     "via": "Wikimedia Commons",
-    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Panasonic_Toughbook_CF-19_fully-rugged_laptop.jpg/1920px-Panasonic_Toughbook_CF-19_fully-rugged_laptop.jpg",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Computer_repair_in_progress.jpg/1920px-Computer_repair_in_progress.jpg",
     "width": 1920,
-    "height": 1440,
-    "bytes": 459109,
-    "credit": "\"Panasonic Toughbook CF-19 fully-rugged laptop\" by Ali from Riyadh : ) from Riyadh, Saudi Arabia, CC BY 2.0, via Wikimedia Commons",
-    "notes": [],
-    "saved": "2026-10-31T19:38:16.576Z"
+    "height": 1272,
+    "bytes": 345369,
+    "credit": "\"Computer repair in progress\" by Vintechcomputerservices, CC BY-SA 4.0, via Wikimedia Commons",
+    "notes": [
+      "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
+    ],
+    "saved": "2026-10-31T22:36:55.634Z"
   }
 ]

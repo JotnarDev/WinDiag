@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'motion/react'
 import { useI18n } from '../i18n'
 
-/** The page's moving picture: a Toughbook at work, settling into frame as it scrolls past. */
+/** The page's moving picture: a technician repairing a laptop, settling into frame as it scrolls past. */
 export function FieldPhoto() {
   const { t } = useI18n()
   const ref = useRef(null)
@@ -14,10 +14,10 @@ export function FieldPhoto() {
     <figure ref={ref} className="relative m-0">
       <div className="h-[56svh] overflow-hidden sm:h-[78svh]">
         <motion.img
-          src="./photos/toughbook-cf19-open.jpg"
-          alt="A Panasonic Toughbook CF-19 open on a work table outdoors, next to a photovoltaic curve tracer, clamps and a screwdriver."
+          src="./photos/computer-repair.jpg"
+          alt="A technician's hands fitting the copper heat sink back onto an open laptop's motherboard, beside boxes of screws labelled bottom panel, under keyboard and motherboard."
           width="1920"
-          height="1440"
+          height="1272"
           loading="lazy"
           style={{ scale, y }}
           className="size-full object-cover"
