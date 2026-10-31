@@ -135,10 +135,8 @@ export function Footer() {
       </div>
       <p className="max-w-[96ch] px-2 pt-5 text-[14px] leading-[1.6] text-muted sm:px-3">
         {t('footer.credits')}:{' '}
-        <a className="underline" href="https://commons.wikimedia.org/wiki/File:Arch_Linux_system_update_via_pacman_on_an_Acer_laptop.jpg">“System update via pacman on an Acer laptop”</a> by Solijon Solayev,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>;{' '}
         <a className="underline" href="https://commons.wikimedia.org/wiki/File:Panasonic_Toughbook_CF-30_(5).jpg">“Panasonic Toughbook CF-30 (5)”</a> by Museum of Transport and Technology,{' '}
-        <a className="underline" href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. All via Wikimedia Commons.
+        <a className="underline" href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>. Via Wikimedia Commons.
       </p>
     </footer>
   )

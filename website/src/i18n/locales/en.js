@@ -48,8 +48,115 @@ export default {
   },
 
   field: {
-    caption: 'Halfway through an update, waiting for a yes. WinDiag is for the bench where PCs get tested, updated and handed back.',
-    credit: 'Photo: Solijon Solayev, CC BY-SA 4.0'
+    caption: 'The first page WinDiag opens: the whole spec sheet, read in seconds and ready to paste into the ticket. Open a row to see the details.',
+    sample: 'Sample device'
+  },
+
+  overview: {
+    window: 'WinDiag',
+    page: 'Overview',
+    description: "Spec sheet of this device's installed components.",
+    copy: 'Copy specs',
+    refresh: 'Refresh',
+    activated: 'Activated',
+    specs: 'Device specifications',
+    groups: { tests: 'Hardware tests', tools: 'Tools' },
+    nav: {
+      overview: 'Overview',
+      display: 'Display',
+      touch: 'Touch',
+      keyboard: 'Keyboard & mouse',
+      audio: 'Audio & camera',
+      battery: 'Battery',
+      disk: 'Disk health',
+      ports: 'USB ports',
+      wireless: 'Wireless & peripherals',
+      tools: 'Technician tools',
+      drivers: 'Drivers',
+      users: 'Users'
+    },
+    device: {
+      name: 'LENOVO ThinkPad T14 Gen 2i',
+      modelIdLabel: 'Model ID',
+      modelId: '20W0005QUS',
+      serialLabel: 'Serial number',
+      serial: 'PF3K7Q2M',
+      os: 'Windows 11 Pro'
+    },
+    rows: {
+      cpu: {
+        title: 'Processor',
+        summary: '11th Gen Intel Core i5-1145G7 · 4 cores · 2.6 GHz',
+        details: [
+          ['Model', '11th Gen Intel Core i5-1145G7 @ 2.60GHz'],
+          ['Manufacturer', 'GenuineIntel'],
+          ['Cores / threads', '4 / 8'],
+          ['Base speed', '2.6 GHz'],
+          ['Max speed', '4.4 GHz'],
+          ['Cache', 'L1 192 KB · L2 5.0 MB · L3 8.0 MB']
+        ]
+      },
+      memory: {
+        title: 'Memory',
+        summary: '16 GB · 2 modules',
+        details: [
+          ['ChannelA-DIMM0', '8 GB · DDR4 · 3200 MHz · Samsung'],
+          ['ChannelB-DIMM0', '8 GB · DDR4 · 3200 MHz · Samsung']
+        ]
+      },
+      storage: {
+        title: 'Storage',
+        summary: '512 GB · 1 disk',
+        action: 'Disk health',
+        details: [
+          ['Disk', 'SAMSUNG MZVLB512HBJQ-000L7 · 512 GB'],
+          ['Type', 'SSD'],
+          ['Interface', 'NVMe'],
+          ['S.M.A.R.T. status', 'Ok']
+        ]
+      },
+      graphics: {
+        title: 'Graphics',
+        summary: 'Intel(R) Iris(R) Xe Graphics (Integrated)',
+        details: [
+          ['Type', 'Integrated'],
+          ['Video memory', 'Shared with system RAM'],
+          ['Driver version', '31.0.101.4502']
+        ]
+      },
+      battery: {
+        title: 'Battery',
+        summary: 'SMP · Lithium-polymer',
+        action: 'Battery test',
+        details: [
+          ['Manufacturer', 'SMP'],
+          ['Model', '5B10W51818'],
+          ['Chemistry', 'Lithium-polymer'],
+          ['Design capacity', '50 450 mWh']
+        ]
+      },
+      bios: {
+        title: 'BIOS',
+        summary: 'LENOVO · vN32ET88W (1.64 )',
+        details: [
+          ['Manufacturer', 'LENOVO'],
+          ['Version', 'N32ET88W (1.64 )'],
+          ['Release date', '2024-02-27']
+        ]
+      },
+      windows: {
+        title: 'Windows',
+        summary: 'Windows 11 Pro · 24H2',
+        badge: 'Activated',
+        details: [
+          ['Edition', 'Windows 11 Pro'],
+          ['Version', '24H2'],
+          ['OS build', '26100.2314'],
+          ['Architecture', '64-bit'],
+          ['Activation', 'Activated']
+        ]
+      }
+    }
   },
 
   board: {
