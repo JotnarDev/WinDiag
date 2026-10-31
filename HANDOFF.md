@@ -10,6 +10,7 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 
 - **Stack:** Electron 44 + electron-vite 5 + React 19 + Tailwind 4. JavaScript, not TypeScript.
 - **Design:** Fluent 2 / Windows 11, with icons from `@fluentui/react-icons`.
+- **App icon:** a pulse line whose peaks draw a W, white on #1F5FBF. Two masters in `build/`: `icon.svg` (48 px and up) and `icon-small.svg` (thicker line, for 16–32 px). They make `build/icon.png` (1024), `build/icon.ico` (16–256; the small sizes use the thick variant), `resources/icon.png` (512, the window icon in dev), `src/renderer/src/assets/app-icon.png` and the website's `app-icon.png` and `favicon.png` (64, thick variant). Change the SVGs, then render the PNGs again.
 - **Windows:** the main process queries the system with PowerShell, through a shared session (`src/main/powershell.js`), and with `systeminformation`.
 - **Permissions:** the app always runs as administrator (`requireAdministrator` in `electron-builder.yml`).
 
