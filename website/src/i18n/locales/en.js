@@ -3,7 +3,7 @@ export default {
   meta: {
     title: 'WinDiag — Hardware diagnostics for Windows',
     description:
-      "Free Windows app for technicians: test a laptop's display, touch, keys, battery, disk and ports, install drivers and BIOS updates, and get it ready for delivery."
+      'Free Windows app for any laptop or desktop: test the display, keys, battery, disk and ports, bring drivers and BIOS up to date, and get the PC ready to hand over.'
   },
 
   nav: {
@@ -21,7 +21,7 @@ export default {
   hero: {
     lines: ['Test it. Fix it.', 'Hand it over.'],
     sentence:
-      'WinDiag is a free hardware diagnostics app for Windows laptops. It tests the screen, keys, battery, disk and ports, then installs the right drivers and BIOS.',
+      'WinDiag is a free hardware diagnostics app for any Windows laptop or desktop. It tests the screen, keys, battery, disk and ports, then brings drivers and BIOS up to date.',
     download: 'Download for Windows',
     meta: 'Version {version} · Windows 10 and 11, 64-bit · Free and open source',
     tryIt: 'Press any key on your keyboard. This is the real keyboard test.',
@@ -48,13 +48,13 @@ export default {
   },
 
   field: {
-    caption: 'A Toughbook CF-19 at a solar test site. WinDiag is made for machines like this one.',
+    caption: 'A Toughbook CF-19 at a solar test site. WinDiag runs on any Windows PC, from an office desktop to a laptop like this one.',
     credit: 'Photo: Bill Haofei Gong, CC BY-SA 4.0'
   },
 
   board: {
     title: 'Eight tests in one window',
-    sentence: 'A sample run on a Toughbook FZ-55 MK2. Select a test to see what it checks.',
+    sentence: 'A sample run on a laptop. Select a test to see what it checks; on a desktop, skip the ones it has no hardware for.',
     sample: 'Sample results',
     status: { pass: 'Passed', attention: 'Check', running: 'Running' },
     tryDisplay: 'Try it on this screen',
@@ -97,7 +97,7 @@ export default {
         facts: ['Health 87 %', '312 cycles', '39.2 of 45 Wh'],
         status: 'pass',
         detail:
-          'Charge, status, health (actual against design capacity), cycle count and charge history for each battery. One click saves the Windows battery report.'
+          'On a laptop: charge, status, health (actual against design capacity), cycle count and charge history for each battery. One click saves the Windows battery report.'
       },
       {
         id: 'disk',
@@ -121,7 +121,7 @@ export default {
         facts: ['Wi-Fi 6E', '4G EM7511', 'GPS and smart card'],
         status: 'pass',
         detail:
-          'Wi-Fi, Bluetooth, mobile broadband, smart card reader, GPS and barcode scanner, whenever the laptop has them.'
+          'Wi-Fi, Bluetooth, mobile broadband, smart card reader, GPS and barcode scanner, whenever the PC has them.'
       }
     ],
     portsPhoto: 'The rear ports of a Toughbook CF-30.'
@@ -171,7 +171,7 @@ export default {
     sentence: 'No accounts and no cloud. WinDiag reads a folder or a server share you already have.',
     steps: [
       { lead: 'First, point it at your drivers.' },
-      { lead: 'Then compare the laptop with them.' },
+      { lead: 'Then compare the PC with them.' },
       { lead: 'Last, update the BIOS safely.' }
     ],
     catalogLabel: 'Driver catalog',
@@ -203,9 +203,9 @@ export default {
   },
 
   rugged: {
-    titleLines: ['Made for the laptops', 'that live outdoors'],
+    titleLines: ['Any Windows PC.', 'Rugged ones too.'],
     sentence:
-      "Every BIOS below is the latest on the maker's own support site, checked on 29 October 2026.",
+      "WinDiag works on laptops and desktops of every brand. Rugged laptops get extra care: the model names technicians use and the right BIOS for each generation. Below, the latest BIOS for each, checked on 29 October 2026.",
     guide: 'Set up a driver folder',
     windows: 'Windows reports',
     shown: 'WinDiag shows',
@@ -249,8 +249,8 @@ export default {
         a: 'Yes. Each release has an installer and a portable zip. Extract the zip anywhere and run windiag-fluent.exe.'
       },
       {
-        q: 'Does it only work on rugged laptops?',
-        a: 'It works on any Windows PC. Panasonic, Getac and Dell rugged machines get extra care: model names, BIOS generations and radios such as 4G, GPS and smart card readers.'
+        q: 'Does it work on desktops and on any brand?',
+        a: 'Yes. It runs on any Windows 10 or 11 PC, laptop or desktop. Skip the tests for hardware a PC does not have, such as a battery or a touch screen. Panasonic, Getac and Dell rugged laptops get extra care: model names, BIOS generations and radios such as 4G and GPS.'
       },
       {
         q: 'Can it delete user accounts?',
@@ -260,12 +260,12 @@ export default {
   },
 
   cta: {
-    title: 'Your next laptop, tested',
-    sentence: 'Download WinDiag and test your next laptop before it leaves the bench.',
+    title: 'Your next PC, tested',
+    sentence: 'Download WinDiag and test your next laptop or desktop before it leaves the bench.',
     filesTitle: 'Two ways to run it',
     files: [
       { name: 'Installer', detail: 'Installs in one click, with Start menu and desktop shortcuts and an uninstaller.' },
-      { name: 'Portable zip', detail: 'Unzip it onto a USB drive and run it on any laptop on the bench.' }
+      { name: 'Portable zip', detail: 'Unzip it onto a USB drive and run it on any PC on the bench.' }
     ],
     requirements: 'Windows 10 or 11, 64-bit. No account, no internet needed.',
     download: 'Download for Windows',

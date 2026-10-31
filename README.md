@@ -1,6 +1,6 @@
 # WinDiag Fluent
 
-A diagnostics and setup tool for Windows computers, with a Fluent (Windows 11) design. A technician uses it to test a computer's hardware, install drivers and BIOS updates, and get the machine ready for delivery. It is built mainly for rugged laptops: Panasonic Toughbook, Getac and Dell Latitude Rugged.
+A diagnostics and setup tool for Windows computers, with a Fluent (Windows 11) design. A technician uses it to test a computer's hardware, install drivers and BIOS updates, and get the machine ready for delivery. It works on any Windows laptop or desktop, and gives rugged laptops (Panasonic Toughbook, Getac and Dell Latitude Rugged) extra care: the model names technicians use and the right BIOS for each generation.
 
 - **Current version:** 2.5.1. The changes in each version are listed in [CHANGELOG.md](CHANGELOG.md) and inside the app, under Settings → About.
 - **Author:** JOTNAR.

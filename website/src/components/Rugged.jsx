@@ -75,8 +75,8 @@ export function Rugged() {
       <Reveal className="frame flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <RevealItem as="h2" className="text-h2">
-            <span className="block text-muted">{first}</span>
-            <span className="block">{second}</span>
+            <span className="block">{first}</span>
+            <span className="block text-muted">{second}</span>
           </RevealItem>
           <RevealItem as="p" className="mt-6 max-w-[52ch] text-[18px]">
             {t('rugged.sentence')}
