@@ -48,7 +48,7 @@ export default {
   },
 
   field: {
-    caption: 'The first page WinDiag opens: the whole spec sheet, read in seconds and ready to paste into the ticket. Open a row to see the details.',
+    caption: 'The first page WinDiag opens: the whole spec sheet of the laptop, read in seconds and ready to paste into the ticket.',
     sample: 'Sample device'
   },
 
@@ -59,6 +59,7 @@ export default {
     copy: 'Copy specs',
     refresh: 'Refresh',
     activated: 'Activated',
+    reading: 'Reading components…',
     specs: 'Device specifications',
     groups: { tests: 'Hardware tests', tools: 'Tools' },
     nav: {
