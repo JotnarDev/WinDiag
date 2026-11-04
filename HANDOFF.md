@@ -231,6 +231,7 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 ### 2.6.1 — Keycap icon (patch)
 
 - New icon and brand kit (`brand/`): the pulse-line W on blue was replaced by a keycap with a W. The masters, PNGs, `.ico`, web icons and guidelines are in `brand/`; `brand/source/kit.py` regenerates them and the app's icon files.
+- **Status colours** (app `main.css` and website `styles.css`): lime `#9BE15D`/`#3B6E12` passed, amber `#FFC83D`/`#8A5A00` check, red `#FF5C6C`/`#B4233A` failed (dark/light), replacing Fluent's defaults. The lime keeps passed apart from the Cyan accent. `Badge` adds an icon to the `success`, `caution` and `critical` tones, so status never relies on colour alone. The website also has `running` (Cyan) and `skipped` (grey) tokens, and on a Cyan surface a status chip turns Carbon with the dark-mode colour (`--color-signal-*`).
 - The website was restyled with the kit (dark by default, Cyan accent, Space Grotesk headings, the new logo) and is now English only: the unused Spanish locale, the language switch and `?lang=` were removed.
 
 ### 2.6.0 — Driver sources, Windows Update modes, new icon (minor)
@@ -316,7 +317,7 @@ src/renderer/src/
 ## 7. Pending / untested
 
 - **To test on Windows:** the 2.5.1 changes (opening WinDiag twice, deleting a user with and without Sysprep open, dropping a file on the window). Everything up to 2.5.0 has been tested.
-- **2.6.1, to test on Windows:** the keycap icon in the taskbar (16, 24 and 32 px at 100 % and 150 % scaling), the title bar, the installer and the .exe in Explorer.
+- **2.6.1, to test on Windows:** the keycap icon in the taskbar (16, 24 and 32 px at 100 % and 150 % scaling), the title bar, the installer and the .exe in Explorer. The new status colours and badge icons in both themes (Drivers, Battery, Disk, Technician tools, Overview), and the red Delete button.
 - **2.6.0, to test on Windows:** the three Windows Update modes; drivers from Windows Update (also in Off mode); the Dell, HP and Lenovo catalogs on each maker's computer (reading the model and BIOS version, silent installs and their exit codes, the BIOS updater); the support links; the new icon in the taskbar and the .exe.
 - **Catalog to review:**
   - CF-C2 has two V2 BIOS files (`V2.00L21` and `V2.50L16`); confirm whether V2.50 is for another sub-model and, if so, use `sku`.

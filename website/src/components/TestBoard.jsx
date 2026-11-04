@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   Battery6Regular,
+  CheckmarkCircle16Filled,
   DesktopRegular,
   HardDriveRegular,
   KeyboardMouseRegular,
@@ -9,6 +10,7 @@ import {
   Speaker2Regular,
   TapSingleRegular,
   UsbPlugRegular,
+  Warning16Filled,
   Wifi1Regular
 } from '@fluentui/react-icons'
 import { useCopy } from '../copy'
@@ -28,9 +30,11 @@ const ICONS = {
   wireless: Wifi1Regular
 }
 
-const STATUS_STYLE = {
-  pass: 'bg-success-bg text-success',
-  attention: 'bg-caution-bg text-caution'
+// Every status pairs its colour with an icon and a word. On the open row's Cyan the
+// chip turns Carbon with the dark-mode colour, so green never sits on Cyan.
+const STATUS = {
+  pass: { icon: CheckmarkCircle16Filled, closed: 'bg-success-bg text-success', open: 'bg-on-accent text-signal-pass' },
+  attention: { icon: Warning16Filled, closed: 'bg-caution-bg text-caution', open: 'bg-on-accent text-signal-caution' }
 }
 
 const LAYOUT = { duration: 0.6, ease: EASE }
@@ -38,6 +42,8 @@ const LAYOUT = { duration: 0.6, ease: EASE }
 function Row({ row, open, onOpen, onTryDisplay }) {
   const { t } = useCopy()
   const Icon = ICONS[row.id]
+  const status = STATUS[row.status]
+  const StatusIcon = status.icon
   return (
     <motion.li
       layout
@@ -69,7 +75,13 @@ function Row({ row, open, onOpen, onTryDisplay }) {
           </span>
         ))}
         <span className="flex justify-end lg:col-span-1">
-          <span className={cn('rounded-[4px] px-3 py-1.5 text-[15px] font-semibold', STATUS_STYLE[row.status])}>
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-[4px] px-3 py-1.5 text-[15px] font-semibold transition-colors duration-500',
+              open ? status.open : status.closed
+            )}
+          >
+            <StatusIcon aria-hidden className="shrink-0" />
             {t(`board.status.${row.status}`)}
           </span>
         </span>

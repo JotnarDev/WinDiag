@@ -43,6 +43,18 @@ Every piece also comes in one colour: `-black` and `-white`, plus `-cyan` and `-
 
 Cyan was chosen to stay clear of the blues, oranges and greens common among Windows, PC makers and rugged-laptop sellers. On a light taskbar the key's body is pale, so the Carbon top and the white W carry the icon there; keep it that way and do not add an outline.
 
+**Status colours** (app and website). Each is always shown with an icon and a word, never by colour alone:
+
+| Status | On dark (text / fill) | On light (text / fill) | Icon |
+|---|---|---|---|
+| Passed | `#9BE15D` / `#22331A` | `#3B6E12` / `#E6F6D6` | check |
+| Check | `#FFC83D` / `#3A3116` | `#8A5A00` / `#FFF1C7` | warning |
+| Failed | `#FF5C6C` / `#3D1E23` | `#B4233A` / `#FFE3E6` | cross |
+| Running | `#22E3F2` / `#10343A` | `#0E7490` / `#D4F6FA` | progress |
+| Not tested | `#A3A9B1` / `#2A2E34` | `#555B63` / `#E3E6EA` | dash |
+
+Passed is a lime, not an emerald, to stay apart from the Cyan. On a Cyan surface, a status chip is Carbon with the on-dark colour.
+
 The CMYK and Pantone values are screen approximations. Check them against a printed Pantone guide before printing.
 
 ## 3. Typography

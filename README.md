@@ -377,7 +377,7 @@ The project follows [Semantic Versioning](https://semver.org/):
 
 | Version | Main change |
 |---|---|
-| 2.6.1 | New icon: the keycap W |
+| 2.6.1 | New icon: the keycap W; new status colours |
 | 2.6.0 | Driver sources: Windows Update and Dell, HP and Lenovo catalogs; Windows Update modes; new icon |
 | 2.5.1 | Security fixes: Electron update, single instance, safer user deletion |
 | 2.5.0 | Release notes in Settings → About |

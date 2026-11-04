@@ -104,12 +104,14 @@
   --flyout: #fcfcfc;
   --input-active: #ffffff;
 
-  --success: #0f7b0f;
-  --success-bg: #dff6dd;
-  --caution: #9d5d00;
-  --caution-bg: #fff4ce;
-  --critical: #c42b1c;
-  --critical-bg: #fde7e9;
+  /* WinDiag status colours: lime, amber and signal red. Status is always shown
+     with an icon and a word as well, never by colour alone. */
+  --success: #3b6e12;
+  --success-bg: #e6f6d6;
+  --caution: #8a5a00;
+  --caution-bg: #fff1c7;
+  --critical: #b4233a;
+  --critical-bg: #ffe3e6;
   --neutral-bg: rgb(246 246 246 / 0.5);
 
   --elevation-card: 0 2px 4px rgb(0 0 0 / 0.04);
@@ -151,12 +153,12 @@
     --flyout: #2c2c2c;
     --input-active: #1e1e1e;
 
-    --success: #6ccb5f;
-    --success-bg: #393d1b;
-    --caution: #fce100;
-    --caution-bg: #433519;
-    --critical: #ff99a4;
-    --critical-bg: #442726;
+    --success: #9be15d;
+    --success-bg: #22331a;
+    --caution: #ffc83d;
+    --caution-bg: #3a3116;
+    --critical: #ff5c6c;
+    --critical-bg: #3d1e23;
     --neutral-bg: rgb(255 255 255 / 0.0326);
 
     --elevation-card: 0 2px 4px rgb(0 0 0 / 0.13);

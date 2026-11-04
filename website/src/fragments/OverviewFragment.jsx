@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import {
   ArrowSyncRegular,
   Battery6Regular,
+  CheckmarkCircle12Filled,
   ChevronDownRegular,
   CopyRegular,
   DesktopRegular,
@@ -69,7 +70,8 @@ const ROW_ICONS = {
 
 function Badge({ children }) {
   return (
-    <span className="inline-flex h-5 items-center rounded-full bg-success-bg px-2 text-[12px] text-success">
+    <span className="inline-flex h-5 items-center gap-1 rounded-full bg-success-bg px-2 text-[12px] font-semibold text-success">
+      <CheckmarkCircle12Filled aria-hidden className="-ml-0.5 size-3 shrink-0" />
       {children}
     </span>
   )

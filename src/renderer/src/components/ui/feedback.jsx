@@ -1,9 +1,12 @@
 import { useEffect, useId, useRef } from 'react'
 import {
+  CheckmarkCircle12Filled,
   CheckmarkCircleFilled,
+  DismissCircle12Filled,
   DismissCircleFilled,
   DismissRegular,
   InfoFilled,
+  Warning12Filled,
   WarningFilled
 } from '@fluentui/react-icons'
 import { Button } from '@/components/ui/Button'
@@ -65,8 +68,17 @@ const BADGE_TONES = {
   neutral: 'border border-control-stroke bg-control-alt text-text-secondary'
 }
 
+// Status tones carry an icon as well as their colour, so they still read for
+// colour-blind users and in greyscale
+const BADGE_ICONS = {
+  success: CheckmarkCircle12Filled,
+  caution: Warning12Filled,
+  critical: DismissCircle12Filled
+}
+
 /** Small status label (Fluent 2 badge). */
 export function Badge({ tone = 'neutral', className, children }) {
+  const Icon = BADGE_ICONS[tone]
   return (
     <span
       className={cn(
@@ -75,6 +87,7 @@ export function Badge({ tone = 'neutral', className, children }) {
         className
       )}
     >
+      {Icon && <Icon aria-hidden className="-ml-0.5 size-3 shrink-0" />}
       {children}
     </span>
   )

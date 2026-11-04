@@ -10,6 +10,7 @@ WinDiag Fluent follows [Semantic Versioning](https://semver.org/):
 
 ### Changed
 - New icon: a cyan keycap with a W, in the taskbar, the title bar, the installer and the .exe. A simpler version is used at 32 px and below so it stays sharp.
+- New status colours: lime for passed, amber for check and red for failed. Status labels also show an icon next to the word, so they read without relying on colour.
 
 ## 2.6.0 — 2026-10-31
 

@@ -58,6 +58,16 @@
   --color-success-bg: var(--success-bg);
   --color-caution: var(--caution);
   --color-caution-bg: var(--caution-bg);
+  --color-critical: var(--critical);
+  --color-critical-bg: var(--critical-bg);
+  --color-running: var(--running);
+  --color-running-bg: var(--running-bg);
+  --color-skipped: var(--skipped);
+  --color-skipped-bg: var(--skipped-bg);
+  /* Status on a Cyan surface: a Carbon chip with the dark-mode colour, in both themes */
+  --color-signal-pass: #9be15d;
+  --color-signal-caution: #ffc83d;
+  --color-signal-critical: #ff5c6c;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --radius-ui: 4px;
@@ -89,15 +99,23 @@
   --subtle-hover: rgb(255 255 255 / 0.06);
   --ui-text: #f4f5f6;
   --ui-text-2: rgb(244 245 246 / 0.72);
-  --success: #6ccb5f;
-  --success-bg: #1d3320;
+  /* Status: lime, amber, signal red, Cyan for running, grey for not tested.
+     Always shown with an icon and a word, never by colour alone. */
+  --success: #9be15d;
+  --success-bg: #22331a;
   --caution: #ffc83d;
   --caution-bg: #3a3116;
+  --critical: #ff5c6c;
+  --critical-bg: #3d1e23;
+  --running: #22e3f2;
+  --running-bg: #10343a;
+  --skipped: #a3a9b1;
+  --skipped-bg: #2a2e34;
 
   /* Fields for the switch bands: tints of the brand's accents */
   --band-steel: #1f2a36;
   --band-cyan: #10343a;
-  --band-green: #17331f;
+  --band-green: #22331a;
   --band-amber: #362c12;
   --band-slate: #2a2e35;
 }
@@ -124,14 +142,20 @@
   --subtle-hover: rgb(0 0 0 / 0.0373);
   --ui-text: rgb(0 0 0 / 0.896);
   --ui-text-2: rgb(0 0 0 / 0.606);
-  --success: #0f7b0f;
-  --success-bg: #dff6dd;
-  --caution: #9d5d00;
-  --caution-bg: #fff4ce;
+  --success: #3b6e12;
+  --success-bg: #e6f6d6;
+  --caution: #8a5a00;
+  --caution-bg: #fff1c7;
+  --critical: #b4233a;
+  --critical-bg: #ffe3e6;
+  --running: #0e7490;
+  --running-bg: #d4f6fa;
+  --skipped: #555b63;
+  --skipped-bg: #e3e6ea;
 
   --band-steel: #dce5ef;
   --band-cyan: #d2f5f8;
-  --band-green: #dcf3e1;
+  --band-green: #e6f6d6;
   --band-amber: #fbeccb;
   --band-slate: #e0e3e7;
 }
