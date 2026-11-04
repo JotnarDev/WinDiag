@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 
 // The same solid fills the app's Display test steps through
 const COLORS = ['#ff0000', '#00ff00', '#0000ff', '#ffffff', '#000000']
 
 /** WinDiag's display test on the visitor's own screen: full-screen solid colours. */
 export function DisplayTest({ open, onClose }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const ref = useRef(null)
   const [index, setIndex] = useState(0)
   const [hint, setHint] = useState(true)

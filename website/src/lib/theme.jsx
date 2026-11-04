@@ -7,18 +7,18 @@ const ThemeContext = createContext(null)
 function readPref() {
   try {
     const saved = localStorage.getItem(KEY)
-    return PREFS.includes(saved) ? saved : 'system'
+    return PREFS.includes(saved) ? saved : 'dark'
   } catch {
-    return 'system'
+    return 'dark'
   }
 }
 
 const systemDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches
 
-/** Light, dark or "follow the system", saved per visitor and applied to <html data-theme>. */
+/** Dark (the brand's default), light or "follow the system", saved per visitor and applied to <html data-theme>. */
 export function ThemeProvider({ children }) {
   const [pref, setPrefState] = useState(readPref)
-  const [resolved, setResolved] = useState(() => document.documentElement.dataset.theme || 'light')
+  const [resolved, setResolved] = useState(() => document.documentElement.dataset.theme || 'dark')
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)')

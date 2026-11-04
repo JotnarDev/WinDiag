@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <rect x="16" y="16" width="992" height="992" rx="276" fill="#1F5FBF"/>
-  <path d="M 150,512 H 250 L 316,270 L 420,742 L 512,452 L 604,742 L 708,270 L 774,512 H 874"
-        fill="none"
-        stroke="#FFFFFF"
-        stroke-width="104"
-        stroke-linecap="round"
-        stroke-linejoin="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1024" height="1024" role="img" aria-label="WinDiag"><title>WinDiag</title><path fill="#22E3F2" fill-rule="evenodd" d="M68 16L188 16A52 52 0 0 1 240 68L240 188A52 52 0 0 1 188 240L68 240A52 52 0 0 1 16 188L16 68A52 52 0 0 1 68 16ZM70 32L186 32A30 30 0 0 1 216 62L216 154A30 30 0 0 1 186 184L70 184A30 30 0 0 1 40 154L40 62A30 30 0 0 1 70 32Z"/><path fill="#141619" fill-rule="evenodd" d="M70 32L186 32A30 30 0 0 1 216 62L216 154A30 30 0 0 1 186 184L70 184A30 30 0 0 1 40 154L40 62A30 30 0 0 1 70 32Z"/><path fill="#F4F5F6" fill-rule="evenodd" d="M44.28 60L47.36 66.91L89.25 161L110.1 161L128 130L145.9 161L166.75 161L208.64 66.91L211.72 60L174.5 60L153.75 106.61L128 62L102.25 106.61L81.5 60Z"/></svg>

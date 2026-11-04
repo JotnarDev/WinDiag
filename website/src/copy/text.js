@@ -1,4 +1,4 @@
-// English copy for the whole page. Keep keys in sync with the other locales.
+// The page's copy, in English. Components read it with t('section.key') from ./index.js.
 export default {
   meta: {
     title: 'WinDiag — Hardware diagnostics for Windows',
@@ -14,8 +14,7 @@ export default {
     download: 'Download',
     skip: 'Skip to content',
     theme: 'Theme',
-    themes: { system: 'System', light: 'Light', dark: 'Dark' },
-    language: 'Language'
+    themes: { system: 'System', light: 'Light', dark: 'Dark' }
   },
 
   hero: {

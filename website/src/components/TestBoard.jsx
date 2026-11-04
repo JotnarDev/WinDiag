@@ -11,7 +11,7 @@ import {
   UsbPlugRegular,
   Wifi1Regular
 } from '@fluentui/react-icons'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { cn } from '../lib/cn'
 import { EASE, Reveal, RevealItem } from '../lib/motion'
 import { DisplayTest } from './DisplayTest'
@@ -36,7 +36,7 @@ const STATUS_STYLE = {
 const LAYOUT = { duration: 0.6, ease: EASE }
 
 function Row({ row, open, onOpen, onTryDisplay }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const Icon = ICONS[row.id]
   return (
     <motion.li
@@ -125,7 +125,7 @@ function Row({ row, open, onOpen, onTryDisplay }) {
 
 /** The eight hardware tests as a board of rows; one row is open at a time. */
 export function TestBoard() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const rows = t('board.rows')
   const [open, setOpen] = useState('keyboard')
   const [displayOpen, setDisplayOpen] = useState(false)

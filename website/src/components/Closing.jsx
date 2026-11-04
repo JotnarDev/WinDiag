@@ -1,13 +1,14 @@
 import { ArrowDownloadRegular, UsbStickRegular } from '@fluentui/react-icons'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { SITE } from '../lib/site'
 import { cn } from '../lib/cn'
 import { Reveal, RevealItem } from '../lib/motion'
 import { Button } from './Button'
+import { LogoSymbol, Wordmark } from './Logo'
 
 /** The plain last word: one sentence and one action. */
 export function Cta() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   return (
     <section aria-labelledby="cta-title" className="frame grid gap-14 py-[clamp(96px,13vw,200px)] lg:grid-cols-12 lg:items-end">
       <Reveal className="lg:col-span-6">
@@ -35,9 +36,9 @@ export function Cta() {
           {t('cta.files').map((file, i) => (
             <RevealItem as="li" key={file.name} className="flex items-start gap-4 rounded-[8px] bg-stage p-5 transition-colors duration-500">
               {i === 0 ? (
-                <ArrowDownloadRegular fontSize={24} className="mt-0.5 shrink-0 text-accent" />
+                <ArrowDownloadRegular fontSize={24} className="mt-0.5 shrink-0 text-accent-ink" />
               ) : (
-                <UsbStickRegular fontSize={24} className="mt-0.5 shrink-0 text-accent" />
+                <UsbStickRegular fontSize={24} className="mt-0.5 shrink-0 text-accent-ink" />
               )}
               <span>
                 <span className="block text-[18px] font-semibold">{file.name}</span>
@@ -62,12 +63,12 @@ function Tile({ className, children, ...rest }) {
   )
 }
 
-const formatDate = (iso, locale) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+const formatDate = (iso) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' })
 
 /** The footer as the last rows of a board: every tile filled, the name at full width. */
 export function Footer() {
-  const { t, locale } = useI18n()
+  const { t } = useCopy()
   const links = [
     ['releases', 'https://github.com/JotnarDev/WinDiag/releases'],
     ['changelog', SITE.changelog],
@@ -99,7 +100,7 @@ export function Footer() {
             <a href={SITE.changelog} className="tabular block text-[20px] font-semibold hover:underline">
               {t('footer.releaseLine', { version: SITE.version })}
             </a>
-            <p className="text-[15px] text-muted">{t('footer.releaseDate', { date: formatDate(SITE.released, locale) })}</p>
+            <p className="text-[15px] text-muted">{t('footer.releaseDate', { date: formatDate(SITE.released) })}</p>
           </div>
         </Tile>
         <Tile className="order-6 col-span-2 justify-between gap-6 lg:order-none lg:col-span-3">
@@ -110,19 +111,17 @@ export function Footer() {
         </Tile>
 
         <div className="order-1 col-span-2 flex min-h-[160px] items-center justify-center overflow-hidden rounded-[4px] bg-inverse text-on-inverse transition-colors duration-500 lg:order-none lg:col-span-8 lg:min-h-[320px]">
-          <span
-            className="flex select-none items-center gap-[0.22em] text-[clamp(48px,10vw,160px)] font-semibold leading-none tracking-[-0.05em]"
-            aria-hidden="true"
-          >
-            <img src="./app-icon.svg" alt="" width="1024" height="1024" className="size-[0.92em] shrink-0" />
-            WinDiag
+          {/* The horizontal lockup, in the brand's proportions */}
+          <span className="flex select-none items-center gap-[0.19em] text-[clamp(64px,13vw,200px)] leading-none" aria-hidden="true">
+            <LogoSymbol className="size-[1em] shrink-0" />
+            <Wordmark className="h-[0.447em] w-auto translate-y-[0.06em]" />
           </span>
         </div>
         <a
           href={SITE.download}
           className="group order-2 col-span-2 flex min-h-[160px] flex-col justify-between rounded-[4px] bg-accent p-5 text-on-accent transition-[filter] duration-300 hover:brightness-110 sm:p-6 lg:order-none lg:col-span-4 lg:min-h-[320px]"
         >
-          <span className="text-[28px] font-semibold tracking-[-0.025em]">{t('footer.invite')}</span>
+          <span className="font-display text-[32px] font-semibold tracking-[-0.03em]">{t('footer.invite')}</span>
           <svg
             className="size-14 self-end transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1 group-hover:translate-y-1"
             viewBox="0 0 56 56"

@@ -1,10 +1,10 @@
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { Reveal, RevealItem } from '../lib/motion'
 import { BrandMarquee } from './BrandMarquee'
 
 /** Any brand of PC: the title, one sentence and the makers' logos sliding past. */
 export function Brands() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const [first, second] = t('brands.titleLines')
   return (
     <section id="brands" className="scroll-mt-16 py-[clamp(96px,13vw,200px)]">

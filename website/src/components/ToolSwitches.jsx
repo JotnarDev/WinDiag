@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { cn } from '../lib/cn'
 import { Reveal, RevealItem } from '../lib/motion'
 import { ToggleSwitch } from '../fragments/ui'
 
-// Each band fills with one of the app's colour palettes when its switch is on
-const FIELDS = ['var(--band-windows)', 'var(--band-forest)', 'var(--band-ocean)', 'var(--band-sunset)', 'var(--band-slate)']
+// Each band fills with a tint of the brand's colours when its switch is on
+const FIELDS = ['var(--band-cyan)', 'var(--band-steel)', 'var(--band-green)', 'var(--band-amber)', 'var(--band-slate)']
 
 function Band({ row, field }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const [on, setOn] = useState(row.on)
   return (
     <div
@@ -26,7 +26,7 @@ function Band({ row, field }) {
           </div>
           <p
             className={cn(
-              'max-w-[30ch] text-[24px] font-semibold leading-[1.15] tracking-[-0.025em] transition-colors duration-500 sm:text-[clamp(26px,2.8vw,36px)]',
+              'max-w-[30ch] font-display text-[24px] font-semibold leading-[1.1] tracking-[-0.03em] transition-colors duration-500 sm:text-[clamp(26px,2.8vw,36px)]',
               on ? 'text-ink' : 'text-muted'
             )}
           >
@@ -48,7 +48,7 @@ function Band({ row, field }) {
 
 /** Settings that exist in WinDiag, each as a sentence the visitor can switch on. */
 export function ToolSwitches() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const rows = t('tools.rows')
   return (
     <section id="tools" className="scroll-mt-16 pb-[clamp(96px,13vw,200px)]">

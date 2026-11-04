@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { ArrowDownloadRegular, KeyboardRegular } from '@fluentui/react-icons'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { SITE } from '../lib/site'
 import { EASE } from '../lib/motion'
 import { KeyboardFragment } from '../fragments/KeyboardFragment'
@@ -14,7 +14,7 @@ const touchFirst = () => window.matchMedia('(hover: none)').matches
  * one step lighter, WinDiag's keyboard test reading the visitor's keyboard.
  */
 export function Hero() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const ref = useRef(null)
   const [armed, setArmed] = useState(false)
   const [touch] = useState(touchFirst)
@@ -64,7 +64,7 @@ export function Hero() {
 
       <div className="flex flex-col items-center justify-center gap-5 bg-stage px-[var(--gutter)] py-10 transition-colors duration-500 lg:py-16">
         <motion.div
-          className="w-full max-w-[680px]"
+          className="w-full max-w-[780px]"
           initial={{ opacity: 0, y: 40, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.1, ease: EASE, delay: 0.3 }}
@@ -72,7 +72,7 @@ export function Hero() {
           <KeyboardFragment armed={armed} />
         </motion.div>
         <motion.p
-          className="flex max-w-[680px] items-center gap-2 self-center text-[15px] text-muted"
+          className="flex max-w-[780px] items-center gap-2 self-center text-[15px] text-muted"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.1 }}

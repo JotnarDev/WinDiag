@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { OverviewFragment, WINDOW_SIZE } from '../fragments/OverviewFragment'
 
 // Below this scale the window is a picture: too small to tap, so it ignores touches
@@ -25,7 +25,7 @@ function useFitScale(ref) {
  * The screen wakes, WinDiag reads the components, and its Overview fills in.
  */
 export function FieldPhoto() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const ref = useRef(null)
   const screenRef = useRef(null)
   const reduced = useReducedMotion()
@@ -49,7 +49,7 @@ export function FieldPhoto() {
 
   return (
     <figure ref={ref} className="relative m-0">
-      <div className="overflow-hidden bg-[var(--band-windows)] px-[var(--gutter)] pb-[clamp(40px,7vw,104px)] pt-[clamp(32px,6vw,88px)] transition-colors duration-500">
+      <div className="overflow-hidden bg-accent px-[var(--gutter)] pb-[clamp(40px,7vw,104px)] pt-[clamp(32px,6vw,88px)] transition-colors duration-500">
         <motion.div style={{ y: lift }} className="mx-auto max-w-[1180px] [perspective:2000px]">
           {/* Lid: dark bezel around the screen, hinged on its bottom edge */}
           <motion.div
@@ -61,25 +61,25 @@ export function FieldPhoto() {
               ref={screenRef}
               className={`relative aspect-[16/10] overflow-hidden bg-black ${scale < TAP_SCALE ? 'pointer-events-none' : ''}`}
             >
-              <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0' }}>
-                <OverviewFragment phase={phase} interactive={scale >= TAP_SCALE} />
-              </div>
-              {/* Asleep until the lid opens */}
+              {/* Asleep until the lid opens: the window fades in on a black screen */}
               <motion.div
-                className="absolute inset-0 bg-black"
                 initial={false}
-                animate={{ opacity: phase === 'off' ? 1 : 0 }}
+                animate={{ opacity: phase === 'off' ? 0 : 1 }}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
-                aria-hidden="true"
-              />
+              >
+                <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0' }}>
+                  <OverviewFragment phase={phase} interactive={scale >= TAP_SCALE} />
+                </div>
+              </motion.div>
             </div>
           </motion.div>
           {/* Base: the deck's front edge with its thumb notch */}
           <div
-            className="relative h-[clamp(10px,1.7vw,22px)] rounded-b-[clamp(8px,1.4vw,18px)] rounded-t-[2px] bg-[linear-gradient(#e2e4e7,#b9bdc2_55%,#8f9399)] shadow-[0_24px_40px_-12px_rgb(0_0_0/0.35)]" /* taste-skill-ignore */
+            className="relative h-[clamp(10px,1.7vw,22px)] rounded-b-[clamp(8px,1.4vw,18px)] rounded-t-[2px] bg-[#c4c8cd]"
             aria-hidden="true"
           >
-            <span className="absolute left-1/2 top-0 h-[38%] w-[14%] -translate-x-1/2 rounded-b-[8px] bg-[#a3a7ad]" />
+            <span className="absolute left-1/2 top-0 h-[38%] w-[14%] -translate-x-1/2 rounded-b-[8px] bg-[#9ea3a9]" />
+            <span className="absolute inset-x-0 bottom-0 h-[34%] rounded-b-[inherit] bg-[#9ea3a9]" />
           </div>
         </motion.div>
       </div>

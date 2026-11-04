@@ -1,8 +1,16 @@
+<p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/svg/windiag-horizontal-on-dark.svg">
+    <img src="brand/svg/windiag-horizontal-on-light.svg" alt="WinDiag" width="320">
+  </picture>
+</p>
+
 # WinDiag Fluent
 
 A diagnostics and setup tool for Windows computers, with a Fluent (Windows 11) design. A technician uses it to test a computer's hardware, install drivers and BIOS updates, and get the machine ready for delivery. It works on any Windows laptop or desktop, and gives rugged laptops (Panasonic Toughbook, Getac and Dell Latitude Rugged) extra care: the model names technicians use and the right BIOS for each generation.
 
-- **Current version:** 2.6.0. The changes in each version are listed in [CHANGELOG.md](CHANGELOG.md) and inside the app, under Settings → About.
+- **Current version:** 2.6.1. The changes in each version are listed in [CHANGELOG.md](CHANGELOG.md) and inside the app, under Settings → About.
+- **Website:** [jotnardev.github.io/WinDiag](https://jotnardev.github.io/WinDiag/).
 - **Author:** JOTNAR.
 - **Stack:** Electron 44 · electron-vite 5 · React 19 · Tailwind CSS 4 · Fluent UI icons · systeminformation.
 
@@ -19,9 +27,10 @@ A diagnostics and setup tool for Windows computers, with a Fluent (Windows 11) d
 5. [Settings](#settings)
 6. [Development](#development)
 7. [Project structure](#project-structure)
-8. [Versioning](#versioning)
-9. [Troubleshooting](#troubleshooting)
-10. [License](#license)
+8. [Brand](#brand)
+9. [Versioning](#versioning)
+10. [Troubleshooting](#troubleshooting)
+11. [License](#license)
 
 ---
 
@@ -317,6 +326,9 @@ src/
     lib/                        palette.js, changelog.js, support-links.js, utils.js
     modules/                    one page per file (Overview, Drivers, Settings…)
     assets/main.css             Fluent tokens (light/dark), palette tint
+build/                          app icon masters (icon.svg, icon-small.svg) and icon.ico/png
+brand/                          brand kit: logo masters, colours, icons, guidelines
+website/                        the product website (React + Vite, GitHub Pages)
 CHANGELOG.md                    version history (read by Settings → About)
 HANDOFF.md                      guide for whoever continues the project
 docs/DRIVERS.md                 how to set up a driver folder, server share and catalog
@@ -332,6 +344,14 @@ electron-builder.yml            Windows packaging
 1. `handle('channel', …)` in `src/main/index.js`.
 2. The method in `src/preload/index.js`.
 3. Call it from the renderer with `window.api.method()`.
+
+---
+
+## Brand
+
+The logo is a keycap with a W: Cyan `#22E3F2` key, Carbon `#141619` top and a Paper `#F4F5F6` W, with "WinDiag" set in Space Grotesk. [`brand/`](brand/README.md) holds the SVG masters (symbol, a small cut for 32 px and below, horizontal and stacked lockups, one-colour versions), the PNG and `.ico` exports, the web icon set and the usage guidelines (colours, clear space, minimum sizes, misuse).
+
+The app icons in `build/` and `resources/` and the website's icons are generated from the same geometry with `python3 brand/source/kit.py`.
 
 ---
 
@@ -357,6 +377,7 @@ The project follows [Semantic Versioning](https://semver.org/):
 
 | Version | Main change |
 |---|---|
+| 2.6.1 | New icon: the keycap W |
 | 2.6.0 | Driver sources: Windows Update and Dell, HP and Lenovo catalogs; Windows Update modes; new icon |
 | 2.5.1 | Security fixes: Electron update, single instance, safer user deletion |
 | 2.5.0 | Release notes in Settings → About |

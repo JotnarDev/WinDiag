@@ -1,16 +1,17 @@
 import { DesktopRegular, WeatherMoonRegular, WeatherSunnyRegular, ArrowDownloadRegular } from '@fluentui/react-icons'
 import { motion } from 'motion/react'
-import { LOCALES, useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { useTheme } from '../lib/theme'
 import { SITE } from '../lib/site'
 import { cn } from '../lib/cn'
 import { Button } from './Button'
+import { LogoSymbol, Wordmark } from './Logo'
 
 const THEME_ICONS = { system: DesktopRegular, light: WeatherSunnyRegular, dark: WeatherMoonRegular }
 
 /** System / Light / Dark, as a segmented control with a sliding selection. */
 function ThemeSwitch() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const { pref, setPref, prefs } = useTheme()
   return (
     <div role="radiogroup" aria-label={t('nav.theme')} className="flex rounded-[6px] bg-stage p-1">
@@ -46,30 +47,8 @@ function ThemeSwitch() {
   )
 }
 
-/** Only rendered once a second language is marked ready in i18n/index.jsx. */
-function LanguageSwitch() {
-  const { t, locale, setLocale, available } = useI18n()
-  if (available.length < 2) return null
-  return (
-    <label className="flex items-center">
-      <span className="sr-only">{t('nav.language')}</span>
-      <select
-        value={locale}
-        onChange={(e) => setLocale(e.target.value)}
-        className="h-11 rounded-[6px] bg-stage px-3 text-[15px] text-ink"
-      >
-        {available.map((code) => (
-          <option key={code} value={code}>
-            {LOCALES[code].label}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
 export function Header() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const links = ['tests', 'tools', 'drivers', 'faq']
   return (
     <header className="sticky top-0 z-40 bg-bg transition-colors duration-500">
@@ -80,9 +59,9 @@ export function Header() {
         {t('nav.skip')}
       </a>
       <div className="frame flex h-16 items-center gap-6">
-        <a href="#top" className="flex shrink-0 items-center gap-2.5 text-[19px] font-semibold tracking-[-0.01em]">
-          <img src="./app-icon.png" alt="" width="28" height="28" className="size-7" />
-          WinDiag
+        <a href="#top" aria-label="WinDiag" className="flex shrink-0 items-center gap-2.5">
+          <LogoSymbol className="size-8" />
+          <Wordmark className="h-[22px] w-auto translate-y-[3px]" />
         </a>
         <nav aria-label="Main" className="ml-6 hidden items-center gap-7 lg:flex">
           {links.map((id) => (
@@ -92,7 +71,6 @@ export function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          <LanguageSwitch />
           <ThemeSwitch />
           <div className="hidden sm:block">
             <Button href={SITE.download}>

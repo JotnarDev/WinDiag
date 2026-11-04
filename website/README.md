@@ -12,15 +12,21 @@ npm run preview  # serve the build
 
 The build uses relative paths (`base: './'`), so `dist/` works from any folder, including GitHub Pages.
 
-## Text and languages
+## Text
 
-All text lives in `src/i18n/locales/`. English (`en.js`) is complete. To add Spanish:
+The page is in English. All its text lives in `src/copy/text.js`, and components read it with
+`t('section.key')` from `src/copy/index.js`.
 
-1. Fill `src/i18n/locales/es.js` with the same keys as `en.js`. Any key left out falls back to English.
-2. Set `ready: true` for `es` in `LOCALES` in `src/i18n/index.jsx`.
+## Look
 
-The language switch in the header appears by itself once two languages are ready. A visitor can also pick
-a language with `?lang=es`; otherwise the site uses the last choice or the browser's language.
+The page follows the brand kit in [`/brand`](../brand/README.md): Carbon, Graphite and Paper grounds, Cyan
+(`#22E3F2`) as the one accent, and Space Grotesk for headings (self-hosted in `src/fonts/`, SIL OFL 1.1).
+Running text stays in Segoe UI, like the app. Dark is the default theme; visitors can switch to light or
+follow the system. All colours are tokens at the top of `src/styles.css`; in light mode, accent text uses
+Cyan Deep (`--accent-ink`, `#0E7490`) so it stays readable.
+
+The logo in the header and footer is `src/components/Logo.jsx`, drawn from the masters in `brand/svg/`.
+The favicons, app icons, `site.webmanifest` and `og-image.png` in `public/` come from the same kit.
 
 ## Data shown on the page
 

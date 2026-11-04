@@ -1,0 +1,49 @@
+{
+  "brand": "WinDiag",
+  "tagline": "Test it. Fix it. Hand it over.",
+  "brief": "A hardware diagnostics tool for Windows, for technicians who refurbish laptops. It should feel precise, modern and technical, away from medical imagery and Windows blue.",
+  "adjectives": [
+    "technical",
+    "precise",
+    "modern",
+    "efficient"
+  ],
+  "criteria": "Success: readable at 16 px in the taskbar, works in one colour, no clichés (gears, magnifying glasses, stethoscopes, Windows logos).",
+  "industry": "software",
+  "nav": [
+    "Tests",
+    "Tools",
+    "Drivers",
+    "Download"
+  ],
+  "brand_color": "#22E3F2",
+  "greyscale": false,
+  "designer": "WinDiag",
+  "round": 3,
+  "concepts": [
+    {
+      "name": "Keycap W",
+      "symbol": "../svg/windiag-symbol-black.svg",
+      "lockup": "../svg/windiag-horizontal-black.svg",
+      "symbol_on_tile": "../svg/windiag-symbol.svg",
+      "lockup_on_dark": "../svg/windiag-horizontal-on-dark.svg",
+      "tile_color": "#141619",
+      "idea": "A keycap with a W: the keyboard test that opens the website, turned into the mark.",
+      "rationale": [
+        "Recognisable at 16 px on dark and light taskbars",
+        "Cyan on Carbon: clear of the category's blues, oranges and greens",
+        "A thicker bottom lip makes it a key, without drawing a keyboard"
+      ],
+      "symbol_on_dark": "../svg/windiag-symbol.svg",
+      "stacked_on_dark": "../svg/windiag-stacked-on-dark.svg",
+      "stacked_on_tile": "../svg/windiag-stacked-on-dark.svg"
+    }
+  ],
+  "recommendation": "Keycap W — the approved, refined direction.",
+  "next_steps": [
+    "Test the icon in the Windows taskbar at 100 % and 150 % scaling",
+    "Run a trademark search",
+    "Status colours for the app (passed, failed, attention)"
+  ],
+  "final": true
+}

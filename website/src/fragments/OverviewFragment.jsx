@@ -25,7 +25,7 @@ import {
   WindowRegular,
   WrenchScrewdriverRegular
 } from '@fluentui/react-icons'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { cn } from '../lib/cn'
 import { EASE } from '../lib/motion'
 import { UiButton } from './ui'
@@ -56,7 +56,7 @@ const NAV_GROUPS = [
   }
 ]
 
-// One icon per row of the spec sheet, keyed like overview.rows in the locale
+// One icon per row of the spec sheet, keyed like overview.rows in copy/text.js
 const ROW_ICONS = {
   cpu: DeveloperBoardRegular,
   memory: RamRegular,
@@ -132,7 +132,7 @@ function Expander({ id, row, open, onToggle, interactive }) {
             transition={{ duration: 0.35, ease: EASE }}
             className="overflow-hidden"
           >
-            <dl className="m-0 grid grid-cols-[minmax(110px,auto)_1fr] gap-x-6 gap-y-1.5 border-t border-card-stroke px-4 py-3 pl-[52px] text-[13px]">
+            <dl className="m-0 grid grid-cols-[minmax(110px,auto)_1fr] gap-x-6 gap-y-1.5 border-t border-card-stroke px-4 py-3 pl-[52px] text-[13px]" /* taste-skill-ignore: the app's own divider */>
               {row.details.map(([label, value]) => (
                 <div key={label} className="contents">
                   <dt className="text-ui-text-2">{label}</dt>
@@ -149,7 +149,7 @@ function Expander({ id, row, open, onToggle, interactive }) {
 
 function Spinner() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" className="animate-spin text-accent" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 16 16" className="animate-spin text-accent-ink" aria-hidden="true">
       <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="28 41" />
     </svg>
   )
@@ -171,7 +171,7 @@ export const WINDOW_SIZE = { width: 1120, height: 700 }
  * Rows open like the app's expanders when `interactive`.
  */
 export function OverviewFragment({ phase = 'ready', interactive = true }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const rows = t('overview.rows')
   const [open, setOpen] = useState('cpu')
 
@@ -224,7 +224,7 @@ export function OverviewFragment({ phase = 'ready', interactive = true }) {
               {/* The device card */}
               <motion.div {...reveal(0)} className="mt-6 flex items-center gap-5 rounded-[8px] border border-card-stroke bg-card px-5 py-5">
                 <span className="flex size-14 shrink-0 items-center justify-center rounded-[8px] bg-subtle-hover">
-                  <LaptopRegular fontSize={32} className="text-accent" />
+                  <LaptopRegular fontSize={32} className="text-accent-ink" />
                 </span>
                 <div className="min-w-0 flex-1 text-[13px]">
                   <p className="text-[20px] font-semibold leading-snug">{t('overview.device.name')}</p>

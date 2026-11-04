@@ -6,6 +6,11 @@ WinDiag Fluent follows [Semantic Versioning](https://semver.org/):
 - **Minor**: a new feature or page. Resets the patch number.
 - **Patch**: a fix to something that already existed.
 
+## 2.6.1 — 2026-11-03
+
+### Changed
+- New icon: a cyan keycap with a W, in the taskbar, the title bar, the installer and the .exe. A simpler version is used at 32 px and below so it stays sharp.
+
 ## 2.6.0 — 2026-10-31
 
 ### Added

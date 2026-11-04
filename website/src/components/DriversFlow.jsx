@@ -14,7 +14,7 @@ import {
   ShieldKeyholeRegular,
   WarningRegular
 } from '@fluentui/react-icons'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { SITE } from '../lib/site'
 import { EASE, Reveal, RevealItem } from '../lib/motion'
 import { ProgressBar, ToggleSwitch, UiButton } from '../fragments/ui'
@@ -98,7 +98,7 @@ function GroupHeader({ icon: Icon, label, count, tone }) {
 }
 
 function OfferLine({ device }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   return (
     <div className="tabular text-[12px] text-ui-text-2">
       {device.installed ? `${device.installed} → ` : ''}
@@ -108,13 +108,13 @@ function OfferLine({ device }) {
 }
 
 function CompareResult({ sources }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const { updates, missing, notFound } = compareWith(sources)
   return (
     <Panel className="flex flex-col gap-3">
       {updates.length > 0 && (
         <div>
-          <GroupHeader icon={ArrowRightRegular} label={t('flow.updates')} count={updates.length} tone="text-accent" />
+          <GroupHeader icon={ArrowRightRegular} label={t('flow.updates')} count={updates.length} tone="text-accent-ink" />
           <ul className="m-0 flex list-none flex-col gap-1 p-0">
             {updates.map((device) => (
               <li
@@ -190,7 +190,7 @@ function CompareResult({ sources }) {
 }
 
 function SourceRow({ id, on, onChange, children }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const Icon = SOURCE_ICONS[id]
   return (
     <div className="rounded-[4px] bg-card px-3 py-2">
@@ -210,7 +210,7 @@ function SourceRow({ id, on, onChange, children }) {
 }
 
 function CopyCode({ code }) {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const [copied, setCopied] = useState(false)
   const copy = async () => {
     try {
@@ -236,7 +236,7 @@ function CopyCode({ code }) {
 
 /** Comparing drivers, step by step: what you give WinDiag and what it gives back. */
 export function DriversFlow() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const steps = t('flow.steps')
   const [phase, setPhase] = useState('done') // 'idle' | 'running' | 'done'
   const [sources, setSources] = useState({ folder: true, windowsUpdate: true, makers: true })
@@ -354,7 +354,7 @@ export function DriversFlow() {
               <div data-ui className="rounded-[8px] bg-bg p-4 sm:p-6">
                 <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
                   <div className="flex items-center gap-3">
-                    <ShieldKeyholeRegular fontSize={28} className="text-accent" />
+                    <ShieldKeyholeRegular fontSize={28} className="text-accent-ink" />
                     <div>
                       <div className="text-[16px] font-semibold">{t('flow.biosTitle')}</div>
                       <div className="text-ui-text-2">Panasonic FZ-55 MK2</div>
@@ -367,7 +367,7 @@ export function DriversFlow() {
                     </div>
                     <div>
                       <div className="text-[12px] text-ui-text-2">{t('flow.inCatalog')}</div>
-                      <div className="text-[18px] font-semibold text-accent">V2.00L31</div>
+                      <div className="text-[18px] font-semibold text-accent-ink">V2.00L31</div>
                     </div>
                   </div>
                   <UiButton accent className="ml-auto">

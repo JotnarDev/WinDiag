@@ -9,7 +9,7 @@ import {
   KeyboardMouseRegular,
   TapSingleRegular
 } from '@fluentui/react-icons'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { cn } from '../lib/cn'
 import { EASE } from '../lib/motion'
 import { ProgressBar, UiButton } from './ui'
@@ -65,10 +65,11 @@ function Key({ code, label, width = 1, state, onPress }) {
  * own keyboard. Keys light up as they are pressed (or tapped on a phone).
  */
 export function KeyboardFragment({ armed }) {
-  const { t } = useI18n()
-  const [tested, setTested] = useState(() => new Set())
+  const { t } = useCopy()
+  // The W starts lit: WinDiag's logo is that key. Reset clears it like any other.
+  const [tested, setTested] = useState(() => new Set(['KeyW']))
   const [down, setDown] = useState(() => new Set())
-  const [last, setLast] = useState(null)
+  const [last, setLast] = useState('KeyW')
   const armedRef = useRef(armed)
   armedRef.current = armed
 

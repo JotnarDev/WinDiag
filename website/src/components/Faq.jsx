@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useI18n } from '../i18n'
+import { useCopy } from '../copy'
 import { cn } from '../lib/cn'
 import { EASE, Reveal, RevealItem } from '../lib/motion'
 
@@ -9,7 +9,7 @@ import { EASE, Reveal, RevealItem } from '../lib/motion'
  * and keyboard focus. On a phone each answer opens under its question.
  */
 export function Faq() {
-  const { t } = useI18n()
+  const { t } = useCopy()
   const items = t('faq.items')
   const [selected, setSelected] = useState(0)
 

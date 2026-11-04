@@ -10,13 +10,14 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 
 - **Stack:** Electron 44 + electron-vite 5 + React 19 + Tailwind 4. JavaScript, not TypeScript.
 - **Design:** Fluent 2 / Windows 11, with icons from `@fluentui/react-icons`.
-- **App icon:** a pulse line whose peaks draw a W, white on #1F5FBF. Two masters in `build/`: `icon.svg` (48 px and up) and `icon-small.svg` (thicker line, for 16–32 px). They make `build/icon.png` (1024), `build/icon.ico` (16–256; the small sizes use the thick variant), `resources/icon.png` (512, the window icon in dev), `src/renderer/src/assets/app-icon.png` and the website's `app-icon.png` and `favicon.png` (64, thick variant). Change the SVGs, then render the PNGs again.
+- **App icon:** a keycap with a W (since 2.6.1): Cyan `#22E3F2` key, Carbon `#141619` top, Paper `#F4F5F6` W. It is part of the brand kit in `brand/` (see `brand/README.md`). All icon files are generated from the geometry in `brand/source/mark.py` with `python3 brand/source/kit.py`, which writes `build/icon.svg` (48 px and up), `build/icon-small.svg` (thicker walls and W, for 16–32 px), `build/icon.png` (1024), `build/icon.ico` (16–256; the small sizes use the small cut), `resources/icon.png` (512, the window icon in dev), `src/renderer/src/assets/app-icon.png` and the website's `app-icon.svg`, `app-icon.png`, `favicon.png` (64) and `og-image.png`. Change the geometry, then run the script; do not edit the PNGs by hand.
+- **Website:** `website/` (React + Vite, published on GitHub Pages; see `website/README.md`). English only: all text is in `website/src/copy/text.js`. It uses the brand kit: dark (Carbon) by default, Cyan as the accent, Space Grotesk for headings. Its `SITE.version` (`website/src/lib/site.js`) is the published release, so update it after each release, not before.
 - **Windows:** the main process queries the system with PowerShell, through a shared session (`src/main/powershell.js`), and with `systeminformation`.
 - **Permissions:** the app always runs as administrator (`requireAdministrator` in `electron-builder.yml`).
 
 ### Only the Fluent version is maintained
 
-This repository (branch `main` of `JotnarDev/WinDiag`, version **2.6.0**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
+This repository (branch `main` of `JotnarDev/WinDiag`, version **2.6.1**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
 
 It started as a copy of the original WinDiag (1.0.0, which is still on the development machine on the `windows-integration` branch). That project is no longer developed or copied to the USB drives, so **do not port changes to it**.
 
@@ -227,6 +228,11 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 - **Preload:** removed `contextBridge.exposeInMainWorld('electron', electronAPI)` and the `@electron-toolkit/preload` dependency. The renderer never used it, and it gave the page access to every IPC channel. Only `window.api` is exposed.
 - **Navigation:** `will-navigate` is blocked on the main window. `isTrustedSender()` trusts any `file://` URL, so the window must never leave its own page (dropping a file on it used to navigate).
 
+### 2.6.1 — Keycap icon (patch)
+
+- New icon and brand kit (`brand/`): the pulse-line W on blue was replaced by a keycap with a W. The masters, PNGs, `.ico`, web icons and guidelines are in `brand/`; `brand/source/kit.py` regenerates them and the app's icon files.
+- The website was restyled with the kit (dark by default, Cyan accent, Space Grotesk headings, the new logo) and is now English only: the unused Spanish locale, the language switch and `?lang=` were removed.
+
 ### 2.6.0 — Driver sources, Windows Update modes, new icon (minor)
 
 - **Windows Update modes** (`src/main/windows-update.js`, based on Chris Titus' WinUtil, MIT): default, security (no drivers, feature updates deferred 365 days, quality updates 4 days) and disabled (policies, blocked update server, UsoSvc/wuauserv/BITS stopped and disabled, scheduled tasks off). `withWindowsUpdateAccess()` opens it for WinDiag's own driver search and puts the mode back afterwards.
@@ -310,6 +316,7 @@ src/renderer/src/
 ## 7. Pending / untested
 
 - **To test on Windows:** the 2.5.1 changes (opening WinDiag twice, deleting a user with and without Sysprep open, dropping a file on the window). Everything up to 2.5.0 has been tested.
+- **2.6.1, to test on Windows:** the keycap icon in the taskbar (16, 24 and 32 px at 100 % and 150 % scaling), the title bar, the installer and the .exe in Explorer.
 - **2.6.0, to test on Windows:** the three Windows Update modes; drivers from Windows Update (also in Off mode); the Dell, HP and Lenovo catalogs on each maker's computer (reading the model and BIOS version, silent installs and their exit codes, the BIOS updater); the support links; the new icon in the taskbar and the .exe.
 - **Catalog to review:**
   - CF-C2 has two V2 BIOS files (`V2.00L21` and `V2.50L16`); confirm whether V2.50 is for another sub-model and, if so, use `sku`.
