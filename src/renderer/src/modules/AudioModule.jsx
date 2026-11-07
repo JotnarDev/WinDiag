@@ -8,6 +8,7 @@ import {
   VideoRegular
 } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { TestVerdict } from '@/components/TestVerdict'
 import { Button } from '@/components/ui/Button'
 import { Card, Section, SettingsCard } from '@/components/ui/Card'
 import { InfoBar, ProgressBar } from '@/components/ui/feedback'
@@ -291,20 +292,23 @@ export function AudioModule() {
       title="Audio & camera"
       description="Live camera preview, microphone input level and a test tone per speaker channel."
       actions={
-        isActive ? (
-          <Button icon={VideoOffRegular} onClick={stopAll}>
-            Stop camera & mic
-          </Button>
-        ) : (
-          <Button
-            variant="accent"
-            icon={VideoRegular}
-            onClick={() => void startTest()}
-            disabled={status === 'requesting'}
-          >
-            {status === 'requesting' ? 'Requesting access…' : 'Start camera & mic'}
-          </Button>
-        )
+        <>
+          {isActive ? (
+            <Button icon={VideoOffRegular} onClick={stopAll}>
+              Stop camera & mic
+            </Button>
+          ) : (
+            <Button
+              variant="accent"
+              icon={VideoRegular}
+              onClick={() => void startTest()}
+              disabled={status === 'requesting'}
+            >
+              {status === 'requesting' ? 'Requesting access…' : 'Start camera & mic'}
+            </Button>
+          )}
+          <TestVerdict test="audio" />
+        </>
       }
     >
       {status === 'error' && (

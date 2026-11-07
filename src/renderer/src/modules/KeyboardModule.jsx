@@ -1,6 +1,8 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowResetRegular, CursorClickRegular, KeyboardRegular } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { TestVerdict } from '@/components/TestVerdict'
+import { useTestProgress } from '@/context/TestResultsContext'
 import { Button } from '@/components/ui/Button'
 import { Card, Section } from '@/components/ui/Card'
 import { InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'
@@ -790,6 +792,7 @@ export function KeyboardModule({ onNavigate }) {
     }
   }, [])
   const progress = (testedCount / ALL_CODES.size) * 100
+  useTestProgress('keyboard', testedCount > 0 ? `${testedCount} of ${ALL_CODES.size} keys` : null)
   const mouseButtonClass = (pressed) =>
     cn('transition-colors duration-100', pressed && 'bg-accent-fill')
   return (
@@ -797,9 +800,12 @@ export function KeyboardModule({ onNavigate }) {
       title="Keyboard & mouse"
       description="Press every key and click every mouse button. Keys are matched by physical position, so any keyboard language works."
       actions={
-        <Button icon={ArrowResetRegular} onClick={reset}>
-          Reset
-        </Button>
+        <>
+          <Button icon={ArrowResetRegular} onClick={reset}>
+            Reset
+          </Button>
+          <TestVerdict test="keyboard" />
+        </>
       }
     >
       {systemKeysBlocked === null && (

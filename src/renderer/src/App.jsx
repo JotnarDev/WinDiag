@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AppShell } from '@/components/AppShell'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { SystemInfoProvider } from '@/context/SystemInfoContext'
+import { TestResultsProvider } from '@/context/TestResultsContext'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
 import { DiskModule } from '@/modules/DiskModule'
@@ -33,7 +34,7 @@ const MODULES = {
 }
 
 // Modules that display the live readings from SystemInfoProvider
-const LIVE_DATA_MODULES = new Set(['battery'])
+const LIVE_DATA_MODULES = new Set(['overview', 'battery'])
 
 export function App({ titleBarHeight, micaSupported, initialSettings, onSettingsChange }) {
   const [activeModule, setActiveModule] = useState(() =>
@@ -46,13 +47,15 @@ export function App({ titleBarHeight, micaSupported, initialSettings, onSettings
     // persist across pages instead of being re-fetched every time.
     <SettingsProvider initialSettings={initialSettings} onChange={onSettingsChange}>
       <SystemInfoProvider live={LIVE_DATA_MODULES.has(activeModule)}>
-        <AppShell
-          activeModule={activeModule}
-          onSelectModule={setActiveModule}
-          titleBarHeight={titleBarHeight}
-        >
-          <ActiveModule onNavigate={setActiveModule} micaSupported={micaSupported} />
-        </AppShell>
+        <TestResultsProvider>
+          <AppShell
+            activeModule={activeModule}
+            onSelectModule={setActiveModule}
+            titleBarHeight={titleBarHeight}
+          >
+            <ActiveModule onNavigate={setActiveModule} micaSupported={micaSupported} />
+          </AppShell>
+        </TestResultsProvider>
       </SystemInfoProvider>
     </SettingsProvider>
   )

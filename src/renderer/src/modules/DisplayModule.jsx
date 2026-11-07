@@ -6,6 +6,7 @@ import {
   DismissRegular
 } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { TestVerdict } from '@/components/TestVerdict'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
@@ -128,6 +129,7 @@ export function DisplayModule() {
     <Page
       title="Display"
       description="Fills the screen with solid colors to reveal dead or stuck pixels, light bleed and uneven backlight."
+      actions={<TestVerdict test="display" />}
     >
       <Card className="flex flex-col gap-5 p-5">
         <div className="flex items-start gap-4">

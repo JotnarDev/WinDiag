@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowSyncRegular, HardDriveRegular, ShieldKeyholeRegular } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { useTestAutoResult } from '@/context/TestResultsContext'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge, InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'
@@ -55,6 +56,17 @@ export function DiskModule() {
     void load()
   }, [load])
   const status = STATUS[data?.healthStatus] ?? STATUS.unknown
+  // Fair is worth a look before hand-over; Poor and Critical fail
+  const AUTO_STATUS = { success: 'pass', caution: 'check', critical: 'fail' }
+  useTestAutoResult(
+    'disk',
+    data && AUTO_STATUS[status.tone]
+      ? {
+          status: AUTO_STATUS[status.tone],
+          note: data.healthPercent !== null ? `Health ${data.healthPercent} %` : status.label
+        }
+      : null
+  )
   const hasErrorCounts = data?.readErrorsUncorrected != null && data?.writeErrorsUncorrected != null
   return (
     <Page

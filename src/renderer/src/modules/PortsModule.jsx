@@ -8,6 +8,8 @@ import {
   PlayRegular
 } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { TestVerdict } from '@/components/TestVerdict'
+import { useTestAutoResult, useTestProgress } from '@/context/TestResultsContext'
 import { Button } from '@/components/ui/Button'
 import { Card, Section } from '@/components/ui/Card'
 import { Badge, InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'
@@ -68,6 +70,13 @@ export function PortsModule() {
   const ports = (scan?.ports ?? []).filter((p) => !ignored.has(p.id))
   const testedCount = ports.filter((p) => tested[p.id]).length
   const isComplete = ports.length > 0 && testedCount === ports.length
+  // Every port detecting a device is a pass on its own; a dead port is the
+  // technician's call ("Has a problem"), since it may just need another try
+  useTestProgress('ports', ports.length > 0 ? `${testedCount} of ${ports.length} ports` : null)
+  useTestAutoResult(
+    'ports',
+    isComplete ? { status: 'pass', note: `${ports.length} of ${ports.length} ports` } : null
+  )
 
   useEffect(() => {
     if (!isActive) return
@@ -143,6 +152,7 @@ export function PortsModule() {
               Reset
             </Button>
           )}
+          <TestVerdict test="ports" />
         </>
       }
     >

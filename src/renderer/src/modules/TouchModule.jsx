@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DismissRegular, EraserRegular, TapSingleRegular } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { TestVerdict } from '@/components/TestVerdict'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { InfoBar } from '@/components/ui/feedback'
@@ -193,6 +194,7 @@ export function TouchModule() {
     <Page
       title="Touch"
       description="Draws the trail of every contact point to check the digitizer's accuracy, continuity and multi-touch."
+      actions={<TestVerdict test="touch" />}
     >
       <Card className="flex flex-col gap-4 p-5">
         <div className="flex items-start gap-4">

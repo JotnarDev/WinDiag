@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+/* WinDiag's brand face, for the device name and big readings (SIL OFL 1.1) */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('./fonts/SpaceGrotesk-Variable.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
 /*
  * Fluent 2 (Windows 11) design tokens. Values follow the WinUI 3 theme
  * resources; the app follows the Windows light/dark setting and accent color.
@@ -8,6 +16,12 @@
 @theme inline {
   --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  --font-brand: 'Space Grotesk', 'Segoe UI Variable Display', system-ui, sans-serif;
+
+  /* Brand colours, fixed whatever accent the user picks */
+  --color-brand-cyan: #22e3f2;
+  --color-brand-carbon: #141619;
+  --color-brand-paper: #f4f5f6;
 
   /* Fluent type ramp */
   --text-caption: 12px;

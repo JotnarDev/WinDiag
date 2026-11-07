@@ -9,6 +9,7 @@ import {
   Wifi1Regular
 } from '@fluentui/react-icons'
 import { Page } from '@/components/Page'
+import { TestVerdict } from '@/components/TestVerdict'
 import { Button } from '@/components/ui/Button'
 import { Section } from '@/components/ui/Card'
 import { Badge, InfoBar, ProgressRing } from '@/components/ui/feedback'
@@ -174,13 +175,16 @@ export function OtherDevicesModule() {
       title="Wireless & peripherals"
       description="Detects and tests less common hardware when this device actually has it."
       actions={
-        <Button
-          icon={ArrowSyncRegular}
-          onClick={() => void loadSnapshot()}
-          disabled={loadingSnapshot}
-        >
-          Scan again
-        </Button>
+        <>
+          <Button
+            icon={ArrowSyncRegular}
+            onClick={() => void loadSnapshot()}
+            disabled={loadingSnapshot}
+          >
+            Scan again
+          </Button>
+          <TestVerdict test="otherDevices" />
+        </>
       }
     >
       <Section title="Wireless">
