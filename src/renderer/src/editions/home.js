@@ -84,3 +84,4 @@ export const home = {
   showRunAsAdmin: false,
   settings: { tests: false, drivers: false }
 }
+export default home

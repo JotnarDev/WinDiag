@@ -1,17 +1,26 @@
-# WinDiag (home edition). Shares the Bench config and changes what makes it a
-# separate app: its own id, name and folder, so both editions can be installed
-# side by side. Build it with: npm run build:win:home
-extends: ./electron-builder.yml
+# WinDiag (home edition). Its own id, name and folder, so it can be installed
+# next to WinDiag Bench. Build it with: npm run build:win
 appId: com.jotnar.windiag.home
 productName: WinDiag
 directories:
   output: dist-home
   buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!scripts/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,HANDOFF.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{jsconfig.json,components.json}'
+asarUnpack:
+  - resources/**
 win:
   executableName: windiag
-  # Home users shouldn't see a UAC prompt just to open the app: actions that
-  # need admin rights ask for them when they run
+  # No UAC prompt just to open the app: actions that need admin rights ask
+  # for them when they run
   requestedExecutionLevel: asInvoker
+  # Release assets: an installer and a portable zip that runs without installing
   target:
     - target: nsis
       arch: x64
@@ -23,3 +32,9 @@ nsis:
   shortcutName: WinDiag
   uninstallDisplayName: WinDiag
   createDesktopShortcut: always
+npmRebuild: false
+# Chromium UI locales: keep English and Spanish only (~40 MB smaller install)
+electronLanguages:
+  - en-US
+  - es
+  - es-419

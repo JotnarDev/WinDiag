@@ -2,16 +2,16 @@ import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
 import { DiskModule } from '@/modules/DiskModule'
 import { DisplayModule } from '@/modules/DisplayModule'
-import { DriversModule } from '@/modules/DriversModule'
+import { DriversModule } from '@/bench/DriversModule'
 import { KeyboardModule } from '@/modules/KeyboardModule'
 import { OtherDevicesModule } from '@/modules/OtherDevicesModule'
-import { OverviewModule } from '@/modules/OverviewModule'
+import { OverviewModule } from '@/bench/OverviewModule'
 import { PortsModule } from '@/modules/PortsModule'
 import { SettingsModule } from '@/modules/SettingsModule'
-import { ToolsModule } from '@/modules/ToolsModule'
+import { ToolsModule } from '@/bench/ToolsModule'
 import { TouchModule } from '@/modules/TouchModule'
-import { UsersModule } from '@/modules/UsersModule'
-import { BENCH_NAV } from './bench-nav'
+import { UsersModule } from '@/bench/UsersModule'
+import { BENCH_NAV } from './nav'
 
 /** WinDiag Bench: test, fix and hand over PCs (refurbishers and technicians). */
 export const bench = {
@@ -40,3 +40,4 @@ export const bench = {
   // Settings sections only this edition has
   settings: { tests: true, drivers: true }
 }
+export default bench

@@ -8,9 +8,9 @@ import { spawn } from 'child_process'
 import si from 'systeminformation'
 import { compareVersions } from './inf-parser'
 import { compareBiosVersions } from './driver-catalog'
-import { friendlyModel } from './device-model'
-import { runPowerShell } from './powershell'
-import { isRunningElevated, notElevatedResult } from './system-tools'
+import { friendlyModel } from '../device-model'
+import { runPowerShell } from '../powershell'
+import { isRunningElevated, notElevatedResult } from '../system-tools'
 import { activeSources, getSource } from './driver-sources'
 
 // The folder source's own tools, loaded like the source itself

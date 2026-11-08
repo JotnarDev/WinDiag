@@ -12,8 +12,8 @@
 //             so machine policies do the real work: automatic updates off and
 //             Windows Update pointed at a local server that doesn't exist
 //             (honoured on Home editions too).
-import { runPowerShell } from './powershell'
-import { isRunningElevated, notElevatedResult } from './system-tools'
+import { runPowerShell } from '../powershell'
+import { isRunningElevated, notElevatedResult } from '../system-tools'
 
 export const UPDATE_MODES = ['default', 'security', 'disabled']
 

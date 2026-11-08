@@ -1,4 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
+// This edition's own calls: src/preload/bench.js or src/preload/home.js
+import { editionApi } from '@edition-api'
 
 const api = {
   getStaticSystemInfo: () => ipcRenderer.invoke('system:get-static-info'),
@@ -20,27 +22,14 @@ const api = {
   getGpsFix: () => ipcRenderer.invoke('gps:get-fix'),
   getWifiConnectionStatus: () => ipcRenderer.invoke('wifi:get-status'),
   launchSystemTool: (toolId) => ipcRenderer.invoke('system:launch-tool', toolId),
-  runCheckup: (id) => ipcRenderer.invoke('checkup:run', id),
-  openWindowsPage: (id) => ipcRenderer.invoke('system:open-windows-page', id),
   launchProductKeyDialog: () => ipcRenderer.invoke('system:launch-product-key-dialog'),
-  getWindowsUpdateState: () => ipcRenderer.invoke('system:get-update-state'),
-  setWindowsUpdateMode: (mode) => ipcRenderer.invoke('system:set-update-mode', mode),
   generateBatteryReport: () => ipcRenderer.invoke('system:generate-battery-report'),
   generateEnergyReport: () => ipcRenderer.invoke('system:generate-energy-report'),
   scheduleCheckDiskOnRestart: () => ipcRenderer.invoke('system:schedule-check-disk'),
-  getWindowsUsers: () => ipcRenderer.invoke('users:get-list'),
-  deleteWindowsUser: (sid) => ipcRenderer.invoke('users:delete', sid),
   isSysprepRunning: () => ipcRenderer.invoke('system:is-sysprep-running'),
   isElevated: () => ipcRenderer.invoke('system:is-elevated'),
   relaunchAsAdmin: () => ipcRenderer.invoke('system:relaunch-as-admin'),
   getMainDiskHealth: () => ipcRenderer.invoke('disk:get-health'),
-  findDefaultDriverFolder: () => ipcRenderer.invoke('drivers:find-default-folder'),
-  chooseDriverFolder: (defaultPath) => ipcRenderer.invoke('drivers:choose-folder', defaultPath),
-  chooseDriverCatalog: (defaultPath) => ipcRenderer.invoke('drivers:choose-catalog', defaultPath),
-  createDriverCatalog: (folder) => ipcRenderer.invoke('drivers:create-catalog', folder),
-  updateBios: (key) => ipcRenderer.invoke('drivers:update-bios', key),
-  scanDrivers: (request) => ipcRenderer.invoke('drivers:scan', request),
-  installDrivers: (items) => ipcRenderer.invoke('drivers:install', items),
   setPrintScreenBlocked: (blocked) =>
     ipcRenderer.invoke('keyboard:set-printscreen-blocked', blocked),
   onPrintScreenPressed: (callback) => {
@@ -58,4 +47,4 @@ const api = {
   }
 }
 
-contextBridge.exposeInMainWorld('api', api)
+contextBridge.exposeInMainWorld('api', { ...api, ...editionApi })

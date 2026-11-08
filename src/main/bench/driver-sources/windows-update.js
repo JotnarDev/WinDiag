@@ -6,7 +6,7 @@
 // that Windows ranks above the installed ones. Each runs in its own
 // PowerShell process: a search takes a minute or two, an install longer, and
 // the shared session must stay free for the pages' quick queries.
-import { runPowerShellIsolated } from '../powershell'
+import { runPowerShellIsolated } from '../../powershell'
 import { withWindowsUpdateAccess } from '../windows-update'
 
 const SEARCH_TIMEOUT_MS = 6 * 60e3

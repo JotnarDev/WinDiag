@@ -1,8 +1,8 @@
 name: Release
 
-# Builds WinDiag Fluent on Windows and publishes a GitHub Release with:
-#   - windiag-fluent-X.Y.Z-setup.exe     installer (NSIS)
-#   - windiag-fluent-X.Y.Z-portable.zip  portable version, no install needed
+# Builds WinDiag on Windows and publishes a GitHub Release with an installer
+# (NSIS) and a portable zip. It builds the edition whose code is in this
+# repository: Bench in the private one, Home in the public one.
 #
 # Trigger: bump the version, commit, then push a matching tag:
 #   git tag v2.5.0 && git push origin v2.5.0
@@ -40,8 +40,25 @@ jobs:
 
       - run: npm ci
 
+      - name: Find the edition
+        shell: pwsh
+        run: |
+          if (Test-Path src/renderer/src/bench/edition.js) {
+            "EDITION=bench" >> $env:GITHUB_ENV
+            "EDITION_NAME=WinDiag Bench" >> $env:GITHUB_ENV
+            "EXE_NAME=windiag-fluent" >> $env:GITHUB_ENV
+            "OUT_DIR=dist" >> $env:GITHUB_ENV
+            "ADMIN_NOTE=The app asks for administrator rights when it starts." >> $env:GITHUB_ENV
+          } else {
+            "EDITION=home" >> $env:GITHUB_ENV
+            "EDITION_NAME=WinDiag" >> $env:GITHUB_ENV
+            "EXE_NAME=windiag" >> $env:GITHUB_ENV
+            "OUT_DIR=dist-home" >> $env:GITHUB_ENV
+            "ADMIN_NOTE=It asks for administrator rights only for the actions that need them." >> $env:GITHUB_ENV
+          }
+
       - name: Build installer and portable zip
-        run: npx electron-vite build && npx electron-builder --win --x64 --publish never
+        run: node scripts/build-win.mjs ${{ env.EDITION }} --x64 --publish never
 
       - name: Write release notes from CHANGELOG.md
         shell: pwsh
@@ -59,10 +76,10 @@ jobs:
           $body = @(
             '## Downloads',
             '',
-            "- **windiag-fluent-$version-setup.exe**: installer. Adds Start menu and desktop shortcuts.",
-            "- **windiag-fluent-$version-portable.zip**: portable. Extract it anywhere (for example a USB drive) and run ``windiag-fluent.exe``.",
+            "- **$env:EXE_NAME-$version-setup.exe**: installer. Adds Start menu and desktop shortcuts.",
+            "- **$env:EXE_NAME-$version-portable.zip**: portable. Extract it anywhere (for example a USB drive) and run ``$env:EXE_NAME.exe``.",
             '',
-            'Requires Windows 10 or 11, 64-bit. The app asks for administrator rights when it starts.',
+            "Requires Windows 10 or 11, 64-bit. $env:ADMIN_NOTE",
             '',
             "## What's new"
           ) + $notes
@@ -71,17 +88,17 @@ jobs:
       - name: Keep the build as a workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windiag-fluent-windows
+          name: ${{ env.EXE_NAME }}-windows
           path: |
-            dist/*-setup.exe
-            dist/*-portable.zip
+            ${{ env.OUT_DIR }}/*-setup.exe
+            ${{ env.OUT_DIR }}/*-portable.zip
 
       - name: Publish the release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          name: WinDiag Fluent ${{ github.ref_name }}
+          name: ${{ env.EDITION_NAME }} ${{ github.ref_name }}
           body_path: release-notes.md
           files: |
-            dist/*-setup.exe
-            dist/*-portable.zip
+            ${{ env.OUT_DIR }}/*-setup.exe
+            ${{ env.OUT_DIR }}/*-portable.zip

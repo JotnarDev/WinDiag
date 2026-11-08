@@ -1,5 +1,5 @@
-import { parseJsonArray, runPowerShell } from './powershell'
-import { isRunningElevated, isSysprepRunning, notElevatedResult } from './system-tools'
+import { parseJsonArray, runPowerShell } from '../powershell'
+import { isRunningElevated, isSysprepRunning, notElevatedResult } from '../system-tools'
 
 const cleanString = (value) => {
   if (typeof value !== 'string') return null

@@ -7,14 +7,16 @@
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:bench": "electron-vite dev --mode bench",
     "dev:home": "electron-vite dev --mode home",
     "build": "electron-vite build",
+    "build:bench": "electron-vite build --mode bench",
     "build:home": "electron-vite build --mode home",
     "start": "electron-vite preview",
     "start:home": "electron-vite preview --mode home",
-    "build:win": "electron-vite build && electron-builder --win",
-    "build:win:home": "electron-vite build --mode home && electron-builder --win --config electron-builder.home.yml",
-    "build:unpack": "electron-vite build && electron-builder --dir"
+    "build:win": "node scripts/build-win.mjs",
+    "build:win:bench": "node scripts/build-win.mjs bench",
+    "build:win:home": "node scripts/build-win.mjs home"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",

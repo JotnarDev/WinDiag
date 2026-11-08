@@ -13,7 +13,7 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 - **App icon:** a keycap with a W (since 2.6.1): Cyan `#22E3F2` key, Carbon `#141619` top, Paper `#F4F5F6` W. It is part of the brand kit in `brand/` (see `brand/README.md`). All icon files are generated from the geometry in `brand/source/mark.py` with `python3 brand/source/kit.py`, which writes `build/icon.svg` (48 px and up), `build/icon-small.svg` (thicker walls and W, for 16–32 px), `build/icon.png` (1024), `build/icon.ico` (16–256; the small sizes use the small cut), `resources/icon.png` (512, the window icon in dev), `src/renderer/src/assets/app-icon.png` and the website's `app-icon.svg`, `app-icon.png`, `favicon.png` (64) and `og-image.png`. Change the geometry, then run the script; do not edit the PNGs by hand.
 - **Website:** `website/` (React + Vite, published on GitHub Pages; see `website/README.md`). English only: all text is in `website/src/copy/text.js`. It uses the brand kit: dark (Carbon) by default, Cyan as the accent, Space Grotesk for headings. Its `SITE.version` (`website/src/lib/site.js`) is the published release, so update it after each release, not before.
 - **Windows:** the main process queries the system with PowerShell, through a shared session (`src/main/powershell.js`), and with `systeminformation`.
-- **Permissions:** the app always runs as administrator (`requireAdministrator` in `electron-builder.yml`).
+- **Permissions:** the app always runs as administrator (`requireAdministrator` in `electron-builder.bench.yml`).
 
 ### Only the Fluent version is maintained
 
@@ -91,7 +91,7 @@ Compares the installed drivers with a driver folder and installs the newer ones.
 - **`src/main/inf-parser.js` (pure functions, no Electron):**
   - Reads an `.inf` in UTF-16 with or without BOM, UTF-8 or latin1.
   - Extracts `DriverVer` (resolving `%strings%`), the provider, the class and the hardware IDs from the model sections that apply to the architecture. On x64 only `NTamd64` sections count; undecorated ones are ignored, which also drops XP drivers.
-- **`src/main/drivers.js`:**
+- **`src/main/bench/drivers.js`:**
   - Looks for `X:\02 Drivers` on every drive.
   - Walks the folder up to 12 levels deep and skips folders ending in `- OLD`.
   - Parses the `.inf` files with a concurrency of 8 and keeps an in-memory cache keyed by file size and date.
@@ -112,7 +112,7 @@ Compares the installed drivers with a driver folder and installs the newer ones.
 
 Avoids reading 440 `.inf` files over the network when the drivers are on a server.
 
-- **`src/main/driver-catalog.js` (pure functions):** `catalogEntry`, `buildCatalog` and `parseCatalog`. The format is:
+- **`src/main/bench/driver-catalog.js` (pure functions):** `catalogEntry`, `buildCatalog` and `parseCatalog`. The format is:
 
   ```json
   {
@@ -236,7 +236,7 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 
 ### 2.6.0 — Driver sources, Windows Update modes, new icon (minor)
 
-- **Windows Update modes** (`src/main/windows-update.js`, based on Chris Titus' WinUtil, MIT): default, security (no drivers, feature updates deferred 365 days, quality updates 4 days) and disabled (policies, blocked update server, UsoSvc/wuauserv/BITS stopped and disabled, scheduled tasks off). `withWindowsUpdateAccess()` opens it for WinDiag's own driver search and puts the mode back afterwards.
+- **Windows Update modes** (`src/main/bench/windows-update.js`, based on Chris Titus' WinUtil, MIT): default, security (no drivers, feature updates deferred 365 days, quality updates 4 days) and disabled (policies, blocked update server, UsoSvc/wuauserv/BITS stopped and disabled, scheduled tasks off). `withWindowsUpdateAccess()` opens it for WinDiag's own driver search and puts the mode back afterwards.
 - **Driver sources:** `drivers.js` is the core (inventory, comparison, installs, BIOS checks) and knows no source. Each source is a module in `driver-sources/` with `find`, `install` and `prepareBios` (contract in `driver-sources/index.js`): `local` (folder or catalog), `windows-update` (Windows Update API in an isolated PowerShell), `dell`, `hp`, `lenovo`. Makers' sources only load on that maker's computers and share `maker-files.js` (downloads, SHA-256, Authenticode signature, cab reading, installers); their packages live in `%ProgramData%\WinDiag\drivers\<maker>`.
 - **Dell:** CatalogIndexPC.cab → the model's cab by SystemSKUNumber. Drivers need PCI/USB IDs. Silent install `/s`; DUP exit codes mapped.
 - **HP:** platformList.cab → the reference cab for the baseboard ID and the closest Windows version. Exact hardware IDs; BIOS by ROM family ("T76 Ver. 01.25.00"). SoftPaqs extracted with `-e -s -f`, then HP's SilentInstall command.
@@ -249,26 +249,41 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 
 ## 4. Code structure (Fluent)
 
-### Two editions from one code base (in progress, branch `editions`)
+### Two editions from one code base (branch `editions`)
 
-WinDiag is being split into two apps built from the same code:
+WinDiag is split into two apps built from the same code:
 
-- **Bench** (the app as it has always been): testing, fixing and handing over PCs, for refurbishers and technicians. It keeps WinDiag's identity: app id `com.jotnar.windiag.fluent`, settings in `%APPDATA%\windiag-fluent`, admin rights at launch, `electron-builder.yml`, output in `dist/`. Installed copies keep their settings and updates.
-- **Home** (`WinDiag`): looking after your own PC safely and in plain words: checkup, speed up, privacy, personalize, apps, updates, security, repair, hardware. App id `com.jotnar.windiag.home`, settings in `%APPDATA%\WinDiag`, no admin prompt at launch (actions that need it ask when they run), `electron-builder.home.yml` (extends the Bench config), output in `dist-home/`. Both editions can be installed side by side. Its pages are placeholders for now.
+- **Bench** (the app as it has always been): testing, fixing and handing over PCs, for refurbishers and technicians. Paid; its code is only in the **private** repository (`WinDiag-Bench`). It keeps WinDiag's identity: app id `com.jotnar.windiag.fluent`, settings in `%APPDATA%\windiag-fluent`, admin rights at launch, `electron-builder.bench.yml`, output in `dist/`. Installed copies keep their settings and updates.
+- **Home** (`WinDiag`): looking after your own PC safely and in plain words: checkup, speed up, privacy, personalize, apps, updates, security, repair, hardware. Free and **public** (`WinDiag`, MIT). App id `com.jotnar.windiag.home`, settings in `%APPDATA%\WinDiag`, no admin prompt at launch (actions that need it ask when they run), `electron-builder.home.yml`, output in `dist-home/`. Both editions can be installed side by side.
 
-The edition is chosen at build time with electron-vite's `--mode` (`bench` by default, `home`), which defines `__EDITION__` for main, preload and renderer:
+**Where the code lives.** Everything that only Bench has sits in three `bench/` places, so the public repository is the private one minus those folders:
 
-| | Bench | Home |
-|---|---|---|
-| Develop | `npm run dev` | `npm run dev:home` |
-| Build | `npm run build` | `npm run build:home` |
-| Installer | `npm run build:win` | `npm run build:win:home` |
+| | Bench only (private) | Home only | Shared |
+|---|---|---|---|
+| Main | `src/main/bench/` (ipc.js, drivers, driver sources, users, Windows Update modes) | `src/main/editions/home.js` (IPC), `checkup.js` | the rest of `src/main/` |
+| Preload | `src/preload/bench.js` | `src/preload/home.js` | `src/preload/index.js` |
+| Renderer | `src/renderer/src/bench/` (edition.js, nav.js, Overview, Tools, Drivers, Users) | `src/renderer/src/editions/home*.js`, `src/renderer/src/home/` | hardware tests in `modules/`, components, context, lib |
+| Build | `electron-builder.bench.yml` | `electron-builder.home.yml` | `scripts/build-win.mjs` |
+
+Each edition's own code comes in through three aliases set in `electron.vite.config.mjs` (`@edition-ipc`, `@edition-api`, `@edition`), so a build never contains the other edition's code. With no `--mode`, the config builds Bench when `src/renderer/src/bench/edition.js` exists, otherwise Home; `__EDITION__` is defined for main, preload and renderer.
+
+| | Default (Bench if present) | Bench | Home |
+|---|---|---|---|
+| Develop | `npm run dev` | `npm run dev:bench` | `npm run dev:home` |
+| Build | `npm run build` | `npm run build:bench` | `npm run build:home` |
+| Installer | `npm run build:win` | `npm run build:win:bench` | `npm run build:win:home` |
+
+The Release workflow builds the edition its repository has (Bench in the private one, Home in the public one).
+
+**Two repositories.** The private `WinDiag-Bench` has the public `WinDiag` as its `upstream` remote:
+
+- Shared work (hardware tests, UI, Home) is done in the public repository; the private one takes it with `git pull upstream main`.
+- Bench work is done only in the private repository and never pushed to the public one.
+- The public repository's commit "Remove WinDiag Bench" deletes the `bench/` places; the private one merged it with `git merge -s ours`, so later merges don't delete them again.
 
 - `src/main/edition.js`: app id and settings folder per edition; `applyEditionPaths()` runs before the single-instance lock.
-- `src/renderer/src/editions/`: one file per edition (`bench.js`, `home.js`) with its navigation (`*-nav.js`), pages, live-reading pages, whether to offer "Run as administrator" and which Settings sections it has. `editions/index.js` exports the active one as `EDITION`; `App.jsx`, `AppShell.jsx` and `SettingsModule.jsx` read it. The unused edition's pages are left out of the bundle.
-- Shared code (system readings, PowerShell, tests, UI components) stays where it was. Home pages live in `src/renderer/src/home/`.
+- An edition (`bench/edition.js`, `editions/home.js`) lists its navigation, pages, live-reading pages, whether to offer "Run as administrator" and which Settings sections it has; `editions/index.js` exports it as `EDITION` for `App.jsx`, `AppShell.jsx` and `SettingsModule.jsx`.
 - The start page is stored as any short page id; the renderer falls back to the first page when the edition doesn't have it.
-- The Release workflow still builds Bench only.
 
 ```
 src/main/
@@ -277,16 +292,21 @@ src/main/
   settings.js       settings.json with SCHEMA
   system-info.js    static/dynamic specs, activation
   system-tools.js   reports, elevation, sysprep, chkdsk
-  windows-update.js Windows Update modes; opens it for WinDiag's own driver search
-  drivers.js        driver comparison and installs, BIOS safety checks (no source code)
-  driver-sources/   index.js (the list and contract), windows-update.js, local.js, dell.js, hp.js, lenovo.js, maker-files.js (shared by the makers' sources)
-  inf-parser.js     .inf parser (pure)
-  driver-catalog.js JSON catalog, BIOS, versions (pure)
+  checkup.js        Home's checkup (read-only checks) and the Windows pages it may open
   device-model.js   Panasonic names (pure)
-  users.js, ports.js, other-devices.js, disk-health.js, edge-gestures.js, keyboard-hook.js
-src/preload/index.js  window.api (each method = one IPC channel)
+  ports.js, other-devices.js, disk-health.js, edge-gestures.js, keyboard-hook.js
+  editions/home.js  Home's IPC
+  bench/            Bench only (private repository):
+    ipc.js            Bench's IPC
+    windows-update.js Windows Update modes; opens it for WinDiag's own driver search
+    drivers.js        driver comparison and installs, BIOS safety checks (no source code)
+    driver-sources/   index.js (the list and contract), windows-update.js, local.js, dell.js, hp.js, lenovo.js, maker-files.js
+    inf-parser.js     .inf parser (pure)
+    driver-catalog.js JSON catalog, BIOS, versions (pure)
+    users.js
+src/preload/index.js  window.api (each method = one IPC channel); bench.js / home.js add each edition's
 src/renderer/src/
-  App.jsx (MODULES map), main.jsx, components/, context/, lib/, modules/
+  App.jsx, main.jsx, components/, context/, lib/, modules/ (shared pages), editions/, home/, bench/
 ```
 
 **To add a page:**
@@ -295,7 +315,7 @@ src/renderer/src/
 3. Its id in `PAGE_IDS` in `settings.js`.
 
 **To add a driver source** (a maker's catalog, for example):
-1. A module in `src/main/driver-sources/` that exports `find`, `install` and `prepareBios` (the contract is described at the top of `driver-sources/index.js`).
+1. A module in `src/main/bench/driver-sources/` that exports `find`, `install` and `prepareBios` (the contract is described at the top of `driver-sources/index.js`).
 2. An entry in `DRIVER_SOURCES`. A maker's source sets `manufacturer`, so it is only loaded on that maker's computers, and uses `maker-files.js` to download and check its files (SHA-256, then the maker's signature) before running anything. If the maker writes BIOS versions differently from Windows, the source gives `installedVersion` in the maker's terms.
 3. Nothing else: `drivers.js` and the Drivers page work with any source.
 

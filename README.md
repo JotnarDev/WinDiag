@@ -332,7 +332,7 @@ website/                        the product website (React + Vite, GitHub Pages)
 CHANGELOG.md                    version history (read by Settings → About)
 HANDOFF.md                      guide for whoever continues the project
 docs/DRIVERS.md                 how to set up a driver folder, server share and catalog
-electron-builder.yml            Windows packaging
+electron-builder.*.yml         Windows packaging (one per edition)
 ```
 
 **Add a page:**

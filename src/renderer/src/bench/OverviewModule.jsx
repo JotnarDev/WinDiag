@@ -21,7 +21,7 @@ import {
   WarningFilled,
   WindowRegular
 } from '@fluentui/react-icons'
-import { BENCH_NAV } from '@/editions/bench-nav'
+import { BENCH_NAV } from '@/bench/nav'
 import { Button } from '@/components/ui/Button'
 import { Card, PropertyList } from '@/components/ui/Card'
 import { Badge, InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'

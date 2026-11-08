@@ -32,10 +32,7 @@ import {
   isRunningElevated,
   relaunchAsAdmin
 } from './system-tools'
-import { getWindowsUpdateState, setWindowsUpdateMode } from './windows-update'
-import { getWindowsUsers, deleteWindowsUser } from './users'
 import { getMainDiskHealth } from './disk-health'
-import { runCheck, openWindowsPage } from './checkup'
 import {
   recoverEdgeGestures,
   restoreEdgeGesturesSync,
@@ -44,15 +41,8 @@ import {
 import { startKeyboardHook, stopKeyboardHook } from './keyboard-hook'
 import { getSettings, resetSettings, updateSettings } from './settings'
 import { EDITION, applyEditionPaths } from './edition'
-import {
-  chooseCatalogFile,
-  chooseDriverFolder,
-  createCatalog,
-  findDefaultDriverFolder,
-  installDrivers,
-  launchBiosUpdate,
-  scanDrivers
-} from './drivers'
+// This edition's own pages: src/main/bench/ipc.js or src/main/editions/home.js
+import { registerEditionIpc } from '@edition-ipc'
 
 // Only used when the keyboard hook couldn't start: the keys then reach
 // Windows, so a lock key toggles and has to be toggled back.
@@ -276,60 +266,15 @@ function startApp() {
   handle('system:launch-tool', (_event, toolId) =>
     launchSystemTool(expect('string', toolId, 'system:launch-tool'))
   )
-  handle('checkup:run', (_event, id) => runCheck(expect('string', id, 'checkup:run')))
-  handle('system:open-windows-page', (_event, id) =>
-    openWindowsPage(expect('string', id, 'system:open-windows-page'))
-  )
   handle('system:launch-product-key-dialog', () => launchProductKeyDialog())
-  handle('system:get-update-state', () => getWindowsUpdateState())
-  handle('system:set-update-mode', (_event, mode) =>
-    setWindowsUpdateMode(expect('string', mode, 'system:set-update-mode'))
-  )
   handle('system:generate-battery-report', () => generateBatteryReport())
   handle('system:generate-energy-report', () => generateEnergyReport())
   handle('system:schedule-check-disk', () => scheduleCheckDiskOnRestart())
-  handle('users:get-list', () => getWindowsUsers())
-  handle('users:delete', (_event, sid) => deleteWindowsUser(expect('string', sid, 'users:delete')))
   handle('system:is-sysprep-running', () => isSysprepRunning())
   handle('system:is-elevated', () => isRunningElevated())
   handle('system:relaunch-as-admin', () => relaunchAsAdmin())
   handle('disk:get-health', () => getMainDiskHealth())
-  handle('drivers:find-default-folder', () => findDefaultDriverFolder())
-  handle('drivers:choose-folder', (event, defaultPath) =>
-    chooseDriverFolder(
-      BrowserWindow.fromWebContents(event.sender),
-      typeof defaultPath === 'string' ? defaultPath : undefined
-    )
-  )
-  handle('drivers:choose-catalog', (event, defaultPath) =>
-    chooseCatalogFile(
-      BrowserWindow.fromWebContents(event.sender),
-      typeof defaultPath === 'string' ? defaultPath : undefined
-    )
-  )
-  handle('drivers:create-catalog', (event, folder) =>
-    createCatalog(
-      BrowserWindow.fromWebContents(event.sender),
-      expect('string', folder, 'drivers:create-catalog')
-    )
-  )
-  handle('drivers:update-bios', (_event, key) =>
-    launchBiosUpdate(expect('string', key, 'drivers:update-bios'))
-  )
-  handle('drivers:scan', (_event, request) => {
-    const local = request?.local ?? null
-    if (local !== null && !['folder', 'catalog'].includes(local?.kind))
-      throw new TypeError('drivers:scan')
-    return scanDrivers({
-      local: local && { kind: local.kind, path: expect('string', local.path, 'drivers:scan') },
-      windowsUpdate: request?.windowsUpdate === true,
-      makers: request?.makers === true
-    })
-  })
-  handle('drivers:install', (_event, items) => {
-    if (!Array.isArray(items)) throw new TypeError('drivers:install: expected a list')
-    return installDrivers(items)
-  })
+  registerEditionIpc({ handle, expect })
   handle('window:get-appearance', () => getAppearance())
   handle('settings:get', () => getSettings())
   handle('settings:update', (_event, patch) => {

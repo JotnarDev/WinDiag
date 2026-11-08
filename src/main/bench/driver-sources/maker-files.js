@@ -11,7 +11,7 @@ import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
-import { runPowerShell } from '../powershell'
+import { runPowerShell } from '../../powershell'
 
 const execFileAsync = promisify(execFile)
 
