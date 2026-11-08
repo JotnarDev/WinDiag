@@ -8,6 +8,7 @@ import {
   setStartupApp
 } from '../speed'
 import { getPrivacySettings, restartExplorer, setPrivacySettings } from '../privacy'
+import { getPersonalizeSettings, setPersonalizeSettings } from '../personalize'
 
 /** IPC that only the home edition has. */
 export function registerEditionIpc({ handle, expect }) {
@@ -35,6 +36,17 @@ export function registerEditionIpc({ handle, expect }) {
       changes.map((c) => ({
         id: expect('string', c?.id, 'privacy:set-settings'),
         on: expect('boolean', c?.on, 'privacy:set-settings')
+      }))
+    )
+  })
+  handle('personalize:get-settings', () => getPersonalizeSettings())
+  handle('personalize:set-settings', (_event, changes) => {
+    if (!Array.isArray(changes) || changes.length > 50)
+      throw new TypeError('personalize:set-settings')
+    return setPersonalizeSettings(
+      changes.map((c) => ({
+        id: expect('string', c?.id, 'personalize:set-settings'),
+        option: expect('string', c?.option, 'personalize:set-settings')
       }))
     )
   })

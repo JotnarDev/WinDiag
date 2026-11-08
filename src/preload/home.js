@@ -12,5 +12,7 @@ export const editionApi = {
   setPowerMode: (mode) => ipcRenderer.invoke('speed:set-power-mode', mode),
   getPrivacySettings: () => ipcRenderer.invoke('privacy:get-settings'),
   setPrivacySettings: (changes) => ipcRenderer.invoke('privacy:set-settings', changes),
+  getPersonalizeSettings: () => ipcRenderer.invoke('personalize:get-settings'),
+  setPersonalizeSettings: (changes) => ipcRenderer.invoke('personalize:set-settings', changes),
   restartExplorer: () => ipcRenderer.invoke('system:restart-explorer')
 }

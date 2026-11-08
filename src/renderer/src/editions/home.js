@@ -2,6 +2,7 @@ import { comingSoonPage } from '@/home/ComingSoonPage'
 import { HomeOverview } from '@/home/HomeOverview'
 import { SpeedPage } from '@/home/SpeedPage'
 import { PrivacyPage } from '@/home/PrivacyPage'
+import { PersonalizePage } from '@/home/PersonalizePage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -23,15 +24,7 @@ export const home = {
     overview: HomeOverview,
     speed: SpeedPage,
     privacy: PrivacyPage,
-    personalize: comingSoonPage({
-      title: 'Personalize',
-      description: 'Make Windows work the way you like.',
-      plans: [
-        'Dark mode, file extensions, hidden files and battery percentage',
-        'Taskbar: alignment, Widgets, search and Task View',
-        'End task from the taskbar, the classic right-click menu, Sticky Keys and Num Lock'
-      ]
-    }),
+    personalize: PersonalizePage,
     apps: comingSoonPage({
       title: 'Apps',
       description: 'Install trusted apps and keep them up to date.',
