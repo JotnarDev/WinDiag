@@ -29,7 +29,10 @@ import { useSystemInfoContext } from '@/context/SystemInfoContext'
 import { resolveTestResult, useTestResults } from '@/context/TestResultsContext'
 import { cn } from '@/lib/utils'
 
-const HARDWARE_TESTS = BENCH_NAV.find((group) => group.header === 'Hardware tests').items
+// The gamepad tester checks an accessory, not the PC, so it isn't counted
+const HARDWARE_TESTS = BENCH_NAV.find((group) => group.header === 'Hardware tests').items.filter(
+  (item) => item.id !== 'gamepad'
+)
 
 const GPU_KIND_LABELS = {
   integrated: 'Integrated',

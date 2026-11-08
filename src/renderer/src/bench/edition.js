@@ -3,6 +3,7 @@ import { BatteryModule } from '@/modules/BatteryModule'
 import { DiskModule } from '@/modules/DiskModule'
 import { DisplayModule } from '@/modules/DisplayModule'
 import { DriversModule } from '@/bench/DriversModule'
+import { GamepadModule } from '@/modules/GamepadModule'
 import { KeyboardModule } from '@/modules/KeyboardModule'
 import { OtherDevicesModule } from '@/modules/OtherDevicesModule'
 import { OverviewModule } from '@/bench/OverviewModule'
@@ -28,6 +29,7 @@ export const bench = {
     disk: DiskModule,
     ports: PortsModule,
     otherDevices: OtherDevicesModule,
+    gamepad: GamepadModule,
     tools: ToolsModule,
     drivers: DriversModule,
     users: UsersModule,

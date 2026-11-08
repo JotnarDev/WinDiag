@@ -1,5 +1,14 @@
 import { comingSoonPage } from '@/home/ComingSoonPage'
 import { HomeOverview } from '@/home/HomeOverview'
+import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
+import { AudioModule } from '@/modules/AudioModule'
+import { BatteryModule } from '@/modules/BatteryModule'
+import { DiskModule } from '@/modules/DiskModule'
+import { DisplayModule } from '@/modules/DisplayModule'
+import { GamepadModule } from '@/modules/GamepadModule'
+import { KeyboardModule } from '@/modules/KeyboardModule'
+import { PortsModule } from '@/modules/PortsModule'
+import { TouchModule } from '@/modules/TouchModule'
 import { SettingsModule } from '@/modules/SettingsModule'
 import { HOME_NAV } from './home-nav'
 
@@ -69,17 +78,22 @@ export const home = {
         'Create a restore point or go back to one'
       ]
     }),
-    hardware: comingSoonPage({
-      title: 'Hardware',
-      description: 'Check that a part of your PC works.',
-      plans: [
-        'Keyboard, screen, speakers, microphone and camera tests',
-        'Battery and drive health in plain words'
-      ]
-    }),
+    hardware: HardwarePage,
+    // Hardware tests, shared with Bench, opened from the Hardware page
+    gamepad: GamepadModule,
+    keyboard: KeyboardModule,
+    display: DisplayModule,
+    touch: TouchModule,
+    audio: AudioModule,
+    battery: BatteryModule,
+    disk: DiskModule,
+    ports: PortsModule,
     settings: SettingsModule
   },
-  liveModules: new Set(),
+  // Pages that show the live readings, which then refresh every few seconds
+  liveModules: new Set(['battery']),
+  // Pages without a navigation item, and the item that stays selected on them
+  parentOf: Object.fromEntries(HARDWARE_TESTS.map((test) => [test.id, 'hardware'])),
   // Asks for admin rights only for the actions that need them
   showRunAsAdmin: false,
   settings: { tests: false, drivers: false }

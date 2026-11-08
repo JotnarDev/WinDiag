@@ -136,7 +136,7 @@ function NavPane({ activeModule, onSelect, showLabels, isElevated }) {
               <NavItem
                 key={item.id}
                 item={item}
-                selected={item.id === activeModule}
+                selected={item.id === activeModule || EDITION.parentOf?.[activeModule] === item.id}
                 showLabel={showLabels}
                 onSelect={onSelect}
               />

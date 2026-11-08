@@ -10,7 +10,8 @@ import {
   TapSingleRegular,
   UsbPlugRegular,
   Wifi1Regular,
-  WrenchScrewdriverRegular
+  WrenchScrewdriverRegular,
+  XboxControllerRegular
 } from '@fluentui/react-icons'
 
 // WinDiag Bench's navigation: the first item is the start page by default
@@ -28,7 +29,8 @@ export const BENCH_NAV = [
       { id: 'battery', label: 'Battery', icon: Battery6Regular },
       { id: 'disk', label: 'Disk health', icon: HardDriveRegular },
       { id: 'ports', label: 'USB ports', icon: UsbPlugRegular },
-      { id: 'otherDevices', label: 'Wireless & peripherals', icon: Wifi1Regular }
+      { id: 'otherDevices', label: 'Wireless & peripherals', icon: Wifi1Regular },
+      { id: 'gamepad', label: 'Gamepad', icon: XboxControllerRegular }
     ]
   },
   {
