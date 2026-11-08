@@ -1,5 +1,6 @@
 import { comingSoonPage } from '@/home/ComingSoonPage'
 import { HomeOverview } from '@/home/HomeOverview'
+import { SpeedPage } from '@/home/SpeedPage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -19,15 +20,7 @@ export const home = {
   navGroups: HOME_NAV,
   modules: {
     overview: HomeOverview,
-    speed: comingSoonPage({
-      title: 'Speed up',
-      description: 'Start faster and free up space.',
-      plans: [
-        'Apps that start with Windows, with their impact and a switch for each',
-        'Clean up temporary files, Disk Cleanup and the Recycle Bin, with the space you get back',
-        'Power plan: balanced or best performance'
-      ]
-    }),
+    speed: SpeedPage,
     privacy: comingSoonPage({
       title: 'Privacy',
       description: 'Decide what Windows shares and shows you.',
