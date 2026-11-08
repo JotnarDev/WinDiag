@@ -14,15 +14,14 @@ export function UnderConstruction() {
           Under construction.
         </h1>
         <p className="mt-5 max-w-[46ch] text-[18px] leading-[1.5] text-muted">
-          We&apos;re rebuilding WinDiag and this site with it. The current version is still free to
-          download.
+          We&apos;re rebuilding WinDiag and this site with it. Follow along on GitHub.
         </p>
         <p className="mt-8">
           <a
-            href={SITE.download}
+            href={SITE.repo}
             className="inline-flex h-11 items-center rounded-[4px] bg-accent px-5 text-[16px] font-semibold text-on-accent transition-transform active:scale-[0.97]"
           >
-            WinDiag {SITE.version} on GitHub
+            WinDiag on GitHub
           </a>
         </p>
       </div>
