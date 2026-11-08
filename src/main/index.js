@@ -35,6 +35,7 @@ import {
 import { getWindowsUpdateState, setWindowsUpdateMode } from './windows-update'
 import { getWindowsUsers, deleteWindowsUser } from './users'
 import { getMainDiskHealth } from './disk-health'
+import { runCheck, openWindowsPage } from './checkup'
 import {
   recoverEdgeGestures,
   restoreEdgeGesturesSync,
@@ -274,6 +275,10 @@ function startApp() {
   handle('wifi:get-status', () => getWifiConnectionStatus())
   handle('system:launch-tool', (_event, toolId) =>
     launchSystemTool(expect('string', toolId, 'system:launch-tool'))
+  )
+  handle('checkup:run', (_event, id) => runCheck(expect('string', id, 'checkup:run')))
+  handle('system:open-windows-page', (_event, id) =>
+    openWindowsPage(expect('string', id, 'system:open-windows-page'))
   )
   handle('system:launch-product-key-dialog', () => launchProductKeyDialog())
   handle('system:get-update-state', () => getWindowsUpdateState())

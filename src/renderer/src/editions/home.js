@@ -1,4 +1,5 @@
 import { comingSoonPage } from '@/home/ComingSoonPage'
+import { HomeOverview } from '@/home/HomeOverview'
 import { SettingsModule } from '@/modules/SettingsModule'
 import { HOME_NAV } from './home-nav'
 
@@ -8,14 +9,7 @@ export const home = {
   title: 'WinDiag',
   navGroups: HOME_NAV,
   modules: {
-    overview: comingSoonPage({
-      title: 'Home',
-      description: 'A one-click checkup of this PC, and what to do about each finding.',
-      plans: [
-        'A health check of battery, drive, free space, updates, startup apps and security',
-        'One card per finding, with a button that fixes it or opens the right page'
-      ]
-    }),
+    overview: HomeOverview,
     speed: comingSoonPage({
       title: 'Speed up',
       description: 'Start faster and free up space.',
