@@ -1,6 +1,7 @@
 import { comingSoonPage } from '@/home/ComingSoonPage'
 import { HomeOverview } from '@/home/HomeOverview'
 import { SpeedPage } from '@/home/SpeedPage'
+import { PrivacyPage } from '@/home/PrivacyPage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -21,15 +22,7 @@ export const home = {
   modules: {
     overview: HomeOverview,
     speed: SpeedPage,
-    privacy: comingSoonPage({
-      title: 'Privacy',
-      description: 'Decide what Windows shares and shows you.',
-      plans: [
-        'Telemetry, activity history and location',
-        'Suggested apps, Store and Bing results in Start and search',
-        'Each switch explained, and every change can be undone'
-      ]
-    }),
+    privacy: PrivacyPage,
     personalize: comingSoonPage({
       title: 'Personalize',
       description: 'Make Windows work the way you like.',

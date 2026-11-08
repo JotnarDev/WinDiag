@@ -9,5 +9,8 @@ export const editionApi = {
   scanCleanup: () => ipcRenderer.invoke('speed:scan-cleanup'),
   runCleanup: (id) => ipcRenderer.invoke('speed:run-cleanup', id),
   getPowerMode: () => ipcRenderer.invoke('speed:get-power-mode'),
-  setPowerMode: (mode) => ipcRenderer.invoke('speed:set-power-mode', mode)
+  setPowerMode: (mode) => ipcRenderer.invoke('speed:set-power-mode', mode),
+  getPrivacySettings: () => ipcRenderer.invoke('privacy:get-settings'),
+  setPrivacySettings: (changes) => ipcRenderer.invoke('privacy:set-settings', changes),
+  restartExplorer: () => ipcRenderer.invoke('system:restart-explorer')
 }

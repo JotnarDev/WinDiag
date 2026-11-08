@@ -7,6 +7,7 @@ import {
   setPowerMode,
   setStartupApp
 } from '../speed'
+import { getPrivacySettings, restartExplorer, setPrivacySettings } from '../privacy'
 
 /** IPC that only the home edition has. */
 export function registerEditionIpc({ handle, expect }) {
@@ -27,4 +28,15 @@ export function registerEditionIpc({ handle, expect }) {
   handle('speed:set-power-mode', (_event, mode) =>
     setPowerMode(expect('string', mode, 'speed:set-power-mode'))
   )
+  handle('privacy:get-settings', () => getPrivacySettings())
+  handle('privacy:set-settings', (_event, changes) => {
+    if (!Array.isArray(changes) || changes.length > 50) throw new TypeError('privacy:set-settings')
+    return setPrivacySettings(
+      changes.map((c) => ({
+        id: expect('string', c?.id, 'privacy:set-settings'),
+        on: expect('boolean', c?.on, 'privacy:set-settings')
+      }))
+    )
+  })
+  handle('system:restart-explorer', () => restartExplorer())
 }

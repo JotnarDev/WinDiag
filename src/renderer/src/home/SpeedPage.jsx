@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge, InfoBar, ProgressRing, ToggleSwitch } from '@/components/ui/feedback'
 import { cn } from '@/lib/utils'
+import { actionError, errorText } from './actions'
 
 /*
  * Speed up: apps that start with Windows, temporary files and the power
@@ -27,19 +28,6 @@ export function formatBytes(bytes) {
   const mb = bytes / 1024 ** 2
   if (mb >= 1) return `${Math.round(mb)} MB`
   return `${Math.max(1, Math.round(bytes / 1024))} KB`
-}
-
-/** An error's own words, without Electron's "Error invoking remote method…". */
-function errorText(err, fallback) {
-  const message = err?.message ?? ''
-  return message.replace(/^Error invoking remote method '[^']+': (\w*Error: )?/, '') || fallback
-}
-
-/** What went wrong with an action, in words; null when it worked. */
-function actionError(result) {
-  if (result?.ok) return null
-  if (result?.cancelled) return 'Nothing changed: Windows didn’t get administrator permission.'
-  return result?.error || 'Windows didn’t accept the change.'
 }
 
 export function SpeedPage() {
