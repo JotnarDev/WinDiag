@@ -3,6 +3,7 @@ import './assets/main.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { EDITION } from './editions'
 import { applyPalette, setSystemAccent } from './lib/palette'
 
 let currentSettings = {}
@@ -36,6 +37,9 @@ const [appearance, settings] = await Promise.all([
 currentSettings = settings
 applyAppearance(appearance)
 window.api.onAppearanceChanged(applyAppearance)
+
+// The window's title, which the taskbar shows
+document.title = EDITION.title
 
 createRoot(document.getElementById('root'), {
   onUncaughtError: (error, info) =>
