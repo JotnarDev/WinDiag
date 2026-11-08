@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppShell } from '@/components/AppShell'
+import { PageErrorBoundary } from '@/components/PageErrorBoundary'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { SystemInfoProvider } from '@/context/SystemInfoContext'
 import { TestResultsProvider } from '@/context/TestResultsContext'
@@ -22,7 +23,9 @@ export function App({ titleBarHeight, micaSupported, initialSettings, onSettings
             onSelectModule={setActiveModule}
             titleBarHeight={titleBarHeight}
           >
-            <ActiveModule onNavigate={setActiveModule} micaSupported={micaSupported} />
+            <PageErrorBoundary key={activeModule} page={activeModule}>
+              <ActiveModule onNavigate={setActiveModule} micaSupported={micaSupported} />
+            </PageErrorBoundary>
           </AppShell>
         </TestResultsProvider>
       </SystemInfoProvider>

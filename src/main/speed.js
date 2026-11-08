@@ -166,7 +166,10 @@ $bytes = if (${enabled ? '$true' : '$false'}) {
 New-ItemProperty -Path $path -Name $name -Value $bytes -PropertyType Binary -Force | Out-Null
 'done'
 `
-  return runActionScript(script, { admin: source.admin })
+  return runActionScript(script, {
+    admin: source.admin,
+    label: `Turning ${enabled ? 'on' : 'off'} the startup app “${name}”`
+  })
 }
 
 /* --- Clean up -------------------------------------------------------------- */
@@ -258,7 +261,11 @@ export async function runCleanup(id) {
   requireWindows()
   const job = CLEANUP_SCRIPTS[id]
   if (!job) throw new Error(`Unknown clean-up: ${id}`)
-  return runActionScript(OLD_FILES_FUNCTION + job.script, { admin: job.admin, timeoutMs: 300e3 })
+  return runActionScript(OLD_FILES_FUNCTION + job.script, {
+    admin: job.admin,
+    timeoutMs: 300e3,
+    label: `Clean-up of ${id}`
+  })
 }
 
 /* --- Power mode ------------------------------------------------------------ */
@@ -319,5 +326,5 @@ export async function setPowerMode(mode) {
     `$code = [WinDiag.PowerOverlay]::PowerSetActiveOverlayScheme([Guid]'${guid}')
 if ($code -ne 0) { throw "Windows didn't accept the power mode (error $code)." }
 'done'`
-  return runActionScript(script, { admin: false })
+  return runActionScript(script, { admin: false, label: `Setting the power mode to ${mode}` })
 }

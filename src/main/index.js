@@ -41,6 +41,7 @@ import {
 import { startKeyboardHook, stopKeyboardHook } from './keyboard-hook'
 import { getSettings, resetSettings, updateSettings } from './settings'
 import { EDITION, applyEditionPaths } from './edition'
+import { clearLog, getLogInfo, initLog, logError, openLog, showLogInFolder } from './log'
 // This edition's own pages: src/main/bench/ipc.js or src/main/editions/home.js
 import { registerEditionIpc } from '@edition-ipc'
 
@@ -204,9 +205,19 @@ function isTrustedSender(event) {
 }
 
 function handle(channel, listener) {
-  ipcMain.handle(channel, (event, ...args) => {
-    if (!isTrustedSender(event)) throw new Error(`Blocked ${channel} from an untrusted page`)
-    return listener(event, ...args)
+  ipcMain.handle(channel, async (event, ...args) => {
+    if (!isTrustedSender(event)) {
+      logError(channel, 'Blocked a call from an untrusted page')
+      throw new Error(`Blocked ${channel} from an untrusted page`)
+    }
+    try {
+      return await listener(event, ...args)
+    } catch (error) {
+      if (error?.message !== 'Only available on Windows') {
+        logError(channel, error?.message ?? 'Failed', error)
+      }
+      throw error
+    }
   })
 }
 
@@ -228,6 +239,8 @@ function applySettings() {
 
 // Before anything reads the settings folder or takes the single-instance lock
 applyEditionPaths()
+// Crashes and failed calls go to <settings folder>\logs\errors.log
+initLog()
 
 // A second copy would start its own PowerShell session and keyboard hook and
 // fight over the edge-gesture setting, so it just brings this window forward
@@ -275,6 +288,17 @@ function startApp() {
   handle('system:relaunch-as-admin', () => relaunchAsAdmin())
   handle('disk:get-health', () => getMainDiskHealth())
   registerEditionIpc({ handle, expect })
+  handle('log:error', (_event, message, detail) => {
+    logError(
+      'page',
+      typeof message === 'string' ? message : 'Error',
+      typeof detail === 'string' ? detail : undefined
+    )
+  })
+  handle('log:get-info', () => getLogInfo())
+  handle('log:open', () => openLog())
+  handle('log:show-in-folder', () => showLogInFolder())
+  handle('log:clear', () => clearLog())
   handle('window:get-appearance', () => getAppearance())
   handle('settings:get', () => getSettings())
   handle('settings:update', (_event, patch) => {

@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowResetRegular,
   BlurRegular,
+  BugRegular,
+  DeleteRegular,
+  FolderOpenRegular,
+  OpenRegular,
   CheckmarkFilled,
   ColorRegular,
   DarkThemeRegular,
@@ -310,6 +314,10 @@ export function SettingsModule({ micaSupported }) {
         </Section>
       )}
 
+      <Section title="Troubleshooting">
+        <ErrorLogCard />
+      </Section>
+
       <Section title="About">
         <Expander
           iconNode={<img src={appIcon} alt="" className="size-5 shrink-0" draggable={false} />}
@@ -329,5 +337,47 @@ export function SettingsModule({ micaSupported }) {
         </SettingsCard>
       </Section>
     </Page>
+  )
+}
+
+/** The error log: how many errors it holds, and buttons to open or clear it. */
+function ErrorLogCard() {
+  const [info, setInfo] = useState(null)
+  const refresh = () =>
+    window.api
+      .getLogInfo()
+      .then(setInfo)
+      .catch(() => setInfo(null))
+  useEffect(() => {
+    refresh()
+  }, [])
+
+  const count = info?.entries ?? 0
+  const description =
+    count === 0
+      ? 'No errors recorded. When something fails, WinDiag writes it here so it can be checked.'
+      : `${count} ${count === 1 ? 'error' : 'errors'} recorded. Open the log to see what failed, or send the file when reporting a problem.`
+
+  return (
+    <SettingsCard icon={BugRegular} title="Error log" description={description} stacked>
+      <Button icon={OpenRegular} onClick={() => void window.api.openLog()}>
+        Open log
+      </Button>
+      <Button icon={FolderOpenRegular} onClick={() => void window.api.showLogInFolder()}>
+        Show in folder
+      </Button>
+      <Button
+        icon={DeleteRegular}
+        disabled={count === 0}
+        onClick={() => void window.api.clearLog().then(refresh)}
+      >
+        Clear
+      </Button>
+      {info?.path && (
+        <span className="selectable w-full truncate text-caption text-text-secondary">
+          {info.path}
+        </span>
+      )}
+    </SettingsCard>
   )
 }

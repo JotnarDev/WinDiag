@@ -5,6 +5,7 @@ import { runPowerShell, runPowerShellIsolated } from './powershell'
 import { getWindowsActivation } from './system-info'
 import { getMainDiskHealth } from './disk-health'
 import { getStartupApps } from './speed'
+import { logError } from './log'
 
 /*
  * The home edition's checkup: quick, read-only checks that need no admin
@@ -147,7 +148,9 @@ export async function runCheck(id) {
   try {
     return { ok: true, data: await check() }
   } catch (error) {
-    return { ok: false, error: error?.message ?? String(error) }
+    const message = error?.message ?? String(error)
+    if (message !== 'Only available on Windows') logError(`checkup:${id}`, message, error)
+    return { ok: false, error: message }
   }
 }
 

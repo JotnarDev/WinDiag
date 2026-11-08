@@ -3,6 +3,7 @@ import path from 'path'
 import { mkdtemp, readFile, rm } from 'fs/promises'
 import { runPowerShell, runPowerShellIsolated } from './powershell'
 import { isRunningElevated } from './system-tools'
+import { logError } from './log'
 
 /*
  * Runs a PowerShell script with administrator rights, for the few actions of
@@ -45,13 +46,24 @@ try {
 }
 
 /** Runs an action's script, with admin rights only when it needs them. */
-export async function runActionScript(script, { admin = false, timeoutMs = 120e3 } = {}) {
-  if (admin) return runElevatedPowerShell(script, timeoutMs)
-  try {
-    return parseResult(await runPowerShell(wrap(script, null), timeoutMs))
-  } catch (error) {
-    return { ok: false, error: error?.message ?? String(error) }
+export async function runActionScript(script, { admin = false, timeoutMs = 120e3, label } = {}) {
+  let result
+  if (admin) result = await runElevatedPowerShell(script, timeoutMs)
+  else {
+    try {
+      result = parseResult(await runPowerShell(wrap(script, null), timeoutMs))
+    } catch (error) {
+      result = { ok: false, error: error?.message ?? String(error) }
+    }
   }
+  if (!result.ok && !result.cancelled) {
+    logError(
+      'action',
+      `${label ?? 'An action'} failed${admin ? ' (as administrator)' : ''}`,
+      result.error
+    )
+  }
+  return result
 }
 
 function wrap(script, resultFile) {
