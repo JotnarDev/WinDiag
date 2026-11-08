@@ -7,6 +7,7 @@ import { runPowerShellIsolated } from './powershell'
 import { runElevatedPowerShell } from './elevated'
 import { buildBiosInfo, buildDeviceInfo } from './system-info'
 import { logError } from './log'
+import { restorePointScript } from './restore-point'
 
 /*
  * The home edition's Updates page: Windows Update (software and drivers),
@@ -119,23 +120,7 @@ $ids = @(${ids.map(psString).join(', ')})
 
 if (${restorePoint ? '$true' : '$false'}) {
     Step @{ phase = 'restorePoint' }
-    $key = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore'
-    # Windows makes at most one restore point a day unless told otherwise
-    $old = (Get-ItemProperty -LiteralPath $key -Name SystemRestorePointCreationFrequency -ErrorAction SilentlyContinue).SystemRestorePointCreationFrequency
-    New-ItemProperty -LiteralPath $key -Name SystemRestorePointCreationFrequency -PropertyType DWord -Value 0 -Force | Out-Null
-    try {
-        Checkpoint-Computer -Description 'WinDiag: before installing updates' -RestorePointType MODIFY_SETTINGS
-        # It may only warn when it can't make one, so check that one is there
-        $latest = Get-ComputerRestorePoint | Select-Object -Last 1
-        if (-not $latest -or [Management.ManagementDateTimeConverter]::ToDateTime($latest.CreationTime) -lt (Get-Date).AddMinutes(-15)) {
-            throw 'No restore point was created'
-        }
-    } catch {
-        throw "RESTORE_POINT: $($_.Exception.Message)"
-    } finally {
-        if ($null -eq $old) { Remove-ItemProperty -LiteralPath $key -Name SystemRestorePointCreationFrequency -ErrorAction SilentlyContinue }
-        else { New-ItemProperty -LiteralPath $key -Name SystemRestorePointCreationFrequency -PropertyType DWord -Value $old -Force | Out-Null }
-    }
+${restorePointScript('WinDiag: before installing updates')}
 }
 
 Step @{ phase = 'searching' }

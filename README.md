@@ -30,7 +30,7 @@ Look after your own Windows PC, safely and in plain words. WinDiag checks how yo
 | **Apps** | Trusted apps for work, gaming, design and development, installed with winget; update them all in one click. | In beta |
 | **Updates** | Windows Update and its drivers installed in one go, with a restore point before drivers; your BIOS version and the maker's page for drivers and BIOS. | In beta |
 | **Security** | Defender (definitions, scans, unwanted apps, tamper protection), firewall, updates, activation, drive encryption, Secure Boot and TPM, memory integrity and UAC, each explained, with the safe fixes one click away. | In beta |
-| **Repair** | Repair system files, reset the network or Windows Update, restore points. | Planned |
+| **Repair** | Quick fixes (File Explorer, DNS cache, Store cache), repair system files with DISM and SFC, reset Windows Update or the network, create a restore point or go back to one. | In beta |
 
 ## Requirements
 

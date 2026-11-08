@@ -26,6 +26,7 @@ import {
   turnOnFirewall,
   updateDefender
 } from '../security'
+import { getRepairJob, openSystemRestore, runRepair } from '../repair'
 
 /** IPC that only the home edition has. */
 export function registerEditionIpc({ handle, expect }) {
@@ -99,6 +100,9 @@ export function registerEditionIpc({ handle, expect }) {
   handle('security:set-pua', (_event, on) =>
     setPuaProtection(expect('boolean', on, 'security:set-pua'))
   )
+  handle('repair:run', (event, id) => runRepair(expect('string', id, 'repair:run'), event.sender))
+  handle('repair:get-job', () => getRepairJob())
+  handle('repair:open-system-restore', () => openSystemRestore())
   handle('security:open-page', (_event, id) =>
     openSecurityPage(expect('string', id, 'security:open-page'))
   )

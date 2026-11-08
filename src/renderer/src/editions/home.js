@@ -1,4 +1,3 @@
-import { comingSoonPage } from '@/home/ComingSoonPage'
 import { HomeOverview } from '@/home/HomeOverview'
 import { SpeedPage } from '@/home/SpeedPage'
 import { PrivacyPage } from '@/home/PrivacyPage'
@@ -6,6 +5,7 @@ import { PersonalizePage } from '@/home/PersonalizePage'
 import { AppsPage } from '@/home/AppsPage'
 import { UpdatesPage } from '@/home/UpdatesPage'
 import { SecurityPage } from '@/home/SecurityPage'
+import { RepairPage } from '@/home/RepairPage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -31,15 +31,7 @@ export const home = {
     apps: AppsPage,
     updates: UpdatesPage,
     security: SecurityPage,
-    repair: comingSoonPage({
-      title: 'Repair',
-      description: 'Fix common Windows problems.',
-      plans: [
-        'Scan and repair system files',
-        'Reset the network or Windows Update',
-        'Create a restore point or go back to one'
-      ]
-    }),
+    repair: RepairPage,
     hardware: HardwarePage,
     // Hardware tests, shared with Bench, opened from the Hardware page
     gamepad: GamepadModule,

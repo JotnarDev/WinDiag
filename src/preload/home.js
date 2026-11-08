@@ -33,6 +33,14 @@ export const editionApi = {
   turnOnFirewall: () => ipcRenderer.invoke('security:turn-on-firewall'),
   setPuaProtection: (on) => ipcRenderer.invoke('security:set-pua', on),
   openSecurityPage: (id) => ipcRenderer.invoke('security:open-page', id),
+  runRepair: (id) => ipcRenderer.invoke('repair:run', id),
+  getRepairJob: () => ipcRenderer.invoke('repair:get-job'),
+  openSystemRestore: () => ipcRenderer.invoke('repair:open-system-restore'),
+  onRepairProgress: (callback) => {
+    const listener = (_event, job) => callback(job)
+    ipcRenderer.on('repair:progress', listener)
+    return () => ipcRenderer.removeListener('repair:progress', listener)
+  },
   onUpdatesProgress: (callback) => {
     const listener = (_event, job) => callback(job)
     ipcRenderer.on('updates:progress', listener)
