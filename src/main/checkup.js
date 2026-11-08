@@ -162,7 +162,9 @@ const WINDOWS_PAGES = {
   activation: 'ms-settings:activation',
   windowsSecurity: 'windowsdefender:',
   firewall: 'windowsdefender://network',
-  power: 'ms-settings:powersleep'
+  power: 'ms-settings:powersleep',
+  // App Installer, which brings winget
+  appInstaller: 'ms-windows-store://pdp/?productid=9NBLGGH4NNS1'
 }
 
 export async function openWindowsPage(id) {

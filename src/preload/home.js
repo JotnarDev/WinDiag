@@ -14,5 +14,15 @@ export const editionApi = {
   setPrivacySettings: (changes) => ipcRenderer.invoke('privacy:set-settings', changes),
   getPersonalizeSettings: () => ipcRenderer.invoke('personalize:get-settings'),
   setPersonalizeSettings: (changes) => ipcRenderer.invoke('personalize:set-settings', changes),
-  restartExplorer: () => ipcRenderer.invoke('system:restart-explorer')
+  restartExplorer: () => ipcRenderer.invoke('system:restart-explorer'),
+  getApps: () => ipcRenderer.invoke('apps:get'),
+  getAppsJob: () => ipcRenderer.invoke('apps:get-job'),
+  installApps: (ids) => ipcRenderer.invoke('apps:install', ids),
+  updateAllApps: () => ipcRenderer.invoke('apps:update-all'),
+  stopAppsJob: () => ipcRenderer.invoke('apps:stop'),
+  onAppsProgress: (callback) => {
+    const listener = (_event, job) => callback(job)
+    ipcRenderer.on('apps:progress', listener)
+    return () => ipcRenderer.removeListener('apps:progress', listener)
+  }
 }

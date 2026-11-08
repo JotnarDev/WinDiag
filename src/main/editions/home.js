@@ -9,6 +9,7 @@ import {
 } from '../speed'
 import { getPrivacySettings, restartExplorer, setPrivacySettings } from '../privacy'
 import { getPersonalizeSettings, setPersonalizeSettings } from '../personalize'
+import { getApps, getAppsJob, installApps, stopAppsJob, updateAllApps } from '../apps'
 
 /** IPC that only the home edition has. */
 export function registerEditionIpc({ handle, expect }) {
@@ -51,4 +52,15 @@ export function registerEditionIpc({ handle, expect }) {
     )
   })
   handle('system:restart-explorer', () => restartExplorer())
+  handle('apps:get', () => getApps())
+  handle('apps:get-job', () => getAppsJob())
+  handle('apps:install', (event, ids) => {
+    if (!Array.isArray(ids) || ids.length > 100) throw new TypeError('apps:install')
+    return installApps(
+      ids.map((id) => expect('string', id, 'apps:install')),
+      event.sender
+    )
+  })
+  handle('apps:update-all', (event) => updateAllApps(event.sender))
+  handle('apps:stop', () => stopAppsJob())
 }

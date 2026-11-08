@@ -3,6 +3,7 @@ import { HomeOverview } from '@/home/HomeOverview'
 import { SpeedPage } from '@/home/SpeedPage'
 import { PrivacyPage } from '@/home/PrivacyPage'
 import { PersonalizePage } from '@/home/PersonalizePage'
+import { AppsPage } from '@/home/AppsPage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -25,15 +26,7 @@ export const home = {
     speed: SpeedPage,
     privacy: PrivacyPage,
     personalize: PersonalizePage,
-    apps: comingSoonPage({
-      title: 'Apps',
-      description: 'Install trusted apps and keep them up to date.',
-      plans: [
-        'Collections for productivity, gaming, design and development',
-        'Shows what is already installed',
-        'Update all your apps in one click'
-      ]
-    }),
+    apps: AppsPage,
     updates: comingSoonPage({
       title: 'Updates',
       description: 'Windows, drivers and BIOS, kept up to date.',
