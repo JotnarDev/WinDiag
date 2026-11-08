@@ -7,9 +7,13 @@
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:home": "electron-vite dev --mode home",
     "build": "electron-vite build",
+    "build:home": "electron-vite build --mode home",
     "start": "electron-vite preview",
+    "start:home": "electron-vite preview --mode home",
     "build:win": "electron-vite build && electron-builder --win",
+    "build:win:home": "electron-vite build --mode home && electron-builder --win --config electron-builder.home.yml",
     "build:unpack": "electron-vite build && electron-builder --dir"
   },
   "dependencies": {

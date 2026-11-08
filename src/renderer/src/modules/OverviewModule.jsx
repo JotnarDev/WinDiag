@@ -21,7 +21,7 @@ import {
   WarningFilled,
   WindowRegular
 } from '@fluentui/react-icons'
-import { NAV_GROUPS } from '@/components/AppShell'
+import { BENCH_NAV } from '@/editions/bench-nav'
 import { Button } from '@/components/ui/Button'
 import { Card, PropertyList } from '@/components/ui/Card'
 import { Badge, InfoBar, ProgressBar, ProgressRing } from '@/components/ui/feedback'
@@ -29,7 +29,7 @@ import { useSystemInfoContext } from '@/context/SystemInfoContext'
 import { resolveTestResult, useTestResults } from '@/context/TestResultsContext'
 import { cn } from '@/lib/utils'
 
-const HARDWARE_TESTS = NAV_GROUPS.find((group) => group.header === 'Hardware tests').items
+const HARDWARE_TESTS = BENCH_NAV.find((group) => group.header === 'Hardware tests').items
 
 const GPU_KIND_LABELS = {
   integrated: 'Integrated',

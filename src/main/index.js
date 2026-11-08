@@ -42,6 +42,7 @@ import {
 } from './edge-gestures'
 import { startKeyboardHook, stopKeyboardHook } from './keyboard-hook'
 import { getSettings, resetSettings, updateSettings } from './settings'
+import { EDITION, applyEditionPaths } from './edition'
 import {
   chooseCatalogFile,
   chooseDriverFolder,
@@ -234,6 +235,9 @@ function applySettings() {
   return getSettings()
 }
 
+// Before anything reads the settings folder or takes the single-instance lock
+applyEditionPaths()
+
 // A second copy would start its own PowerShell session and keyboard hook and
 // fight over the edge-gesture setting, so it just brings this window forward
 if (!app.requestSingleInstanceLock()) {
@@ -250,7 +254,7 @@ if (!app.requestSingleInstanceLock()) {
 
 function startApp() {
   nativeTheme.themeSource = getSettings().theme
-  electronApp.setAppUserModelId('com.jotnar.windiag.fluent')
+  electronApp.setAppUserModelId(EDITION.appUserModelId)
   // Keep a single PowerShell process alive for systeminformation's queries
   // instead of it spawning a new one per call.
   if (process.platform === 'win32') si.powerShellStart()

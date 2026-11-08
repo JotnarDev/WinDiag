@@ -249,6 +249,27 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 
 ## 4. Code structure (Fluent)
 
+### Two editions from one code base (in progress, branch `editions`)
+
+WinDiag is being split into two apps built from the same code:
+
+- **Bench** (the app as it has always been): testing, fixing and handing over PCs, for refurbishers and technicians. It keeps WinDiag's identity: app id `com.jotnar.windiag.fluent`, settings in `%APPDATA%\windiag-fluent`, admin rights at launch, `electron-builder.yml`, output in `dist/`. Installed copies keep their settings and updates.
+- **Home** (`WinDiag`): looking after your own PC safely and in plain words: checkup, speed up, privacy, personalize, apps, updates, security, repair, hardware. App id `com.jotnar.windiag.home`, settings in `%APPDATA%\WinDiag`, no admin prompt at launch (actions that need it ask when they run), `electron-builder.home.yml` (extends the Bench config), output in `dist-home/`. Both editions can be installed side by side. Its pages are placeholders for now.
+
+The edition is chosen at build time with electron-vite's `--mode` (`bench` by default, `home`), which defines `__EDITION__` for main, preload and renderer:
+
+| | Bench | Home |
+|---|---|---|
+| Develop | `npm run dev` | `npm run dev:home` |
+| Build | `npm run build` | `npm run build:home` |
+| Installer | `npm run build:win` | `npm run build:win:home` |
+
+- `src/main/edition.js`: app id and settings folder per edition; `applyEditionPaths()` runs before the single-instance lock.
+- `src/renderer/src/editions/`: one file per edition (`bench.js`, `home.js`) with its navigation (`*-nav.js`), pages, live-reading pages, whether to offer "Run as administrator" and which Settings sections it has. `editions/index.js` exports the active one as `EDITION`; `App.jsx`, `AppShell.jsx` and `SettingsModule.jsx` read it. The unused edition's pages are left out of the bundle.
+- Shared code (system readings, PowerShell, tests, UI components) stays where it was. Home pages live in `src/renderer/src/home/`.
+- The start page is stored as any short page id; the renderer falls back to the first page when the edition doesn't have it.
+- The Release workflow still builds Bench only.
+
 ```
 src/main/
   index.js          window, appearance (Mica/accent), IPC (handle() validates the sender)

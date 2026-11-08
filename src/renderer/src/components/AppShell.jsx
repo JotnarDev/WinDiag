@@ -1,51 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Battery6Regular,
-  DesktopRegular,
-  DeveloperBoardSearchRegular,
-  HardDriveRegular,
-  HomeRegular,
-  KeyboardMouseRegular,
-  NavigationRegular,
-  PeopleRegular,
-  SettingsRegular,
-  ShieldKeyholeRegular,
-  Speaker2Regular,
-  TapSingleRegular,
-  UsbPlugRegular,
-  Wifi1Regular,
-  WrenchScrewdriverRegular
-} from '@fluentui/react-icons'
+import { NavigationRegular, SettingsRegular, ShieldKeyholeRegular } from '@fluentui/react-icons'
 import appIcon from '@/assets/app-icon.png'
 import { ProgressRing } from '@/components/ui/feedback'
+import { EDITION } from '@/editions'
 import { cn } from '@/lib/utils'
-
-export const NAV_GROUPS = [
-  {
-    items: [{ id: 'overview', label: 'Overview', icon: HomeRegular }]
-  },
-  {
-    header: 'Hardware tests',
-    items: [
-      { id: 'display', label: 'Display', icon: DesktopRegular },
-      { id: 'touch', label: 'Touch', icon: TapSingleRegular },
-      { id: 'keyboard', label: 'Keyboard & mouse', icon: KeyboardMouseRegular },
-      { id: 'audio', label: 'Audio & camera', icon: Speaker2Regular },
-      { id: 'battery', label: 'Battery', icon: Battery6Regular },
-      { id: 'disk', label: 'Disk health', icon: HardDriveRegular },
-      { id: 'ports', label: 'USB ports', icon: UsbPlugRegular },
-      { id: 'otherDevices', label: 'Wireless & peripherals', icon: Wifi1Regular }
-    ]
-  },
-  {
-    header: 'Tools',
-    items: [
-      { id: 'tools', label: 'Technician tools', icon: WrenchScrewdriverRegular },
-      { id: 'drivers', label: 'Drivers', icon: DeveloperBoardSearchRegular },
-      { id: 'users', label: 'Users', icon: PeopleRegular }
-    ]
-  }
-]
 
 // Pinned to the bottom of the pane, like Settings in WinUI's NavigationView
 const SETTINGS_ITEM = { id: 'settings', label: 'Settings', icon: SettingsRegular }
@@ -95,7 +53,7 @@ function TitleBar({ height, onTogglePane, paneOpen, isElevated }) {
       </button>
       <img src={appIcon} alt="" className="ml-2 size-4" draggable={false} />
       <span className="ml-3 truncate text-caption">
-        {isElevated ? 'Administrator: WinDiag' : 'WinDiag'}
+        {isElevated ? `Administrator: ${EDITION.title}` : EDITION.title}
       </span>
     </header>
   )
@@ -166,7 +124,7 @@ function NavPane({ activeModule, onSelect, showLabels, isElevated }) {
   return (
     <nav aria-label="Main" className="flex h-full flex-col">
       <div className="flex flex-1 flex-col gap-1 overflow-x-hidden overflow-y-auto px-1 pb-2">
-        {NAV_GROUPS.map((group, index) => (
+        {EDITION.navGroups.map((group, index) => (
           <div key={group.header ?? index} className="flex flex-col gap-1">
             {group.header &&
               (showLabels ? (
@@ -187,7 +145,9 @@ function NavPane({ activeModule, onSelect, showLabels, isElevated }) {
         ))}
       </div>
       <div className="flex flex-col gap-1 px-1 pb-2">
-        {isElevated === false && <RunAsAdminItem showLabel={showLabels} />}
+        {EDITION.showRunAsAdmin && isElevated === false && (
+          <RunAsAdminItem showLabel={showLabels} />
+        )}
         <NavItem
           item={SETTINGS_ITEM}
           selected={activeModule === SETTINGS_ITEM.id}

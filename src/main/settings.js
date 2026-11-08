@@ -2,27 +2,16 @@ import { app } from 'electron'
 import path from 'path'
 import { readFileSync, writeFileSync } from 'fs'
 
-// Pages that can be chosen as the start page (the navigation ids)
-const PAGE_IDS = [
-  'overview',
-  'display',
-  'touch',
-  'keyboard',
-  'audio',
-  'battery',
-  'disk',
-  'ports',
-  'otherDevices',
-  'tools',
-  'drivers',
-  'users'
-]
+// The start page is a navigation id. Each edition has its own pages, so any
+// short id is kept here and the renderer falls back to the first page when
+// this edition doesn't have it.
+const isPageId = (v) => typeof v === 'string' && /^[a-zA-Z]{1,40}$/.test(v)
 
 // Each setting: its default and whether a value from disk/the page is valid
 const SCHEMA = {
   theme: { default: 'system', valid: (v) => ['system', 'light', 'dark'].includes(v) },
   transparency: { default: true, valid: (v) => typeof v === 'boolean' },
-  startPage: { default: 'overview', valid: (v) => PAGE_IDS.includes(v) },
+  startPage: { default: 'overview', valid: isPageId },
   blockSystemKeys: { default: true, valid: (v) => typeof v === 'boolean' },
   // Last folder compared on the Drivers page ('' = look for "02 Drivers")
   driversFolder: { default: '', valid: (v) => typeof v === 'string' && v.length < 1024 },

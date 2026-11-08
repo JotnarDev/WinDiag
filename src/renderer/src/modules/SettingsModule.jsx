@@ -13,7 +13,7 @@ import {
   PaintBrushRegular
 } from '@fluentui/react-icons'
 import appIcon from '@/assets/app-icon.png'
-import { NAV_GROUPS } from '@/components/AppShell'
+import { EDITION } from '@/editions'
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/Button'
 import { Expander, Section, SettingsCard } from '@/components/ui/Card'
@@ -29,8 +29,6 @@ const THEME_OPTIONS = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' }
 ]
-
-const START_PAGES = NAV_GROUPS.flatMap((group) => group.items)
 
 // One swatch per palette: the accent on a circle of the background tint
 function PalettePicker() {
@@ -260,7 +258,11 @@ export function SettingsModule({ micaSupported }) {
         <SettingsCard
           icon={HomeRegular}
           title="Start page"
-          description="The page WinDiag opens on, e.g. a test you run on every device."
+          description={
+            EDITION.id === 'bench'
+              ? 'The page WinDiag opens on, e.g. a test you run on every device.'
+              : 'The page WinDiag opens on.'
+          }
         >
           <Select
             id="setting-start-page"
@@ -269,43 +271,49 @@ export function SettingsModule({ micaSupported }) {
             onChange={(value) => void updateSetting('startPage', value)}
             className="w-52"
           >
-            {START_PAGES.map((page) => (
-              <option key={page.id} value={page.id}>
-                {page.label}
-              </option>
-            ))}
+            {EDITION.navGroups
+              .flatMap((group) => group.items)
+              .map((page) => (
+                <option key={page.id} value={page.id}>
+                  {page.label}
+                </option>
+              ))}
           </Select>
         </SettingsCard>
       </Section>
 
-      <Section title="Tests">
-        <SettingsCard
-          icon={KeyboardRegular}
-          title="Block system keys in the keyboard test"
-          description="Windows, Print Screen, Esc, Alt+Tab and the lock keys light up but don't act while the test is in front."
-        >
-          <ToggleSwitch
-            label="Block system keys in the keyboard test"
-            checked={settings.blockSystemKeys}
-            onChange={(value) => void updateSetting('blockSystemKeys', value)}
-          />
-        </SettingsCard>
-      </Section>
+      {EDITION.settings.tests && (
+        <Section title="Tests">
+          <SettingsCard
+            icon={KeyboardRegular}
+            title="Block system keys in the keyboard test"
+            description="Windows, Print Screen, Esc, Alt+Tab and the lock keys light up but don't act while the test is in front."
+          >
+            <ToggleSwitch
+              label="Block system keys in the keyboard test"
+              checked={settings.blockSystemKeys}
+              onChange={(value) => void updateSetting('blockSystemKeys', value)}
+            />
+          </SettingsCard>
+        </Section>
+      )}
 
-      <Section title="Drivers">
-        <SettingsCard
-          icon={DocumentBulletListRegular}
-          title="Driver catalog"
-          description="A .json list of your drivers (create one on the Drivers page). When set, the Drivers page compares with it instead of reading every driver in the folder — much faster when the drivers are on a server."
-        >
-          <CatalogPathField />
-        </SettingsCard>
-      </Section>
+      {EDITION.settings.drivers && (
+        <Section title="Drivers">
+          <SettingsCard
+            icon={DocumentBulletListRegular}
+            title="Driver catalog"
+            description="A .json list of your drivers (create one on the Drivers page). When set, the Drivers page compares with it instead of reading every driver in the folder — much faster when the drivers are on a server."
+          >
+            <CatalogPathField />
+          </SettingsCard>
+        </Section>
+      )}
 
       <Section title="About">
         <Expander
           iconNode={<img src={appIcon} alt="" className="size-5 shrink-0" draggable={false} />}
-          title="WinDiag"
+          title={EDITION.title}
           description={`Version ${__APP_VERSION__} · Beta by JOTNAR · Expand to see what changed in each version`}
         >
           <ReleaseNotes />

@@ -6,25 +6,37 @@ import tailwindcss from '@tailwindcss/vite'
 
 const { version } = JSON.parse(readFileSync(resolve('package.json'), 'utf8'))
 
-export default defineConfig({
-  main: {
-    plugins: [externalizeDepsPlugin()]
-  },
-  preload: {
-    plugins: [externalizeDepsPlugin()]
-  },
-  renderer: {
-    define: {
-      __APP_VERSION__: JSON.stringify(version)
+// Two editions from one code base, chosen with --mode:
+// - bench (default): WinDiag for refurbishers and technicians
+// - home (--mode home): WinDiag for people looking after their own PC
+const EDITIONS = ['bench', 'home']
+
+export default defineConfig(({ mode }) => {
+  const edition = EDITIONS.includes(mode) ? mode : 'bench'
+  const define = { __EDITION__: JSON.stringify(edition) }
+  return {
+    main: {
+      define,
+      plugins: [externalizeDepsPlugin()]
     },
-    resolve: {
-      alias: {
-        '@': resolve('src/renderer/src')
-      }
+    preload: {
+      define,
+      plugins: [externalizeDepsPlugin()]
     },
-    build: {
-      minify: true
-    },
-    plugins: [react(), tailwindcss()]
+    renderer: {
+      define: {
+        ...define,
+        __APP_VERSION__: JSON.stringify(version)
+      },
+      resolve: {
+        alias: {
+          '@': resolve('src/renderer/src')
+        }
+      },
+      build: {
+        minify: true
+      },
+      plugins: [react(), tailwindcss()]
+    }
   }
 })
