@@ -43,7 +43,7 @@ import { getSettings, resetSettings, updateSettings } from './settings'
 import { EDITION, applyEditionPaths } from './edition'
 import { clearLog, getLogInfo, initLog, logError, openLog, showLogInFolder } from './log'
 // This edition's own pages: src/main/bench/ipc.js or src/main/editions/home.js
-import { registerEditionIpc } from '@edition-ipc'
+import * as editionMain from '@edition-ipc'
 
 // Only used when the keyboard hook couldn't start: the keys then reach
 // Windows, so a lock key toggles and has to be toggled back.
@@ -131,7 +131,8 @@ function createWindow() {
     // binary directly, which has no icon of its own, so the window/taskbar
     // icon has to be set explicitly here too, for every platform, not just
     // the Linux case the electron-vite template started with.
-    icon,
+    // An edition may bring its own icon
+    icon: editionMain.editionIcon ?? icon,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       sandbox: true,
@@ -287,7 +288,7 @@ function startApp() {
   handle('system:is-elevated', () => isRunningElevated())
   handle('system:relaunch-as-admin', () => relaunchAsAdmin())
   handle('disk:get-health', () => getMainDiskHealth())
-  registerEditionIpc({ handle, expect })
+  editionMain.registerEditionIpc({ handle, expect })
   handle('log:error', (_event, message, detail) => {
     logError(
       'page',

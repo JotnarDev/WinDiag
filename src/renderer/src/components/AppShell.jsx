@@ -51,7 +51,7 @@ function TitleBar({ height, onTogglePane, paneOpen, isElevated }) {
       >
         <NavigationRegular aria-hidden className="size-4" />
       </button>
-      <img src={appIcon} alt="" className="ml-2 size-4" draggable={false} />
+      <img src={EDITION.icon ?? appIcon} alt="" className="ml-2 size-4" draggable={false} />
       <span className="ml-3 truncate text-caption">
         {isElevated ? `Administrator: ${EDITION.title}` : EDITION.title}
       </span>
