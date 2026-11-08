@@ -5,6 +5,7 @@ import { PrivacyPage } from '@/home/PrivacyPage'
 import { PersonalizePage } from '@/home/PersonalizePage'
 import { AppsPage } from '@/home/AppsPage'
 import { UpdatesPage } from '@/home/UpdatesPage'
+import { SecurityPage } from '@/home/SecurityPage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -29,11 +30,7 @@ export const home = {
     personalize: PersonalizePage,
     apps: AppsPage,
     updates: UpdatesPage,
-    security: comingSoonPage({
-      title: 'Security',
-      description: 'Is this PC protected?',
-      plans: ['Microsoft Defender, firewall, BitLocker, activation and pending updates at a glance']
-    }),
+    security: SecurityPage,
     repair: comingSoonPage({
       title: 'Repair',
       description: 'Fix common Windows problems.',

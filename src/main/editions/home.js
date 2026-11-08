@@ -18,6 +18,14 @@ import {
   openMakerSupport,
   restartWindows
 } from '../updates'
+import {
+  getSecurityStatus,
+  openSecurityPage,
+  quickScan,
+  setPuaProtection,
+  turnOnFirewall,
+  updateDefender
+} from '../security'
 
 /** IPC that only the home edition has. */
 export function registerEditionIpc({ handle, expect }) {
@@ -84,4 +92,14 @@ export function registerEditionIpc({ handle, expect }) {
   handle('updates:get-maker', () => getMakerInfo())
   handle('updates:open-maker-support', () => openMakerSupport())
   handle('system:restart', () => restartWindows())
+  handle('security:get-status', () => getSecurityStatus())
+  handle('security:update-defender', () => updateDefender())
+  handle('security:quick-scan', () => quickScan())
+  handle('security:turn-on-firewall', () => turnOnFirewall())
+  handle('security:set-pua', (_event, on) =>
+    setPuaProtection(expect('boolean', on, 'security:set-pua'))
+  )
+  handle('security:open-page', (_event, id) =>
+    openSecurityPage(expect('string', id, 'security:open-page'))
+  )
 }

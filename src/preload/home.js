@@ -27,6 +27,12 @@ export const editionApi = {
   getMakerInfo: () => ipcRenderer.invoke('updates:get-maker'),
   openMakerSupport: () => ipcRenderer.invoke('updates:open-maker-support'),
   restartWindows: () => ipcRenderer.invoke('system:restart'),
+  getSecurityStatus: () => ipcRenderer.invoke('security:get-status'),
+  updateDefender: () => ipcRenderer.invoke('security:update-defender'),
+  quickScan: () => ipcRenderer.invoke('security:quick-scan'),
+  turnOnFirewall: () => ipcRenderer.invoke('security:turn-on-firewall'),
+  setPuaProtection: (on) => ipcRenderer.invoke('security:set-pua', on),
+  openSecurityPage: (id) => ipcRenderer.invoke('security:open-page', id),
   onUpdatesProgress: (callback) => {
     const listener = (_event, job) => callback(job)
     ipcRenderer.on('updates:progress', listener)

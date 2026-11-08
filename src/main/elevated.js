@@ -52,12 +52,17 @@ try {
 }
 
 /** Runs an action's script, with admin rights only when it needs them. */
-export async function runActionScript(script, { admin = false, timeoutMs = 120e3, label } = {}) {
+export async function runActionScript(
+  script,
+  { admin = false, timeoutMs = 120e3, label, isolated = false } = {}
+) {
   let result
-  if (admin) result = await runElevatedPowerShell(script, timeoutMs)
+  if (admin) result = await runElevatedPowerShell(script, timeoutMs, { isolated })
   else {
     try {
-      result = parseResult(await runPowerShell(wrap(script, null), timeoutMs))
+      // Long actions get their own PowerShell, so they don't hold up the shared one
+      const run = isolated ? runPowerShellIsolated : runPowerShell
+      result = parseResult(await run(wrap(script, null), timeoutMs))
     } catch (error) {
       result = { ok: false, error: error?.message ?? String(error) }
     }
