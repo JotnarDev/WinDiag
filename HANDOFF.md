@@ -1,5 +1,7 @@
 # WinDiag — handoff for an AI continuing the project
 
+> **Public repository.** This is WinDiag (home edition). WinDiag Bench's code, the `bench/` folders described below, lives only in the private repository `WinDiag-Bench`; the notes about Bench pages describe code that isn't here.
+
 This file explains what changed in each version of WinDiag Fluent, how it was done and which rules to follow. Read it before touching the code. The details of each version are also in `CHANGELOG.md`, which the app shows under Settings → About.
 
 ---
