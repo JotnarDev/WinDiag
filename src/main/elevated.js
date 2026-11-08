@@ -15,9 +15,15 @@ import { logError } from './log'
  * { ok: false, error }, and a dismissed UAC prompt as { ok: false, cancelled }.
  * Scripts must not include anything the renderer sent unchecked.
  */
-export async function runElevatedPowerShell(script, timeoutMs = 120e3) {
+export async function runElevatedPowerShell(script, timeoutMs = 120e3, { isolated = false } = {}) {
   if (await isRunningElevated()) {
-    return parseResult(await runPowerShell(wrap(script, null), timeoutMs))
+    // Long actions get their own PowerShell, so they don't hold up the shared one
+    const run = isolated ? runPowerShellIsolated : runPowerShell
+    try {
+      return parseResult(await run(wrap(script, null), timeoutMs))
+    } catch (error) {
+      return { ok: false, error: error?.message ?? String(error) }
+    }
   }
 
   // The elevated process can't print to us, so it writes its answer to a

@@ -4,6 +4,7 @@ import { SpeedPage } from '@/home/SpeedPage'
 import { PrivacyPage } from '@/home/PrivacyPage'
 import { PersonalizePage } from '@/home/PersonalizePage'
 import { AppsPage } from '@/home/AppsPage'
+import { UpdatesPage } from '@/home/UpdatesPage'
 import { HARDWARE_TESTS, HardwarePage } from '@/home/HardwarePage'
 import { AudioModule } from '@/modules/AudioModule'
 import { BatteryModule } from '@/modules/BatteryModule'
@@ -27,15 +28,7 @@ export const home = {
     privacy: PrivacyPage,
     personalize: PersonalizePage,
     apps: AppsPage,
-    updates: comingSoonPage({
-      title: 'Updates',
-      description: 'Windows, drivers and BIOS, kept up to date.',
-      plans: [
-        'Pending Windows updates and a button to install them',
-        'Drivers from Windows Update and the maker, with a restore point first',
-        'A notice when a newer BIOS exists, with a link to the maker'
-      ]
-    }),
+    updates: UpdatesPage,
     security: comingSoonPage({
       title: 'Security',
       description: 'Is this PC protected?',

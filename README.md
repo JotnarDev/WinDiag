@@ -28,7 +28,7 @@ Look after your own Windows PC, safely and in plain words. WinDiag checks how yo
 | **Privacy** | Telemetry, activity history, suggestions and ads in Windows, each switch explained. | In beta |
 | **Personalize** | Dark mode, File Explorer (extensions, hidden files, classic right-click menu), taskbar, pointer precision, Sticky Keys and Num Lock; each can be set back to Windows' default. | In beta |
 | **Apps** | Trusted apps for work, gaming, design and development, installed with winget; update them all in one click. | In beta |
-| **Updates** | Windows, drivers and BIOS. | Planned |
+| **Updates** | Windows Update and its drivers installed in one go, with a restore point before drivers; your BIOS version and the maker's page for drivers and BIOS. | In beta |
 | **Security** | Defender, firewall, BitLocker and activation at a glance. | Planned |
 | **Repair** | Repair system files, reset the network or Windows Update, restore points. | Planned |
 

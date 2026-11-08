@@ -20,6 +20,18 @@ export const editionApi = {
   installApps: (ids) => ipcRenderer.invoke('apps:install', ids),
   updateAllApps: () => ipcRenderer.invoke('apps:update-all'),
   stopAppsJob: () => ipcRenderer.invoke('apps:stop'),
+  getWindowsUpdates: () => ipcRenderer.invoke('updates:get'),
+  getUpdatesJob: () => ipcRenderer.invoke('updates:get-job'),
+  installWindowsUpdates: (ids, restorePoint) =>
+    ipcRenderer.invoke('updates:install', ids, restorePoint),
+  getMakerInfo: () => ipcRenderer.invoke('updates:get-maker'),
+  openMakerSupport: () => ipcRenderer.invoke('updates:open-maker-support'),
+  restartWindows: () => ipcRenderer.invoke('system:restart'),
+  onUpdatesProgress: (callback) => {
+    const listener = (_event, job) => callback(job)
+    ipcRenderer.on('updates:progress', listener)
+    return () => ipcRenderer.removeListener('updates:progress', listener)
+  },
   onAppsProgress: (callback) => {
     const listener = (_event, job) => callback(job)
     ipcRenderer.on('apps:progress', listener)
