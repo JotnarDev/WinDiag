@@ -361,7 +361,7 @@ export default {
       },
       {
         q: 'Can I run it from a USB drive?',
-        a: 'Yes. Each release has an installer and a portable zip. Extract the zip anywhere and run windiag-fluent.exe.'
+        a: 'Yes. Each release has an installer and a portable zip. Extract the zip anywhere and run windiag.exe.'
       },
       {
         q: 'Does it work on desktops and on any brand?',

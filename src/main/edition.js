@@ -12,9 +12,10 @@ import path from 'path'
 const EDITIONS = {
   bench: {
     id: 'bench',
+    // The ids and the settings folder still say "fluent", the name Bench had
+    // until 2.6.1, so installed copies keep their settings and updates
     appUserModelId: 'com.jotnar.windiag.fluent',
-    // Electron's default, from package.json's name
-    userDataFolder: null
+    userDataFolder: 'windiag-fluent'
   },
   home: {
     id: 'home',

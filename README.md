@@ -54,7 +54,7 @@ npm run build:win    # installer and portable zip in dist-home/
 
 This code base also builds **WinDiag Bench**, the edition for refurbishers and technicians (drivers and BIOS, users, delivery checks). Bench is a separate commercial product and its code isn't in this repository: its pages live in `bench/` folders that only the private repository has, and the build picks Home when they are missing (see [HANDOFF.md](HANDOFF.md)).
 
-The versions of *WinDiag Fluent* published here up to 2.6.1 stay available under the MIT licence.
+The code of earlier versions (up to 2.6.1, when the app was called WinDiag Fluent) stays in this repository’s history under the MIT licence.
 
 ---
 

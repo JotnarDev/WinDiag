@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Product website for WinDiag Fluent",
+  "description": "Product website for WinDiag",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -1,5 +1,5 @@
 {
-  "name": "windiag-fluent",
+  "name": "windiag",
   "version": "2.6.1",
   "description": "WinDiag — native Windows hardware diagnostics tool (Electron + React)",
   "main": "./out/main/index.js",
