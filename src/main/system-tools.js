@@ -177,12 +177,19 @@ try {
     if ($code -eq ${ERROR_CANCELLED}) { 'cancelled' } else { 'error:' + $_.Exception.Message }
 }`
   try {
+    // Let go of the single-instance lock first: otherwise the elevated copy
+    // finds this one still running, hands over to it and quits
+    app.releaseSingleInstanceLock()
     const output = (await runPowerShell(script, 60e3)).trim()
-    if (output === 'cancelled') return { success: false, message: 'Elevation was canceled.' }
-    if (output !== 'ok') return { success: false, message: output.replace(/^error:/, '') }
+    if (output !== 'ok') {
+      app.requestSingleInstanceLock()
+      if (output === 'cancelled') return { success: false, message: 'Elevation was canceled.' }
+      return { success: false, message: output.replace(/^error:/, '') }
+    }
     setTimeout(() => app.quit(), 300)
     return { success: true, message: 'Relaunching as Administrator…' }
   } catch (err) {
+    app.requestSingleInstanceLock()
     return { success: false, message: errorMessage(err) }
   }
 }

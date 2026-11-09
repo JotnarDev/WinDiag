@@ -1,9 +1,11 @@
 import os from 'os'
 import { shell } from 'electron'
 import si from 'systeminformation'
-import { runPowerShell, runPowerShellIsolated, parseJsonArray } from './powershell'
+import { runPowerShell, runPowerShellIsolated } from './powershell'
 import { getWindowsActivation } from './system-info'
 import { getMainDiskHealth } from './disk-health'
+import { getStartupApps } from './speed'
+import { logError } from './log'
 
 /*
  * The home edition's checkup: quick, read-only checks that need no admin
@@ -77,48 +79,10 @@ async function checkUpdates() {
   return { count: titles.length, titles }
 }
 
-// Apps that start with Windows: the Run keys and Startup folders, minus the
-// ones turned off in Settings > Apps > Startup (StartupApproved: an odd first
-// byte means disabled).
-const STARTUP_SCRIPT = String.raw`
-$ErrorActionPreference = 'SilentlyContinue'
-$approved = 'Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved'
-function Test-Approved($hive, $list, $name) {
-    $value = (Get-ItemProperty -Path "$hive\$approved\$list" -Name $name).$name
-    if ($value -is [byte[]] -and $value.Length -gt 0) { return (($value[0] -band 1) -eq 0) }
-    return $true
-}
-$items = @()
-$keys = @(
-    @{ Hive = 'HKCU:'; Key = 'Software\Microsoft\Windows\CurrentVersion\Run'; List = 'Run' },
-    @{ Hive = 'HKLM:'; Key = 'Software\Microsoft\Windows\CurrentVersion\Run'; List = 'Run' },
-    @{ Hive = 'HKLM:'; Key = 'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run'; List = 'Run32' }
-)
-foreach ($k in $keys) {
-    $item = Get-Item -Path "$($k.Hive)\$($k.Key)"
-    if (-not $item) { continue }
-    foreach ($name in $item.GetValueNames()) {
-        if (-not $name) { continue }
-        $items += [PSCustomObject]@{ Name = $name; Enabled = (Test-Approved $k.Hive $k.List $name) }
-    }
-}
-$folders = @(
-    @{ Hive = 'HKCU:'; Path = [Environment]::GetFolderPath('Startup') },
-    @{ Hive = 'HKLM:'; Path = [Environment]::GetFolderPath('CommonStartup') }
-)
-foreach ($f in $folders) {
-    Get-ChildItem -Path $f.Path -File | Where-Object { $_.Name -ne 'desktop.ini' } | ForEach-Object {
-        $items += [PSCustomObject]@{ Name = $_.BaseName; Enabled = (Test-Approved $f.Hive 'StartupFolder' $_.Name) }
-    }
-}
-ConvertTo-Json -InputObject @($items) -Compress
-`
-
 async function checkStartup() {
-  requireWindows()
-  const items = parseJsonArray(await runPowerShell(STARTUP_SCRIPT, 20e3))
-  const enabled = items.filter((item) => item.Enabled).map((item) => String(item.Name))
-  return { enabledCount: enabled.length, totalCount: items.length, enabled }
+  const apps = await getStartupApps()
+  const enabled = apps.filter((app) => app.enabled).map((app) => app.name)
+  return { enabledCount: enabled.length, totalCount: apps.length, enabled }
 }
 
 // Antivirus as Windows Security Center reports it (productState: the middle
@@ -184,7 +148,9 @@ export async function runCheck(id) {
   try {
     return { ok: true, data: await check() }
   } catch (error) {
-    return { ok: false, error: error?.message ?? String(error) }
+    const message = error?.message ?? String(error)
+    if (message !== 'Only available on Windows') logError(`checkup:${id}`, message, error)
+    return { ok: false, error: message }
   }
 }
 
@@ -195,7 +161,10 @@ const WINDOWS_PAGES = {
   startupApps: 'ms-settings:startupapps',
   activation: 'ms-settings:activation',
   windowsSecurity: 'windowsdefender:',
-  firewall: 'windowsdefender://network'
+  firewall: 'windowsdefender://network',
+  power: 'ms-settings:powersleep',
+  // App Installer, which brings winget
+  appInstaller: 'ms-windows-store://pdp/?productid=9NBLGGH4NNS1'
 }
 
 export async function openWindowsPage(id) {

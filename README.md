@@ -24,13 +24,13 @@ Look after your own Windows PC, safely and in plain words. WinDiag checks how yo
 |---|---|---|
 | **Home** | A one-click checkup: protection, Windows updates, drive health, free space, battery, startup apps, activation and last restart, each with a plain verdict and a button to the right Windows page. Read-only; needs no admin rights. | Ready |
 | **Hardware** | Tests for the keyboard and mouse, screen, touch, sound and camera, battery, drives and USB ports, and a **gamepad tester**: it identifies the controller and explains why it misbehaves (stick drift and range, triggers, buttons that stick or don't respond, vibration, disconnects). | Ready |
-| **Speed up** | Startup apps, cleaning up temporary files, power plan. | Planned |
-| **Privacy** | Telemetry, activity history, suggestions and ads in Windows, each switch explained. | Planned |
-| **Personalize** | Dark mode, file extensions, taskbar, classic right-click menu… | Planned |
-| **Apps** | Trusted apps for work, gaming, design and development, installed with winget; update them all in one click. | Planned |
-| **Updates** | Windows, drivers and BIOS. | Planned |
-| **Security** | Defender, firewall, BitLocker and activation at a glance. | Planned |
-| **Repair** | Repair system files, reset the network or Windows Update, restore points. | Planned |
+| **Speed up** | Startup apps, cleaning up temporary files, power mode. | In beta |
+| **Privacy** | Telemetry, activity history, suggestions and ads in Windows, each switch explained. | In beta |
+| **Personalize** | Dark mode, File Explorer (extensions, hidden files, classic right-click menu), taskbar, pointer precision, Sticky Keys and Num Lock; each can be set back to Windows' default. | In beta |
+| **Apps** | Trusted apps for work, gaming, design and development, installed with winget; update them all in one click. | In beta |
+| **Updates** | Windows Update and its drivers installed in one go, with a restore point before drivers; your BIOS version and the maker's page for drivers and BIOS. | In beta |
+| **Security** | Defender (definitions, scans, unwanted apps, tamper protection), firewall, updates, activation, drive encryption, Secure Boot and TPM, memory integrity and UAC, each explained, with the safe fixes one click away. | In beta |
+| **Repair** | Quick fixes (File Explorer, DNS cache, Store cache), repair system files with DISM and SFC, reset Windows Update or the network, create a restore point or go back to one. | In beta |
 
 ## Requirements
 
@@ -54,7 +54,7 @@ npm run build:win    # installer and portable zip in dist-home/
 
 This code base also builds **WinDiag Bench**, the edition for refurbishers and technicians (drivers and BIOS, users, delivery checks). Bench is a separate commercial product and its code isn't in this repository: its pages live in `bench/` folders that only the private repository has, and the build picks Home when they are missing (see [HANDOFF.md](HANDOFF.md)).
 
-The versions of *WinDiag Fluent* published here up to 2.6.1 stay available under the MIT licence.
+The code of earlier versions (up to 2.6.1, when the app was called WinDiag Fluent) stays in this repository’s history under the MIT licence.
 
 ---
 

@@ -46,7 +46,7 @@ jobs:
           if (Test-Path src/renderer/src/bench/edition.js) {
             "EDITION=bench" >> $env:GITHUB_ENV
             "EDITION_NAME=WinDiag Bench" >> $env:GITHUB_ENV
-            "EXE_NAME=windiag-fluent" >> $env:GITHUB_ENV
+            "EXE_NAME=windiag-bench" >> $env:GITHUB_ENV
             "OUT_DIR=dist" >> $env:GITHUB_ENV
             "ADMIN_NOTE=The app asks for administrator rights when it starts." >> $env:GITHUB_ENV
           } else {

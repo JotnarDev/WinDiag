@@ -3,9 +3,22 @@ import './assets/main.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { EDITION } from './editions'
 import { applyPalette, setSystemAccent } from './lib/palette'
 
 let currentSettings = {}
+
+// Errors in the page go to the error log (Settings > Troubleshooting)
+const logError = (message, detail) => void window.api?.logError(message, detail)?.catch(() => {})
+window.addEventListener('error', (event) =>
+  logError(event.message || 'Error', event.error?.stack ?? `${event.filename}:${event.lineno}`)
+)
+window.addEventListener('unhandledrejection', (event) =>
+  logError(
+    `Unhandled promise rejection: ${event.reason?.message ?? event.reason}`,
+    event.reason?.stack
+  )
+)
 
 function applyAppearance({ mica, accentColor }) {
   document.documentElement.classList.toggle('mica', mica)
@@ -25,7 +38,16 @@ currentSettings = settings
 applyAppearance(appearance)
 window.api.onAppearanceChanged(applyAppearance)
 
-createRoot(document.getElementById('root')).render(
+// The window's title, which the taskbar shows
+document.title = EDITION.title
+
+createRoot(document.getElementById('root'), {
+  onUncaughtError: (error, info) =>
+    logError(
+      `Uncaught: ${error?.message ?? error}`,
+      `${error?.stack ?? ''}\n${info?.componentStack ?? ''}`
+    )
+}).render(
   <StrictMode>
     <App
       titleBarHeight={appearance.titleBarHeight}

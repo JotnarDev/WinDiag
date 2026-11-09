@@ -2,7 +2,7 @@
 
 > **Public repository.** This is WinDiag (home edition). WinDiag Bench's code, the `bench/` folders described below, lives only in the private repository `WinDiag-Bench`; the notes about Bench pages describe code that isn't here.
 
-This file explains what changed in each version of WinDiag Fluent, how it was done and which rules to follow. Read it before touching the code. The details of each version are also in `CHANGELOG.md`, which the app shows under Settings → About.
+This file explains what changed in each version of WinDiag, how it was done and which rules to follow. Read it before touching the code. The details of each version are also in `CHANGELOG.md`, which the app shows under Settings → About.
 
 ---
 
@@ -17,20 +17,15 @@ WinDiag is a diagnostics and setup tool for Windows computers, mainly rugged lap
 - **Windows:** the main process queries the system with PowerShell, through a shared session (`src/main/powershell.js`), and with `systeminformation`.
 - **Permissions:** the app always runs as administrator (`requireAdministrator` in `electron-builder.bench.yml`).
 
-### Only the Fluent version is maintained
+### Names
 
-This repository (branch `main` of `JotnarDev/WinDiag`, version **2.6.1**) is the only maintained project. It was originally developed as `windiag-fluent/` on the git branch `fluent-ui`. The user only needs this version ("with Fluent it is much smoother").
+Until 2.6.1 the app was called **WinDiag Fluent** (it was the Fluent redesign of the original WinDiag 1.0, which is no longer developed: **do not port changes to it**). Since the split into two editions the names are **WinDiag** (home edition) and **WinDiag Bench**; "Fluent" only names the design language (Windows 11's), never the product.
 
-It started as a copy of the original WinDiag (1.0.0, which is still on the development machine on the `windows-integration` branch). That project is no longer developed or copied to the USB drives, so **do not port changes to it**.
+Bench keeps the old ids so installed copies keep their settings and updates:
 
-### Identity of the Fluent variant
-
-- appId `com.jotnar.windiag.fluent`
-- productName `WinDiag Fluent`
-- executable `windiag-fluent.exe`
-- `setAppUserModelId('com.jotnar.windiag.fluent')`
-
-The identity differs from the original so both can be installed side by side.
+- appId and AppUserModelID `com.jotnar.windiag.fluent`
+- settings in `%APPDATA%\windiag-fluent` (set in `src/main/edition.js`, since `package.json`'s name is now `windiag`)
+- productName `WinDiag Bench`, executable `windiag-bench.exe`
 
 ---
 
@@ -46,7 +41,7 @@ The user asked for these rules, and they apply to every change:
 1. Make the change.
 2. Bump the version with `npm version X.Y.Z --no-git-tag-version`, which updates `package.json` and `package-lock.json`.
 3. Add the entry at the top of `CHANGELOG.md`, following the existing format: `## X.Y.Z — YYYY-MM-DD`, then `### Added` / `### Fixed` / `### Changed` and one-line `- ` bullets. **This format must not change:** `src/renderer/src/lib/changelog.js` parses it with a regex to show it in Settings → About.
-4. Build locally if needed: `npm run build:win` creates `dist/windiag-fluent-X.Y.Z-setup.exe` and `dist/windiag-fluent-X.Y.Z-portable.zip`.
+4. Build locally if needed: `npm run build:win` creates the installer and the portable zip (`dist-home/windiag-X.Y.Z-…` for Home, `dist/windiag-bench-X.Y.Z-…` for Bench).
 5. To publish (only when the user asks): commit, then `git tag vX.Y.Z && git push origin main vX.Y.Z`. The `Release` workflow (`.github/workflows/release.yml`) builds both files on a Windows runner and publishes them as a GitHub Release, using that version's `CHANGELOG.md` section as release notes. It fails if the tag does not match `package.json`.
 6. Tell the user which version it ended up as.
 
@@ -249,13 +244,13 @@ Avoids reading 440 `.inf` files over the network when the drivers are on a serve
 
 ---
 
-## 4. Code structure (Fluent)
+## 4. Code structure
 
 ### Two editions from one code base (branch `editions`)
 
 WinDiag is split into two apps built from the same code:
 
-- **Bench** (the app as it has always been): testing, fixing and handing over PCs, for refurbishers and technicians. Paid; its code is only in the **private** repository (`WinDiag-Bench`). It keeps WinDiag's identity: app id `com.jotnar.windiag.fluent`, settings in `%APPDATA%\windiag-fluent`, admin rights at launch, `electron-builder.bench.yml`, output in `dist/`. Installed copies keep their settings and updates.
+- **Bench** (the app as it has always been): testing, fixing and handing over PCs, for refurbishers and technicians. Paid; its code is only in the **private** repository (`WinDiag-Bench`). It keeps the ids it had as WinDiag Fluent: app id `com.jotnar.windiag.fluent`, settings in `%APPDATA%\windiag-fluent`, admin rights at launch, `electron-builder.bench.yml`, output in `dist/`. Installed copies keep their settings and updates.
 - **Home** (`WinDiag`): looking after your own PC safely and in plain words: checkup, speed up, privacy, personalize, apps, updates, security, repair, hardware. Free and **public** (`WinDiag`, MIT). App id `com.jotnar.windiag.home`, settings in `%APPDATA%\WinDiag`, no admin prompt at launch (actions that need it ask when they run), `electron-builder.home.yml`, output in `dist-home/`. Both editions can be installed side by side.
 
 **Where the code lives.** Everything that only Bench has sits in three `bench/` places, so the public repository is the private one minus those folders:
@@ -331,7 +326,7 @@ src/renderer/src/
 ## 5. How the work was done
 
 - **Development happens on Linux**, so Windows-specific features (Mica, the keyboard hook, pnputil, the BIOS updater, BitLocker, Windows Update, deleting users, etc.) can't be run during development. The user tests on the computers and reports back; everything up to 2.5.0 has been tested on Windows.
-- **Build:** `npm run build:win` produces the installer (`dist/windiag-fluent-X.Y.Z-setup.exe`) and the portable zip (`dist/windiag-fluent-X.Y.Z-portable.zip`). Official builds come from the GitHub Actions `Release` workflow, not from local builds. The copy on the USB drive has no `node_modules`: run `npm install` first. On the development machine, `node_modules/electron/dist` had a manually downloaded Linux Electron, used only for screenshots.
+- **Build:** `npm run build:win` produces the installer and the portable zip (`dist-home/` for Home, `dist/` for Bench). Official builds come from the GitHub Actions `Release` workflow, not from local builds. The copy on the USB drive has no `node_modules`: run `npm install` first. On the development machine, `node_modules/electron/dist` had a manually downloaded Linux Electron, used only for screenshots.
 - **Visual review:** an Electron script loads `out/renderer` with mocked IPC and takes screenshots in light mode, dark mode and at different widths. It is not in the repo; it lived in the session's scratchpad.
 - **Undefined-names check:** ESLint with only the `no-undef` rule over `src`. It is also checked that every `window.api.X` in the renderer exists in the preload and that every channel has its `handle`.
 - **Formatting:** Prettier (repo config). Careful: it can join or split imports and break a find-and-replace.

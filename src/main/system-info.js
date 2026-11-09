@@ -77,7 +77,7 @@ async function buildGpuInfo() {
   }
 }
 
-async function buildDeviceInfo() {
+export async function buildDeviceInfo() {
   const sys = await si.system()
   const manufacturer = sanitizeDeviceField(sys.manufacturer)
   const modelId = sanitizeDeviceField(sys.model)
@@ -91,7 +91,7 @@ async function buildDeviceInfo() {
   }
 }
 
-async function buildBiosInfo() {
+export async function buildBiosInfo() {
   const biosData = await si.bios()
   return {
     vendor: sanitizeDeviceField(biosData.vendor),
