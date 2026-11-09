@@ -1,10 +1,35 @@
 # Changelog
 
-WinDiag Fluent follows [Semantic Versioning](https://semver.org/):
+WinDiag follows [Semantic Versioning](https://semver.org/):
 
 - **Major**: a redesign or a change that breaks how the app is used (2.0.0 was the move to Fluent).
 - **Minor**: a new feature or page. Resets the patch number.
 - **Patch**: a fix to something that already existed.
+
+## 3.0.0 — 2026-11-08
+
+WinDiag becomes two editions from one code base: **WinDiag**, free, to keep your own PC healthy in plain words, and **WinDiag Bench**, for technicians. The name "WinDiag Fluent" is retired. Both editions install side by side, each with its own name, icon and settings.
+
+### Added
+- **Home:** a one-click checkup of this PC: protection, Windows updates, drive health, free space, battery, startup apps, activation and last restart, each with a plain verdict and a button to the right Windows page.
+- **Speed up:** the apps that start with Windows, freeing up space (temporary files and the Recycle Bin) and the power mode.
+- **Privacy:** what Windows shares with Microsoft, ads and suggestions, location and Recall, each explained and switched in one place.
+- **Personalize:** dark mode, File Explorer (file extensions, hidden files, the classic right-click menu), the taskbar, and keyboard and mouse settings.
+- **Apps:** install and update 45 trusted apps through winget, one after another, with progress.
+- **Updates:** Windows Update, driver updates with a restore point first, and the maker's BIOS and support links.
+- **Security:** antivirus, firewall, drive encryption, Secure Boot, TPM, memory integrity and UAC at a glance, with safe fixes (update definitions, quick scan, turn on the firewall, block unwanted apps).
+- **Repair:** restart File Explorer, clear the DNS cache, reset the Microsoft Store cache, repair system files (DISM and SFC, with progress), reset Windows Update or the network, and create or go back to a restore point.
+- **Hardware:** the hardware tests, plus a new gamepad tester for drift, dead buttons, triggers and vibration. Each test has a way back to the list (also the mouse's back button and Alt+Left).
+- An error log in Settings → Troubleshooting.
+- The pane says when WinDiag isn't running as administrator and can restart it that way.
+- Bench's Overview is a dashboard: the device with live readings, a ring with every hardware test's result this session, compact specifications and next steps.
+
+### Changed
+- Each edition has its own icon and its name in the title bar and taskbar.
+- The download is about 140 MB again: the website and brand files are no longer packed into the app.
+
+### Fixed
+- Restarting as administrator now opens the new window; before, it closed as soon as Windows gave permission.
 
 ## 2.6.1 — 2026-11-03
 
