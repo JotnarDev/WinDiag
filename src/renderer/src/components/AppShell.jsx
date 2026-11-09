@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { NavigationRegular, SettingsRegular, ShieldKeyholeRegular } from '@fluentui/react-icons'
+import {
+  ArrowLeftRegular,
+  NavigationRegular,
+  SettingsRegular,
+  ShieldKeyholeRegular
+} from '@fluentui/react-icons'
 import appIcon from '@/assets/app-icon.png'
 import { ProgressRing } from '@/components/ui/feedback'
 import { EDITION } from '@/editions'
@@ -99,17 +104,25 @@ function RunAsAdminItem({ showLabel }) {
         type="button"
         onClick={() => void handleClick()}
         disabled={relaunching}
-        title={showLabel ? undefined : 'Run as administrator'}
-        className="flex h-9 w-full items-center gap-4 rounded-control px-3 text-left text-body hover:bg-subtle-hover active:bg-subtle-pressed disabled:text-text-disabled"
+        title={showLabel ? undefined : 'Not running as administrator. Restart as administrator'}
+        className="flex min-h-9 w-full items-center gap-4 rounded-control px-3 py-1.5 text-left text-body hover:bg-subtle-hover active:bg-subtle-pressed disabled:text-text-disabled"
       >
         {relaunching ? (
           <ProgressRing size={16} label="Relaunching" />
         ) : (
           <ShieldKeyholeRegular aria-hidden className="size-4 shrink-0 text-caution" />
         )}
-        {showLabel && (
-          <span className="truncate">{relaunching ? 'Relaunching…' : 'Run as administrator'}</span>
-        )}
+        {showLabel &&
+          (relaunching ? (
+            <span className="truncate">Relaunching…</span>
+          ) : (
+            <span className="min-w-0">
+              <span className="block truncate">Not running as administrator</span>
+              <span className="block truncate text-caption text-text-secondary">
+                Restart as administrator
+              </span>
+            </span>
+          ))}
       </button>
       {error && showLabel && (
         <p role="alert" className="px-3 pt-1 text-caption text-critical">
@@ -212,6 +225,29 @@ export function AppShell({ activeModule, onSelectModule, titleBarHeight, childre
     contentRef.current?.scrollTo({ top: 0 })
     contentRef.current?.focus({ preventScroll: true })
   }
+  // Pages opened from another page (the hardware tests) go back to it
+  const parent = EDITION.parentOf?.[activeModule]
+  const parentLabel =
+    parent && EDITION.navGroups.flatMap((group) => group.items).find((i) => i.id === parent)?.label
+  const goBack = () => {
+    if (parent) handleSelect(parent)
+  }
+  // The mouse's back button and Alt+Left work too, as in File Explorer
+  useEffect(() => {
+    if (!parent) return
+    const onMouse = (event) => {
+      if (event.button === 3) goBack()
+    }
+    const onKey = (event) => {
+      if (event.altKey && event.key === 'ArrowLeft') goBack()
+    }
+    window.addEventListener('mouseup', onMouse)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('mouseup', onMouse)
+      window.removeEventListener('keydown', onKey)
+    }
+  })
   const inlineWidth = wide && panePref ? PANE_WIDTH : COMPACT_WIDTH
   return (
     <div className="flex h-full flex-col">
@@ -251,6 +287,18 @@ export function AppShell({ activeModule, onSelectModule, titleBarHeight, childre
           tabIndex={-1}
           className="min-w-0 flex-1 overflow-y-auto rounded-tl-overlay border-t border-l border-card-stroke bg-layer pt-6 focus-visible:outline-none"
         >
+          {parent && (
+            <div className="mx-auto w-full max-w-[1000px] px-5 sm:px-10">
+              <button
+                type="button"
+                onClick={goBack}
+                className="-ml-2 flex h-8 items-center gap-2 rounded-control px-2 text-body text-text-secondary hover:bg-subtle-hover hover:text-text-primary active:bg-subtle-pressed"
+              >
+                <ArrowLeftRegular aria-hidden className="size-4" />
+                Back to {parentLabel ?? 'the previous page'}
+              </button>
+            </div>
+          )}
           {children}
         </main>
       </div>

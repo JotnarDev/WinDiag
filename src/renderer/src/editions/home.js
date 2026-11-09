@@ -48,8 +48,9 @@ export const home = {
   liveModules: new Set(['battery']),
   // Pages without a navigation item, and the item that stays selected on them
   parentOf: Object.fromEntries(HARDWARE_TESTS.map((test) => [test.id, 'hardware'])),
-  // Asks for admin rights only for the actions that need them
-  showRunAsAdmin: false,
+  // Runs without admin rights and asks for them per action; the pane still
+  // says so and offers to restart as administrator
+  showRunAsAdmin: true,
   settings: { tests: false, drivers: false }
 }
 export default home
