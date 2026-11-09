@@ -1,0 +1,1083 @@
+/*
+ * WinDiag website, draft. One motif: the keycap from the logo (a rounded
+ * square whose top sits higher than its thick bottom lip). It is the button,
+ * the hero's stage, the wall of features, the picture frame and the bullets.
+ *
+ * Logo geometry (256 grid): body radius 52/224; key top inset 22 at the
+ * sides, 14 at the top, 46 at the bottom; key top radius 32.
+ */
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('fonts/SpaceGrotesk-Variable.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --carbon: #141619;
+  --carbon-2: #1b1e22;
+  --graphite: #23262b;
+  --graphite-2: #2c3036;
+  --paper: #f4f5f6;
+  --paper-2: #e3e6ea;
+  --soft: #a3a9b1;
+  --cyan: #22e3f2;
+  --cyan-deep: #0e7490;
+  --good: #9be15d;
+  --look: #ffc83d;
+
+  --display: 'Space Grotesk', 'Segoe UI Variable Display', system-ui, sans-serif;
+  --text: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* five type steps */
+  --t-hero: clamp(48px, 6.6vw, 112px);
+  --t-head: clamp(34px, 3.6vw, 56px);
+  --t-sub: clamp(20px, 1.6vw, 24px);
+  --t-body: 18px;
+  --t-small: 15px;
+
+  --margin: clamp(16px, 2.8vw, 40px);
+  --gap-section: clamp(96px, 11vw, 168px);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  background: var(--carbon);
+  color: var(--paper);
+  font: 400 var(--t-body) / 1.55 var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--cyan);
+  color: var(--carbon);
+}
+
+.frame {
+  padding-inline: var(--margin);
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+.skip:focus {
+  left: var(--margin);
+  top: 8px;
+  z-index: 10;
+  background: var(--paper);
+  color: var(--carbon);
+  padding: 8px 12px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px; /* taste-skill-ignore: visually hidden text */
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- The key: the logo as a button --------------------------------------- */
+
+.key {
+  --press: 0;
+  display: inline-block;
+  background: var(--cyan);
+  border-radius: 0.62em;
+  padding: 0.26em 0.32em 0.62em;
+  text-decoration: none;
+  font: 600 var(--t-small) / 1 var(--display);
+  transition: padding 120ms var(--ease-out);
+}
+.key-top {
+  display: block;
+  background: var(--carbon);
+  color: var(--paper);
+  border-radius: 0.42em;
+  padding: 0.95em 1.3em;
+  white-space: nowrap;
+}
+.key-lg {
+  font-size: 18px;
+}
+/* Pressing moves the key top down into the lip, like a real key */
+.key:hover {
+  padding-top: 0.36em;
+  padding-bottom: 0.52em;
+}
+.key:active {
+  padding-top: 0.5em;
+  padding-bottom: 0.38em;
+}
+
+/* --- Navigation ---------------------------------------------------------- */
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 28px;
+}
+.nav-logo img {
+  height: 34px;
+  width: auto;
+}
+.nav nav {
+  display: flex;
+  gap: clamp(16px, 2.4vw, 36px);
+  font-size: var(--t-small);
+}
+.nav nav a {
+  text-decoration: none;
+  padding-block: 6px;
+}
+.nav nav a:hover {
+  color: var(--cyan);
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  overflow-x: clip;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 24px;
+  min-height: calc(100svh - 62px);
+  padding-top: clamp(48px, 9vh, 120px);
+  padding-bottom: 64px;
+}
+.hero-copy {
+  grid-column: 1 / span 5;
+  align-self: start;
+  position: relative;
+  z-index: 1;
+}
+.hero h1 {
+  font-size: var(--t-hero);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  max-width: 7.5em;
+}
+.lead {
+  margin-top: 36px;
+  max-width: 34ch;
+  font-size: 20px;
+}
+.hero .key {
+  margin-top: 40px;
+}
+.fine {
+  margin-top: 16px;
+  color: var(--soft);
+  font-size: var(--t-small);
+}
+
+/* The stage: the logo's key, enlarged and bleeding off the right edge */
+.stage {
+  grid-column: 6 / -1;
+  grid-row: 1;
+  align-self: stretch;
+  margin-right: calc(-1 * var(--margin) - 8vw);
+  margin-top: clamp(0px, 4vh, 48px);
+  background: var(--cyan);
+  border-radius: clamp(48px, 5vw, 88px);
+  padding: clamp(28px, 2.6vw, 44px) clamp(36px, 3.4vw, 56px) clamp(84px, 8vw, 132px);
+  min-height: 560px;
+  display: flex;
+}
+.stage-top {
+  flex: 1;
+  background: var(--carbon);
+  border-radius: clamp(30px, 3.2vw, 56px);
+  padding: 44px 0 0 44px;
+  overflow: hidden;
+}
+
+/* --- App fragment: Checkup ----------------------------------------------- */
+
+[data-ui] {
+  font: 400 14px / 1.45 var(--text);
+  color: var(--paper);
+}
+.ui-soft {
+  color: var(--soft);
+}
+.checkup {
+  width: 680px;
+}
+.checkup-summary {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 20px;
+  background: var(--graphite);
+  border-radius: 10px;
+  overflow: hidden;
+  padding-right: 20px;
+}
+.checkup-mark {
+  background: var(--cyan);
+  color: var(--carbon);
+  height: 100%;
+  min-height: 132px;
+  display: grid;
+  place-items: center;
+}
+.checkup-mark svg {
+  width: 64px;
+  height: 64px;
+}
+.checkup-title {
+  font: 600 24px / 1.2 var(--display);
+  margin-block: 2px 4px;
+}
+.checks {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.checks li {
+  background: var(--graphite);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  position: relative;
+}
+.checks b {
+  font-weight: 600;
+}
+.checks span {
+  color: var(--paper-2);
+}
+.checks em {
+  font-style: normal;
+  justify-self: start;
+  margin-top: 6px;
+  background: var(--graphite-2);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+.checks li::after {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.checks li[data-check='good']::after {
+  content: '● Good';
+  color: var(--good);
+}
+.checks li[data-check='look']::after {
+  content: '▲ Worth a look';
+  color: var(--look);
+}
+.checks li[data-check='checking']::after {
+  content: 'Checking…';
+  color: var(--soft);
+  font-weight: 400;
+}
+.checks li[data-check='checking'] span,
+.checks li[data-check='checking'] em {
+  visibility: hidden;
+}
+
+/* --- Press any key: the live thing ---------------------------------------- */
+
+.press {
+  position: relative;
+  min-height: 92svh;
+  margin-top: var(--gap-section);
+  background: var(--cyan);
+  color: var(--carbon);
+  overflow: hidden;
+  transition: background-color 160ms linear;
+}
+.press[data-state='b'] {
+  background: var(--paper);
+}
+.press-copy {
+  position: relative;
+  z-index: 1;
+  padding-top: clamp(56px, 8vh, 96px);
+  max-width: 1600px;
+}
+.press h2 {
+  font-size: var(--t-head);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  max-width: 9em;
+}
+.press-copy > p {
+  margin-top: 24px;
+  max-width: 34ch;
+}
+.press-copy > .press-count {
+  margin-top: 32px;
+  font-family: var(--display);
+  font-weight: 600;
+}
+/* A small keyboard: every key is the logo's key, lit in Cyan once it works */
+.kb {
+  margin-top: 16px;
+  display: grid;
+  gap: 6px;
+  width: max-content;
+}
+.kb-row {
+  display: flex;
+  gap: 6px;
+}
+.kb-row:nth-child(2) {
+  margin-left: 22px;
+}
+.kb-row:nth-child(3) {
+  margin-left: 50px;
+}
+.kb-row:nth-child(4) {
+  margin-left: 110px;
+}
+.kb span {
+  width: 44px;
+  aspect-ratio: 1;
+  background: var(--carbon);
+  border-radius: 10px;
+  padding: 3px 4px 10px;
+  display: flex;
+  font: 600 15px / 1 var(--display);
+  transition: padding 90ms var(--ease-out);
+}
+.kb span::before {
+  content: attr(data-k);
+  flex: 1;
+  display: grid;
+  place-items: center;
+  background: var(--carbon-2);
+  color: var(--paper);
+  border-radius: 7px;
+  transition:
+    background-color 160ms linear,
+    color 160ms linear;
+}
+.kb span {
+  font-size: 0;
+}
+.kb span::before {
+  font-size: 15px;
+}
+.kb .kb-space {
+  width: 260px;
+  aspect-ratio: auto;
+  height: 44px;
+}
+.kb .is-tested::before {
+  background: var(--paper);
+  color: var(--carbon);
+}
+.press[data-state='b'] .kb .is-tested::before {
+  background: var(--cyan);
+}
+.kb .is-down {
+  padding-top: 7px;
+  padding-bottom: 6px;
+}
+
+/* The big key: a one-colour key in Carbon, its top showing the field */
+.bigkey {
+  position: absolute;
+  right: -8vw;
+  bottom: 7vh;
+  width: min(62vw, 82vh);
+  aspect-ratio: 1;
+  background: var(--carbon);
+  border-radius: 23.2%;
+  padding: 6.25% 9.8% 20.5%;
+  cursor: pointer;
+  display: flex;
+  transition: padding 90ms var(--ease-out);
+}
+.bigkey.is-down {
+  padding-top: 11%;
+  padding-bottom: 15.75%;
+}
+.bigkey-top {
+  flex: 1;
+  background: inherit;
+  border-radius: 17%;
+  background: var(--cyan);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  transition: background-color 160ms linear;
+}
+.press[data-state='b'] .bigkey-top {
+  background: var(--paper);
+}
+.bigkey-legend {
+  font: 700 clamp(80px, 20vw, 300px) / 1 var(--display);
+  letter-spacing: -0.04em;
+  color: var(--carbon);
+  white-space: nowrap;
+}
+.bigkey-legend.is-long {
+  font-size: clamp(48px, 8vw, 132px);
+}
+.press-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px; /* taste-skill-ignore: hidden input for phone keyboards */
+  bottom: 0;
+  left: 0;
+}
+
+/* --- Horizontal parts ------------------------------------------------------
+ * Without script each track is a row you can swipe or scroll sideways (with
+ * snap points). With GSAP the section is pinned and vertical scrolling moves
+ * the row sideways.
+ */
+
+.hscroll {
+  margin-top: var(--gap-section);
+  overflow-x: clip;
+}
+.hscroll-pin {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.hscroll-pin::-webkit-scrollbar {
+  display: none;
+}
+.hscroll-track {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  padding: 0 var(--margin);
+}
+.hscroll-track > * {
+  scroll-snap-align: start;
+  flex: none;
+}
+.gsap .hscroll-pin {
+  overflow: visible;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+}
+
+/* The wall: one long row of keys */
+.wall {
+  --cell: min(46svh, 36vw, 440px);
+}
+.wall-track {
+  gap: clamp(12px, 1.4vw, 24px);
+}
+.cap {
+  width: var(--cell);
+  height: var(--cell);
+  border-radius: calc(var(--cell) * 0.232);
+  padding: calc(var(--cell) * 0.0625) calc(var(--cell) * 0.098) calc(var(--cell) * 0.205);
+  display: flex;
+  --press: 0;
+  transition: padding 120ms var(--ease-out);
+}
+.cap-wide {
+  width: calc(var(--cell) * 2.1);
+}
+.cap-top {
+  flex: 1;
+  border-radius: calc(var(--cell) * 0.143);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10% 11%;
+  min-width: 0;
+}
+.cap-wide .cap-top {
+  padding: calc(var(--cell) * 0.08) calc(var(--cell) * 0.09);
+}
+.cap-cyan {
+  background: var(--cyan);
+}
+.cap-cyan .cap-top {
+  background: var(--carbon);
+}
+.cap-cyan .cap-big,
+.cap-cyan .cap-word {
+  color: var(--cyan);
+}
+.cap-graphite {
+  background: var(--graphite-2);
+}
+.cap-graphite .cap-top {
+  background: var(--graphite);
+}
+.cap-paper {
+  background: var(--paper-2);
+  color: var(--carbon);
+}
+.cap-paper .cap-top {
+  background: var(--paper);
+}
+.cap-big {
+  font: 600 calc(var(--cell) * 0.36) / 0.9 var(--display);
+  letter-spacing: -0.04em;
+}
+.cap-word {
+  font: 600 calc(var(--cell) * 0.105) / 1 var(--display);
+  letter-spacing: -0.03em;
+}
+.cap-note {
+  font-size: var(--t-small);
+  line-height: 1.35;
+  max-width: 22ch;
+}
+.cap-paper .cap-note {
+  color: #3b4047;
+}
+.cap-cyan .cap-note,
+.cap-graphite .cap-note {
+  color: var(--paper-2);
+}
+.cap-head h2 {
+  font-size: calc(var(--cell) * 0.16);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* The real app: big screens, each the top of a key */
+.app-track {
+  gap: clamp(24px, 3vw, 56px);
+  align-items: center;
+}
+.app-intro {
+  width: min(30vw, 420px);
+}
+.app-intro h2 {
+  font-size: var(--t-hero);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+.app-intro p {
+  margin-top: 24px;
+  max-width: 30ch;
+}
+.panel {
+  margin: 0;
+  width: min(62vw, 112svh);
+}
+.panel-key {
+  border-radius: clamp(36px, 4vw, 64px);
+  padding: clamp(14px, 1.4vw, 24px) clamp(18px, 1.8vw, 30px) clamp(40px, 4.4vw, 72px);
+}
+.panel-top {
+  aspect-ratio: 16 / 10;
+  border-radius: clamp(22px, 2.4vw, 40px);
+  overflow: hidden;
+  background: var(--carbon);
+}
+.panel-top img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left top;
+}
+.panel-cyan .panel-key {
+  background: var(--cyan);
+}
+.panel-graphite .panel-key {
+  background: var(--graphite-2);
+}
+.panel-paper .panel-key {
+  background: var(--paper-2);
+}
+.panel figcaption {
+  margin-top: 18px;
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.panel figcaption b {
+  font: 600 var(--t-sub) / 1.2 var(--display);
+}
+.panel figcaption span {
+  color: var(--soft);
+}
+
+/* --- Safety: inset panel ------------------------------------------------------ */
+
+.safe {
+  margin-top: var(--gap-section);
+  padding-inline: 20px;
+}
+.safe-panel {
+  position: relative;
+  background: var(--graphite);
+  border-radius: 48px;
+  min-height: 88svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1600px;
+  margin-inline: auto;
+}
+.safe-lead {
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+}
+.safe-lead h2 {
+  font-size: var(--t-head);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  max-width: 9em;
+}
+/* The picture in the keycap's shape, its lip cropped by the panel */
+.safe-pic {
+  margin-top: auto;
+  width: min(38vw, 620px);
+  aspect-ratio: 1;
+  background: var(--cyan);
+  border-radius: 23.2%;
+  padding: 6.25% 9.8% 20.5%;
+  display: flex;
+  translate: 0 18%;
+}
+.safe-pic img {
+  flex: 1;
+  min-width: 0;
+  object-fit: cover;
+  object-position: left top;
+  border-radius: 17%;
+}
+.safe-text {
+  padding: 56px 56px 56px 26%;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  align-items: flex-start;
+}
+.safe-text h3 {
+  font-size: var(--t-sub);
+}
+.safe-text p {
+  margin-top: 12px;
+  max-width: 36ch;
+}
+
+/* --- FAQ ------------------------------------------------------------------------ */
+
+.faq {
+  margin-top: var(--gap-section);
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 24px;
+  align-items: start;
+}
+.faq-head {
+  grid-column: 1 / span 4;
+  position: sticky;
+  top: 96px;
+  font-size: var(--t-head);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.faq-list {
+  grid-column: 5 / -1;
+  display: grid;
+  gap: 8px;
+}
+.faq details {
+  background: var(--graphite);
+  border-radius: 20px;
+  transition: background-color 160ms linear;
+}
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 72px;
+  padding: 20px 72px 20px 28px;
+  position: relative;
+  font: 500 var(--t-sub) / 1.3 var(--display);
+  display: flex;
+  align-items: center;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::before,
+.faq summary::after {
+  content: '';
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  width: 16px;
+  height: 3px;
+  margin-top: -1.5px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 200ms var(--ease-out);
+}
+.faq summary::after {
+  transform: rotate(90deg);
+}
+.faq details[open] {
+  background: var(--cyan);
+  color: var(--carbon);
+}
+.faq details[open] summary::after {
+  transform: rotate(0deg);
+}
+.faq details p {
+  padding: 0 28px 28px;
+  max-width: 52ch;
+  font-size: 17px;
+}
+.faq summary:hover {
+  color: var(--cyan);
+}
+.faq details[open] summary:hover {
+  color: var(--carbon);
+}
+
+/* --- Close ---------------------------------------------------------------------- */
+
+.cta {
+  margin-top: var(--gap-section);
+}
+.cta h2 {
+  font-size: var(--t-hero);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  max-width: 10em;
+}
+.cta-row {
+  margin-top: 48px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
+}
+.cta-row p {
+  color: var(--soft);
+  font-size: var(--t-small);
+}
+
+/* --- Footer: the mark, built large ----------------------------------------------- */
+
+.foot {
+  margin-top: var(--gap-section);
+  background: var(--graphite);
+  padding-block: 56px 40px;
+}
+.foot-mark {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(16px, 3vw, 48px);
+}
+.foot-symbol {
+  height: 34svh;
+  min-height: 160px;
+  width: auto;
+}
+.foot-word {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  max-height: 22svh;
+  object-fit: contain;
+  object-position: left bottom;
+  margin-bottom: 3%;
+}
+.foot-links {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  font-size: var(--t-small);
+}
+.foot-links ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.foot-links a {
+  text-decoration: none;
+}
+.foot-links a:hover {
+  color: var(--cyan);
+}
+.foot-by {
+  color: var(--soft);
+  text-align: right;
+}
+
+/* --- Motion ------------------------------------------------------------------------
+ * GSAP runs everything (main.js). Until it starts, the parts it animates are
+ * hidden for a moment; if it never loads, an inline script shows them again.
+ */
+
+.js [data-split],
+.js .hero .lead,
+.js .hero .key,
+.js .hero .fine,
+.js .stage {
+  visibility: hidden;
+}
+.gsap [data-split],
+.gsap .hero .lead,
+.gsap .hero .key,
+.gsap .hero .fine,
+.gsap .stage {
+  visibility: visible;
+}
+.split-line {
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.cap.is-pressed {
+  padding-top: calc(var(--cell) * 0.1);
+  padding-bottom: calc(var(--cell) * 0.1675);
+}
+
+/* --- Phone and tablet ------------------------------------------------------------------ */
+
+@media (max-width: 1100px) {
+  .hero-copy {
+    grid-column: 1 / span 6;
+  }
+  .stage {
+    grid-column: 7 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .nav nav {
+    display: none;
+  }
+  .hero {
+    display: block;
+    padding-top: 40px;
+  }
+  .hero h1 {
+    font-size: 15vw;
+  }
+  .lead {
+    font-size: 18px;
+    margin-top: 24px;
+  }
+  .stage {
+    margin: 64px calc(-1 * var(--margin)) 0;
+    border-radius: 48px;
+    padding: 20px 20px 72px;
+    min-height: 0;
+  }
+  .stage-top {
+    border-radius: 30px;
+    padding: 16px 0 0 16px;
+    height: 520px;
+  }
+  .checkup {
+    width: 620px;
+  }
+  .press {
+    min-height: 86svh;
+  }
+  .press h2 {
+    font-size: 11vw;
+  }
+  .press {
+    min-height: 0;
+    padding-bottom: 0;
+  }
+  .bigkey {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 92vw;
+    margin: 40px 0 -18vw var(--margin);
+  }
+  .kb {
+    gap: 4px;
+  }
+  .kb-row {
+    gap: 4px;
+  }
+  .kb span {
+    width: calc((100vw - 2 * var(--margin) - 36px) / 10);
+    border-radius: 7px;
+    padding: 2px 3px 7px;
+  }
+  .kb span::before {
+    font-size: 13px;
+    border-radius: 5px;
+  }
+  .kb-row:nth-child(2) {
+    margin-left: 14px;
+  }
+  .kb-row:nth-child(3) {
+    margin-left: 32px;
+  }
+  .kb-row:nth-child(4) {
+    margin-left: 64px;
+  }
+  .kb .kb-space {
+    width: 60vw;
+    height: 34px;
+  }
+  .wall {
+    --cell: min(64vw, 50svh);
+  }
+  .cap-note {
+    font-size: 13px;
+  }
+  .app-intro {
+    width: 78vw;
+  }
+  .app-intro h2 {
+    font-size: 13vw;
+  }
+  .panel {
+    width: 86vw;
+  }
+  .panel-top {
+    aspect-ratio: 4 / 5;
+  }
+  .panel figcaption {
+    display: grid;
+    gap: 2px;
+  }
+  .safe {
+    padding-inline: 10px;
+  }
+  .safe-panel {
+    grid-template-columns: 1fr;
+    border-radius: 32px;
+    min-height: 0;
+  }
+  .safe-lead {
+    padding: 32px 24px 0;
+    display: contents;
+  }
+  .safe-lead h2 {
+    padding: 32px 24px 0;
+    font-size: 8.6vw;
+    max-width: none;
+  }
+  .safe-text {
+    padding: 32px 24px;
+    gap: 32px;
+  }
+  .safe-pic {
+    order: 3;
+    width: 86vw;
+    margin: 0 auto;
+    translate: 0 25%;
+  }
+  .faq {
+    display: block;
+  }
+  .faq-head {
+    position: static;
+    font-size: 11vw;
+    margin-bottom: 24px;
+  }
+  .faq summary {
+    font-size: 18px;
+    min-height: 64px;
+    padding: 18px 56px 18px 20px;
+  }
+  .faq summary::before,
+  .faq summary::after {
+    right: 20px;
+  }
+  .faq details p {
+    padding: 0 20px 20px;
+    font-size: 16px;
+  }
+  .cta h2 {
+    font-size: 12vw;
+  }
+  .foot-symbol {
+    height: 22svh;
+    min-height: 110px;
+  }
+  .foot-links {
+    grid-template-columns: 1fr 1fr;
+  }
+  .foot-by {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}
+
+/* The maker's name links to their portfolio */
+.foot-by a {
+  color: var(--paper);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

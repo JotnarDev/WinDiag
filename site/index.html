@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WinDiag — Keep your Windows PC healthy</title>
+    <meta
+      name="description"
+      content="WinDiag is a free, open-source app for Windows 10 and 11. It checks your PC in one click, explains what it finds in plain words and helps you fix it."
+    />
+    <meta name="theme-color" content="#141619" />
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Hide what GSAP animates until it runs; show it anyway if GSAP never loads
+      document.documentElement.classList.add('js')
+      setTimeout(() => {
+        if (!document.documentElement.classList.contains('gsap'))
+          document.documentElement.classList.remove('js')
+      }, 2500)
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav frame">
+      <a href="#top" class="nav-logo" aria-label="WinDiag, back to top">
+        <img src="img/windiag-horizontal-on-dark.svg" alt="WinDiag" width="156" height="36" />
+      </a>
+      <nav aria-label="Main">
+        <a href="#press">Try it</a>
+        <a href="#everything">What it does</a>
+        <a href="#safe">Safety</a>
+        <a href="#faq">Questions</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <!-- Hero: the keycap from the logo, enlarged into the stage for the Checkup -->
+      <section class="hero frame" id="top">
+        <div class="hero-copy">
+          <h1 data-split>Keep your PC healthy.</h1>
+          <p class="lead">
+            WinDiag is a free app for Windows 10 and 11. It checks your PC in one click, tells you
+            what it finds in plain words and helps you fix it.
+          </p>
+          <a class="key key-lg" href="https://github.com/JotnarDev/WinDiag/releases/latest">
+            <span class="key-top">Download for Windows</span>
+          </a>
+          <p class="fine">Version 3.0.0 · 113 MB · Free and open source</p>
+        </div>
+
+        <div class="stage" aria-label="WinDiag's Checkup, as it looks in the app">
+          <div class="stage-top">
+            <div class="checkup" data-ui>
+              <div class="checkup-summary">
+                <div class="checkup-mark" aria-hidden="true">
+                  <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" stroke-width="4" /><path d="M15 25l6 6 12-13" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </div>
+                <div>
+                  <p class="ui-soft">Checkup</p>
+                  <p class="checkup-title" data-summary>Your PC is fine, with 3 things worth a look.</p>
+                  <p class="ui-soft" data-detail>5 good · 3 worth a look</p>
+                </div>
+              </div>
+              <ul class="checks">
+                <li data-check="good"><b>Protection</b><span>Microsoft Defender is on and up to date, and the firewall is on.</span></li>
+                <li data-check="look"><b>Windows updates</b><span>2 updates are waiting to be installed.</span><em>Open Windows Update</em></li>
+                <li data-check="good"><b>Drive health</b><span>Your main drive is healthy.</span></li>
+                <li data-check="good"><b>Free space</b><span>182 GB free of 476 GB on C:.</span></li>
+                <li data-check="good"><b>Battery</b><span>It holds 87 % of the charge it held when new.</span></li>
+                <li data-check="look"><b>Startup apps</b><span>9 apps start with Windows, which slows down startup.</span><em>Manage startup apps</em></li>
+                <li data-check="good"><b>Activation</b><span>Windows is activated.</span></li>
+                <li data-check="look"><b>Last restart</b><span>Your PC hasn’t restarted in 12 days. A restart finishes updates and frees up memory.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Everything it does: one long row of keys, scrolled sideways -->
+      <section class="hscroll wall" id="everything" aria-labelledby="wall-title">
+        <div class="hscroll-pin">
+          <ul class="hscroll-track wall-track">
+            <li class="cap cap-wide cap-head cap-paper">
+              <span class="cap-top"><h2 id="wall-title">One app for the whole PC.</h2><span class="cap-note">Everything WinDiag 3.0.0 does, one key each. Keep scrolling.</span></span>
+            </li>
+            <li class="cap cap-graphite"><span class="cap-top"><span class="cap-big">8</span><span class="cap-note">checks, each with a plain verdict</span></span></li>
+            <li class="cap cap-cyan"><span class="cap-top"><span class="cap-word">Speed up</span><span class="cap-note">Startup apps, free space, power mode</span></span></li>
+            <li class="cap cap-paper"><span class="cap-top"><span class="cap-word">Privacy</span><span class="cap-note">What Windows shares, switched in one place</span></span></li>
+            <li class="cap cap-graphite"><span class="cap-top"><span class="cap-word">Personalize</span><span class="cap-note">Dark mode, taskbar, File Explorer</span></span></li>
+            <li class="cap cap-cyan"><span class="cap-top"><span class="cap-big">45</span><span class="cap-note">trusted apps, installed with winget</span></span></li>
+            <li class="cap cap-paper"><span class="cap-top"><span class="cap-word">Updates</span><span class="cap-note">Windows, drivers and BIOS</span></span></li>
+            <li class="cap cap-graphite"><span class="cap-top"><span class="cap-word">Security</span><span class="cap-note">Antivirus, firewall, encryption, TPM</span></span></li>
+            <li class="cap cap-cyan"><span class="cap-top"><span class="cap-word">Repair</span><span class="cap-note">The fixes a technician tries first</span></span></li>
+            <li class="cap cap-paper"><span class="cap-top"><span class="cap-word">Hardware</span><span class="cap-note">Keyboard, screen, sound, battery, gamepad</span></span></li>
+            <li class="cap cap-graphite"><span class="cap-top"><span class="cap-big">0 €</span><span class="cap-note">No ads, no account, no trial</span></span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- The live thing: WinDiag's keyboard test, on the page -->
+      <section class="press" id="press" data-state="a">
+        <div class="frame press-copy">
+          <h2 data-press-heading>Press any key.</h2>
+          <p>
+            This is WinDiag’s keyboard test, right here. Every key you press shows up on the big key;
+            in the app, the keys that never light up are the ones to fix.
+          </p>
+          <p class="press-count" data-press-count aria-live="polite">0 of 27 keys tested</p>
+          <div class="kb" aria-hidden="true">
+            <div class="kb-row"><span data-k="Q">Q</span><span data-k="W">W</span><span data-k="E">E</span><span data-k="R">R</span><span data-k="T">T</span><span data-k="Y">Y</span><span data-k="U">U</span><span data-k="I">I</span><span data-k="O">O</span><span data-k="P">P</span></div>
+            <div class="kb-row"><span data-k="A">A</span><span data-k="S">S</span><span data-k="D">D</span><span data-k="F">F</span><span data-k="G">G</span><span data-k="H">H</span><span data-k="J">J</span><span data-k="K">K</span><span data-k="L">L</span></div>
+            <div class="kb-row"><span data-k="Z">Z</span><span data-k="X">X</span><span data-k="C">C</span><span data-k="V">V</span><span data-k="B">B</span><span data-k="N">N</span><span data-k="M">M</span></div>
+            <div class="kb-row"><span data-k="Space" class="kb-space">Space</span></div>
+          </div>
+        </div>
+        <label class="bigkey" for="press-input">
+          <span class="visually-hidden">Tap to open your keyboard</span>
+          <span class="bigkey-top"><span class="bigkey-legend" data-press-legend>W</span></span>
+        </label>
+        <input id="press-input" class="press-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type here to test your keys" />
+      </section>
+
+      <!-- The real app: big screens passing sideways -->
+      <section class="hscroll app" id="app" aria-labelledby="app-title">
+        <div class="hscroll-pin">
+          <div class="hscroll-track app-track">
+            <div class="app-intro">
+              <h2 id="app-title">The real app.</h2>
+              <p>When something is wrong, Repair has the safe fixes and Hardware tests each part of the PC, from the keys to the gamepad.</p>
+            </div>
+            <figure class="panel panel-graphite">
+              <div class="panel-key"><div class="panel-top"><img src="img/hardware.jpg" alt="WinDiag’s Hardware page with eight tests: gamepad, keyboard and mouse, screen, touch, sound and camera, battery, drive health and USB ports" width="1640" height="804" loading="lazy" /></div></div>
+              <figcaption><b>Hardware</b><span>Eight tests, one for each part of the PC.</span></figcaption>
+            </figure>
+            <figure class="panel panel-cyan">
+              <div class="panel-key"><div class="panel-top"><img src="img/repair.jpg" alt="WinDiag’s Repair page: restart File Explorer, clear the DNS cache, reset the Microsoft Store cache and repair system files" width="1640" height="1344" loading="lazy" /></div></div>
+              <figcaption><b>Repair</b><span>Each fix says when to use it, how long it takes and whether it asks for permission.</span></figcaption>
+            </figure>
+            <figure class="panel panel-paper">
+              <div class="panel-key"><div class="panel-top"><img src="img/keyboard.jpg" alt="WinDiag’s keyboard test: a full keyboard where every pressed key lights up" width="1640" height="1344" loading="lazy" /></div></div>
+              <figcaption><b>Keyboard & mouse</b><span>Every key and button, matched by position, so any keyboard language works.</span></figcaption>
+            </figure>
+            <figure class="panel panel-cyan">
+              <div class="panel-key"><div class="panel-top"><img src="img/screen.jpg" alt="WinDiag’s display test with white, black, red, green, blue and grey screens" width="1640" height="1004" loading="lazy" /></div></div>
+              <figcaption><b>Screen</b><span>Full-screen colours that show dead pixels, bleeding and uneven backlight.</span></figcaption>
+            </figure>
+            <figure class="panel panel-graphite">
+              <div class="panel-key"><div class="panel-top"><img src="img/gamepad.jpg" alt="WinDiag’s gamepad test asking you to press any button on your controller" width="1640" height="1204" loading="lazy" /></div></div>
+              <figcaption><b>Gamepad</b><span>Finds drift, dead buttons and worn triggers, and says why a controller isn’t seen.</span></figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- Safety: inset panel, the picture in the keycap's shape -->
+      <section class="safe" id="safe">
+        <div class="safe-panel">
+          <div class="safe-lead">
+            <h2 data-split>Nothing changes without you.</h2>
+            <div class="safe-pic">
+              <img src="img/repair.jpg" alt="The Repair page, where every fix waits for you to press Run" width="1640" height="1344" loading="lazy" />
+            </div>
+          </div>
+          <div class="safe-text">
+            <div>
+              <h3>It asks first</h3>
+              <p>WinDiag opens without administrator rights. Windows asks for your permission only when an action needs it, and drivers get a restore point first, so you can always go back.</p>
+            </div>
+            <div>
+              <h3>Open, and only yours</h3>
+              <p>Free and open source under the MIT licence. No account, no ads and no tracking: it only talks to Windows Update, winget and your PC maker’s site when you use them.</p>
+            </div>
+            <a class="key" href="https://github.com/JotnarDev/WinDiag"><span class="key-top">Read the code</span></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Questions -->
+      <section class="faq frame" id="faq">
+        <h2 class="faq-head" data-split>Questions.</h2>
+        <div class="faq-list">
+          <details name="faq" open>
+            <summary>Is it really free?</summary>
+            <p>Yes. WinDiag is free and open source under the MIT licence. There is no trial, no paid version of these features, no ads and no account.</p>
+          </details>
+          <details name="faq">
+            <summary>Which Windows does it need?</summary>
+            <p>Windows 10 or Windows 11, 64-bit. Any brand of laptop or desktop.</p>
+          </details>
+          <details name="faq">
+            <summary>Does it need administrator rights?</summary>
+            <p>Not to open. When an action needs them, such as repairing system files or resetting the network, Windows asks you first. You can also restart WinDiag as administrator from the bottom of its menu.</p>
+          </details>
+          <details name="faq">
+            <summary>Can it break something?</summary>
+            <p>The Checkup only reads. Every setting WinDiag changes can be set back from the same page, drivers get a restore point first, and each repair explains when to use it before you press Run.</p>
+          </details>
+          <details name="faq">
+            <summary>Why does Windows say “Windows protected your PC”?</summary>
+            <p>The installer isn’t code-signed yet, so SmartScreen doesn’t know it. Choose More info, then Run anyway. The whole code is public on GitHub.</p>
+          </details>
+          <details name="faq">
+            <summary>Can I use it without installing it?</summary>
+            <p>Yes. Each release also has a portable zip: extract it anywhere, even a USB drive, and open windiag.exe.</p>
+          </details>
+          <details name="faq">
+            <summary>Where do the apps it installs come from?</summary>
+            <p>From winget, Windows’ own app installer, straight from each maker or the Microsoft Store. WinDiag only offers a fixed list of 45 well-known apps.</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- Close -->
+      <section class="cta frame" id="download">
+        <h2 data-split>Check your PC today.</h2>
+        <div class="cta-row">
+          <a class="key key-lg" href="https://github.com/JotnarDev/WinDiag/releases/latest"><span class="key-top">Download WinDiag</span></a>
+          <p>Version 3.0.0 · Windows 10 and 11, 64-bit · Installer or portable zip</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="frame foot-mark" aria-hidden="true">
+        <img class="foot-symbol" src="img/windiag-symbol.svg" alt="" width="256" height="256" />
+        <img class="foot-word" src="img/windiag-wordmark-paper.svg" alt="" />
+      </div>
+      <div class="frame foot-links">
+        <ul>
+          <li><a href="https://github.com/JotnarDev/WinDiag/releases/latest">Download</a></li>
+          <li><a href="https://github.com/JotnarDev/WinDiag/blob/main/CHANGELOG.md">What’s new</a></li>
+        </ul>
+        <ul>
+          <li><a href="https://github.com/JotnarDev/WinDiag">Source code</a></li>
+          <li><a href="https://github.com/JotnarDev/WinDiag/issues">Report a problem</a></li>
+        </ul>
+        <ul>
+          <li><a href="https://github.com/JotnarDev/WinDiag/blob/main/LICENSE">MIT licence</a></li>
+        </ul>
+        <p class="foot-by">WinDiag 3.0.0 · Made by <a href="https://michael-quintero.netlify.app/">JOTNAR</a></p>
+      </div>
+    </footer>
+
+    <script src="vendor/gsap.min.js" defer></script>
+    <script src="vendor/ScrollTrigger.min.js" defer></script>
+    <script src="vendor/SplitText.min.js" defer></script>
+    <script src="main.js" defer></script>
+  </body>
+</html>

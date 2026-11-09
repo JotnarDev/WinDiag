@@ -14,7 +14,7 @@ files:
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{jsconfig.json,components.json}'
   # Build output, the website and the brand kit aren't part of the app
-  - '!{dist,dist-home,website,brand}/**'
+  - '!{dist,dist-home,website,site,brand}/**'
 asarUnpack:
   - resources/**
 win:

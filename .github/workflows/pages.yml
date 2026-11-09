@@ -1,16 +1,16 @@
 name: Website
 
-# Builds the product website (website/) and publishes it on GitHub Pages:
+# Publishes the product website (site/, plain HTML) on GitHub Pages:
 #   https://jotnardev.github.io/WinDiag/
 #
-# Runs on every push to main that touches website/, or by hand from the
+# Runs on every push to main that touches site/, or by hand from the
 # Actions tab. One-time setup: Settings > Pages > Source: GitHub Actions.
 
 on:
   push:
     branches: [main]
     paths:
-      - 'website/**'
+      - 'site/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -27,26 +27,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: website
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: website/package-lock.json
-
-      - run: npm ci
-      - run: npm run build
-
       - uses: actions/configure-pages@v5
 
+      # The site is plain HTML, CSS and JavaScript: published as it is
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: website/dist
+          path: site
 
   deploy:
     needs: build
