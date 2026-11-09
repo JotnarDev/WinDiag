@@ -14,14 +14,21 @@ export function UnderConstruction() {
           Under construction.
         </h1>
         <p className="mt-5 max-w-[46ch] text-[18px] leading-[1.5] text-muted">
-          We&apos;re rebuilding WinDiag and this site with it. Follow along on GitHub.
+          We&apos;re rebuilding this site. WinDiag {SITE.version} is out: keep your PC healthy, in
+          plain words. Free, for Windows 10 and 11.
         </p>
-        <p className="mt-8">
+        <p className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
           <a
-            href={SITE.repo}
+            href={SITE.download}
             className="inline-flex h-11 items-center rounded-[4px] bg-accent px-5 text-[16px] font-semibold text-on-accent transition-transform active:scale-[0.97]"
           >
-            WinDiag on GitHub
+            Download WinDiag {SITE.version}
+          </a>
+          <a
+            href={SITE.changelog}
+            className="text-[16px] font-semibold underline-offset-4 hover:underline"
+          >
+            What&apos;s new
           </a>
         </p>
       </div>

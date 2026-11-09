@@ -1,7 +1,7 @@
 // Facts about the release the page links to. Update them with each version.
 export const SITE = {
-  version: '2.6.1',
-  released: '2026-11-03',
+  version: '3.0.0',
+  released: '2026-11-08',
   repo: 'https://github.com/JotnarDev/WinDiag',
   download: 'https://github.com/JotnarDev/WinDiag/releases/latest',
   changelog: 'https://github.com/JotnarDev/WinDiag/blob/main/CHANGELOG.md',
